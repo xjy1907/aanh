@@ -1,12 +1,12 @@
 #import "Menu.hpp"
 #import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
 
 bool dk = false;
 
 NSString *decode(NSString *string) {
   NSData *data = [[NSData alloc] initWithBase64EncodedString:string options:0];
   NSString *decodedStr = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-  
   return decodedStr;
 }
 
@@ -14,20 +14,20 @@ void Startgame(void) {
   if (!dk) {
     // 使用dispatch_after实现2秒延迟
     // dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-      NSString *LSApplicationWorkspaceNAme = decode(@"TFNBcHBsaWNhdGlvbldvcmtzcGFjZQ==");
-      const char *cLSApplicationWorkspaceNAme = [LSApplicationWorkspaceNAme UTF8String];
-      Class LSApplicationWorkspace = objc_getClass(cLSApplicationWorkspaceNAme);
-      NSObject *workspace = [LSApplicationWorkspace performSelector:@selector(defaultWorkspace)];
-      NSArray *allApplications = [workspace performSelector:@selector(allApplications)];
-      
-      for (NSObject *appInfo in allApplications) {
-        NSString *bundleID = [appInfo performSelector:@selector(bundleIdentifier)];
-        NSString *bundleName = decode(@"Y29tLnRlbmNlbnQudG1ncC5kZm0=");
-        if ([bundleID isEqualToString:bundleName]) {
-          [workspace performSelector:@selector(openApplicationWithBundleID:) withObject:bundleID];
-        }
+    NSString *LSApplicationWorkspaceNAme = decode(@"TFNBcHBsaWNhdGlvbldvcmtzcGFjZQ==");
+    const char *cLSApplicationWorkspaceNAme = [LSApplicationWorkspaceNAme UTF8String];
+    Class LSApplicationWorkspace = objc_getClass(cLSApplicationWorkspaceNAme);
+    NSObject *workspace = [LSApplicationWorkspace performSelector:@selector(defaultWorkspace)];
+    NSArray *allApplications = [workspace performSelector:@selector(allApplications)];
+    
+    for (NSObject *appInfo in allApplications) {
+      NSString *bundleID = [appInfo performSelector:@selector(bundleIdentifier)];
+      NSString *bundleName = decode(@"Y29tLnRlbmNlbnQudG1ncC5kZm0=");
+      if ([bundleID isEqualToString:bundleName]) {
+        [workspace performSelector:@selector(openApplicationWithBundleID:) withObject:bundleID];
       }
-      dk = true;
+    }
+    dk = true;
     // });
   }
 }
@@ -43,61 +43,96 @@ void Startgame(void) {
 @end
 
 @implementation GestureSwitch {
-  UIView *_boxView; // 方框视图
-  CGFloat _boxSize; // 方框大小
+  UIView *_circleView; // 圆圈视图
+  // UIView *_checkmarkView; // 勾选标记视图 - 暂时注释
+  CGFloat _circleSize; // 圆圈大小
 }
 
 - (instancetype)initWithFrame:(CGRect)frame {
   self = [super initWithFrame:frame];
   if (self) {
-    _boxSize = 20.0; // 方框大小调整为20
+    _circleSize = 20.0; // 圆圈大小调整为20
     _isOn = NO;
     _onColor = [UIColor colorWithRed:0.0 green:0.8 blue:0.4 alpha:1.0]; // 绿色主题色
     _offColor = [UIColor colorWithWhite:0.3 alpha:1.0];                 // 深灰色边框
     
-    // 方框视图
-    _boxView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, _boxSize, _boxSize)];
-    _boxView.layer.borderWidth = 2.0;
-    _boxView.layer.borderColor = _offColor.CGColor;
-    _boxView.layer.cornerRadius = 4.0;               // 圆角
-    _boxView.backgroundColor = [UIColor clearColor]; // 默认背景透明
+    // 圆圈视图
+    _circleView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, _circleSize, _circleSize)];
+    _circleView.layer.borderWidth = 2.0;
+    _circleView.layer.borderColor = _offColor.CGColor;
+    _circleView.layer.cornerRadius = _circleSize / 2;           // 圆形
+    _circleView.backgroundColor = [UIColor clearColor]; // 默认背景透明
+    
+    // 勾选标记视图 - 暂时注释
+    /*
+     _checkmarkView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, _circleSize, _circleSize)];
+     _checkmarkView.backgroundColor = [UIColor clearColor];
+     _checkmarkView.hidden = YES; // 初始隐藏
+     
+     // 创建勾选路径
+     CAShapeLayer *checkmarkLayer = [CAShapeLayer layer];
+     UIBezierPath *checkmarkPath = [UIBezierPath bezierPath];
+     [checkmarkPath moveToPoint:CGPointMake(_circleSize * 0.25, _circleSize * 0.5)];
+     [checkmarkPath addLineToPoint:CGPointMake(_circleSize * 0.4, _circleSize * 0.65)];
+     [checkmarkPath addLineToPoint:CGPointMake(_circleSize * 0.75, _circleSize * 0.35)];
+     
+     checkmarkLayer.path = checkmarkPath.CGPath;
+     checkmarkLayer.strokeColor = [UIColor whiteColor].CGColor;
+     checkmarkLayer.fillColor = [UIColor clearColor].CGColor;
+     checkmarkLayer.lineWidth = 2.0;
+     checkmarkLayer.lineCap = kCALineCapRound;
+     checkmarkLayer.lineJoin = kCALineJoinRound;
+     
+     [_checkmarkView.layer addSublayer:checkmarkLayer];
+     */
     
     // 添加点击手势
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)];
     [self addGestureRecognizer:tap];
     
-    [self addSubview:_boxView];
-    [self updateBoxAppearance];
+    [self addSubview:_circleView];
+    // [self addSubview:_checkmarkView]; // 暂时注释
+    [self updateCircleAppearance];
   }
   return self;
 }
 
 - (void)handleTap:(UITapGestureRecognizer *)gesture {
   self.isOn = !self.isOn;
-  [self updateBoxAppearance];
+  [self updateCircleAppearance];
   if (self.valueChangedHandler) {
     self.valueChangedHandler(self.isOn);
   }
 }
 
-- (void)updateBoxAppearance {
+- (void)updateCircleAppearance {
   [UIView animateWithDuration:0.2
                    animations:^{
     if (self.isOn) {
       // 打开时填充颜色
-      self->_boxView.backgroundColor = self.onColor;
-      self->_boxView.layer.borderColor = self.onColor.CGColor;
+      self->_circleView.backgroundColor = self.onColor;
+      self->_circleView.layer.borderColor = self.onColor.CGColor;
+      // 勾选逻辑暂时注释
+      /*
+       self->_checkmarkView.hidden = NO;
+       self->_checkmarkView.alpha = 1.0;
+       */
     } else {
       // 关闭时清空颜色
-      self->_boxView.backgroundColor = [UIColor clearColor];
-      self->_boxView.layer.borderColor = self.offColor.CGColor;
+      self->_circleView.backgroundColor = [UIColor clearColor];
+      self->_circleView.layer.borderColor = self.offColor.CGColor;
+      // 勾选逻辑暂时注释
+      /*
+       self->_checkmarkView.alpha = 0.0;
+       self->_checkmarkView.hidden = YES;
+       */
     }
   }];
 }
 
 - (void)setIsOn:(BOOL)isOn {
   _isOn = isOn;
-  [self updateBoxAppearance];
+  [self updateCircleAppearance];
 }
 
 @end
@@ -216,6 +251,10 @@ void Startgame(void) {
 
 @implementation MenuFloatController
 
+CGRect screenBounds = [UIScreen mainScreen].bounds;
+CGFloat kuan = screenBounds.size.width;
+CGFloat gao = screenBounds.size.height;
+
 #pragma mark - Lifecycle
 
 - (void)viewDidLoad {
@@ -235,8 +274,7 @@ void Startgame(void) {
   [self configOrientationObserver];
   [self configFloatingBall];
   
-  // 添加屏幕旋转通知监听
-  [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(orientationDidChange:) name:UIDeviceOrientationDidChangeNotification object:nil];
+  Startgame();
 }
 
 #pragma mark - Memory
@@ -257,9 +295,9 @@ void Startgame(void) {
 
 - (UIView *)menuView {
   if (!_menuView) {
-    _menuView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, UIScreen.mainScreen.bounds.size.width / 2, UIScreen.mainScreen.bounds.size.height * 0.5)];
-    _menuView.center = CGPointMake(UIScreen.mainScreen.bounds.size.width / 2, UIScreen.mainScreen.bounds.size.height / 2);
-    _menuView.alpha = 0; // 初始时隐藏菜单
+    _menuView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, kuan/2, gao * 0.65)];
+    _menuView.center = CGPointMake(kuan/2, gao/2);
+    _menuView.alpha = 0;
     
     // ✅ 直接使用 UIVisualEffectView 作为背景，移除黑色背景视图
     UIBlurEffect *blurEffect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleDark];
@@ -287,8 +325,7 @@ void Startgame(void) {
     _menuView.layer.rasterizationScale = [UIScreen mainScreen].scale;
     
     // ✅ 添加拖动手势
-    UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc] initWithTarget:self
-                                                                          action:@selector(handleMenuPan:)];
+    UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handleMenuPan:)];
     [_menuView addGestureRecognizer:pan];
     
     [self.view addSubview:_menuView];
@@ -328,16 +365,9 @@ void Startgame(void) {
       CGPoint translation = [gesture translationInView:self.view];
       CGPoint newCenter = CGPointMake(initialCenter.x + translation.x, initialCenter.y + translation.y);
       
-      // 获取当前屏幕尺寸
-      CGRect screenBounds = [UIScreen mainScreen].bounds;
-      CGFloat screenWidth = screenBounds.size.width;
-      CGFloat screenHeight = screenBounds.size.height;
-      
       // 边界限制
-      newCenter.x = MAX(self.menuView.frame.size.width / 2,
-                        MIN(screenWidth - self.menuView.frame.size.width / 2, newCenter.x));
-      newCenter.y = MAX(self.menuView.frame.size.height / 2,
-                        MIN(screenHeight - self.menuView.frame.size.height / 2, newCenter.y));
+      newCenter.x = MAX(self.menuView.frame.size.width/2, MIN(kuan - self.menuView.frame.size.width/2, newCenter.x));
+      newCenter.y = MAX(self.menuView.frame.size.height/2, MIN(gao - self.menuView.frame.size.height/2, newCenter.y));
       
       self.menuCacheView.center = newCenter;
       break;
@@ -349,21 +379,16 @@ void Startgame(void) {
       self.menuView.hidden = NO;
       [self.menuCacheView removeFromSuperview];
       self.menuCacheView = nil;
-      
       // 添加惯性滑动（可选）
       CGPoint velocity = [gesture velocityInView:self.view];
-      // 获取当前屏幕尺寸
-      CGRect screenBounds = [UIScreen mainScreen].bounds;
-      CGFloat screenWidth = screenBounds.size.width;
-      CGFloat screenHeight = screenBounds.size.height;
-      
+      CGFloat deceleration = 0.9; // 衰减系数
       CGRect finalFrame = self.menuView.frame;
       
       CGFloat targetX = finalFrame.origin.x + velocity.x * 0.1;
-      targetX = MAX(0, MIN(screenWidth - finalFrame.size.width, targetX));
+      targetX = MAX(0, MIN(kuan - finalFrame.size.width, targetX));
       
       CGFloat targetY = finalFrame.origin.y + velocity.y * 0.1;
-      targetY = MAX(0, MIN(screenHeight - finalFrame.size.height, targetY));
+      targetY = MAX(0, MIN(gao - finalFrame.size.height, targetY));
       
       break;
     }
@@ -381,8 +406,7 @@ void Startgame(void) {
   
   [self.orientationObserver setHandler:^(FBSOrientationUpdate *orientationUpdate) {
     dispatch_async(dispatch_get_main_queue(), ^{
-      [weakSelf handleInterfaceOrientationChange:(UIInterfaceOrientation)orientationUpdate.orientation
-                                        duration:orientationUpdate.duration];
+      [weakSelf handleInterfaceOrientationChange:(UIInterfaceOrientation)orientationUpdate.orientation duration:orientationUpdate.duration];
     });
   }];
 }
@@ -390,7 +414,7 @@ void Startgame(void) {
 - (void)configFloatingBall {
   // 悬浮球基础设置
   self.floatingBall = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 50, 50)];
-  self.floatingBall.backgroundColor = [UIColor colorWithWhite:0.0 alpha:0.01]; // 透明但可点击
+  self.floatingBall.backgroundColor = UIColor.redColor; // [UIColor colorWithWhite:0.0 alpha:0.01]; // 透明但可点击
   self.floatingBall.layer.cornerRadius = 20;
   self.floatingBall.userInteractionEnabled = YES;
   
@@ -441,17 +465,19 @@ void Startgame(void) {
   NSArray *levelTitles = @[@"基础功能", @"物资功能", @"高危功能"];
   
   for (int i = 0; i < 3; i++) {
-    UIButton *levelButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    levelButton.frame = CGRectMake(5, 10 + i * (buttonHeight + 10), buttonWidth - 10, buttonHeight);
-    [levelButton setTitle:levelTitles[i] forState:UIControlStateNormal];
-    [levelButton setTitleColor:[UIColor lightGrayColor] forState:UIControlStateNormal];
-    [levelButton setTitleColor:[UIColor whiteColor] forState:UIControlStateSelected];
-    levelButton.titleLabel.font = [UIFont systemFontOfSize:12];
-    levelButton.backgroundColor = [UIColor colorWithWhite:0.15 alpha:1.0]; // 深灰色背景
-    levelButton.layer.cornerRadius = 6;
-    levelButton.tag = 1000 + i;
-    [levelButton addTarget:self action:@selector(levelButtonTapped:) forControlEvents:UIControlEventTouchUpInside];
-    [buttonContainer addSubview:levelButton];
+    UILabel *label = [[UILabel alloc] init];
+    label.frame = CGRectMake(5, 10 + i * (buttonHeight + 10), buttonWidth - 10, buttonHeight);
+    label.text = levelTitles[i];
+    label.textColor = UIColor.lightGrayColor;
+    label.font = [UIFont systemFontOfSize:12];
+    label.textAlignment = NSTextAlignmentCenter;
+    label.backgroundColor = [UIColor colorWithWhite:0.15 alpha:1.0]; // 深灰色背景
+    label.layer.masksToBounds = YES;
+    label.layer.cornerRadius = 6;
+    label.tag = 1000 + i;
+    [label setUserInteractionEnabled:YES];
+    [label addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(levellabelTapped:)]];
+    [buttonContainer addSubview:label];
   }
   
   // 创建三个级别的内容视图
@@ -668,9 +694,9 @@ void Startgame(void) {
 }
 
 // 级别按钮点击事件
-- (void)levelButtonTapped:(UIButton *)sender {
-  NSInteger level = sender.tag - 1000;
-  NSLog(@"按钮被点击: tag=%ld, level=%ld", (long)sender.tag, (long)level);
+- (void)levellabelTapped:(UITapGestureRecognizer *)tap {
+  NSInteger level = tap.view.tag - 1000;
+  NSLog(@"按钮被点击: level=%ld", (long)level);
   [self showLevel:level];
 }
 
@@ -680,15 +706,15 @@ void Startgame(void) {
   
   // 更新按钮状态
   for (int i = 0; i < 3; i++) {
-    UIButton *button = [self.menuView viewWithTag:1000 + i];
-    if (button) {
+    UILabel *label = [self.menuView viewWithTag:1000 + i];
+    if (label) {
       if (i == level) {
-        button.selected = YES;
-        button.backgroundColor = [UIColor colorWithRed:0.0 green:0.8 blue:0.4 alpha:1.0]; // 绿色主题
+        label.textColor = UIColor.whiteColor;
+        label.backgroundColor = [UIColor colorWithRed:0.0 green:0.8 blue:0.4 alpha:1.0]; // 绿色主题
         NSLog(@"按钮 %d 设置为选中状态", i);
       } else {
-        button.selected = NO;
-        button.backgroundColor = [UIColor colorWithWhite:0.15 alpha:1.0]; // 深灰色背景
+        label.textColor = UIColor.lightGrayColor;
+        label.backgroundColor = [UIColor colorWithWhite:0.15 alpha:1.0]; // 深灰色背景
         NSLog(@"按钮 %d 设置为未选中状态", i);
       }
     } else {
@@ -829,11 +855,11 @@ void Startgame(void) {
     slider.value = 雷达大小;
   } else if ([name isEqualToString:@"雷达 X"]) {
     slider.minValue = 0;
-    slider.maxValue = screenWidth * 2;
+    slider.maxValue = kuan*2;
     slider.value = 雷达x;
   } else if ([name isEqualToString:@"雷达 Y"]) {
     slider.minValue = 0;
-    slider.maxValue = screenHeight * 2;
+    slider.maxValue = gao*2;
     slider.value = 雷达y;
   } else if ([name isEqualToString:@"物资绘制距离"]) {
     slider.minValue = 0;
@@ -862,24 +888,7 @@ void Startgame(void) {
 }
 
 - (void)updateFloatingBallPosition {
-  // 获取当前屏幕尺寸
-  CGRect screenBounds = [UIScreen mainScreen].bounds;
-  CGFloat screenWidth = screenBounds.size.width;
-  CGFloat screenHeight = screenBounds.size.height;
-  
-  // 根据当前方向调整悬浮球位置
-  UIInterfaceOrientation currentOrientation = [UIApplication sharedApplication].statusBarOrientation;
-  
-  if (UIInterfaceOrientationIsLandscape(currentOrientation)) {
-    // 横屏时，悬浮球放在顶部中间
-    self.floatingBall.center = CGPointMake(screenWidth / 2, 20);
-  } else {
-    // 竖屏时，悬浮球放在顶部中间
-    self.floatingBall.center = CGPointMake(screenWidth / 2, 20);
-  }
-  
-  NSLog(@"悬浮球位置更新: (%.0f, %.0f), 屏幕尺寸: %.0fx%.0f",
-        self.floatingBall.center.x, self.floatingBall.center.y, screenWidth, screenHeight);
+  self.floatingBall.center = CGPointMake(kuan / 2, 20);
 }
 
 - (void)toggleMenu {
@@ -888,11 +897,8 @@ void Startgame(void) {
   if (self.isMenuVisible) {
     // 触发懒加载
     UIView *menu = self.menuView;
-    // 获取当前屏幕尺寸
-    CGSize screenSize = UIScreen.mainScreen.bounds.size;
     
-    // 更新菜单frame
-    menu.frame = CGRectMake(screenSize.width * 0.25, screenSize.height * 0.25, screenSize.width * 0.5, screenSize.height * 0.5);
+    menu.center = CGPointMake(kuan/2, gao/2);
     menu.transform = CGAffineTransformMakeScale(0.8, 0.8);
     
     [UIView animateWithDuration:0.25
@@ -903,61 +909,50 @@ void Startgame(void) {
                      animations:^{
       menu.alpha = 1;
       menu.transform = CGAffineTransformIdentity;
-      menu.center = CGPointMake(screenSize.width * 0.5, screenSize.height * 0.5);
+      menu.center = CGPointMake(kuan/2, gao/2);
     } completion:nil];
   } else {
     [UIView animateWithDuration:0.2 animations:^{
       self.menuView.alpha = 0;
       self.menuView.transform = CGAffineTransformMakeScale(0.8, 0.8);
     } completion:^(BOOL finished) {
-      CGSize screenSize = UIScreen.mainScreen.bounds.size;
-      self.menuView.center = CGPointMake(screenSize.width * 0.5, screenSize.height * 0.5);
+      self.menuView.center = CGPointMake(kuan/2, gao/2);
     }];
   }
 }
 
 - (void)handleInterfaceOrientationChange:(UIInterfaceOrientation)orientation duration:(NSTimeInterval)duration {
-  NSLog(@"屏幕旋转: %ld", (long)orientation);
+  BOOL isLandscape = UIInterfaceOrientationIsLandscape(orientation);
+  CGRect screenBounds = [UIScreen mainScreen].bounds;
   
-  // 获取当前屏幕尺寸
-  CGRect screenBounds = UIScreen.mainScreen.bounds;
-  
-  // 计算旋转后的尺寸
-  CGFloat screenWidth = screenBounds.size.width;
-  CGFloat screenHeight = screenBounds.size.height;
+  kuan = isLandscape ? MAX(screenBounds.size.width, screenBounds.size.height) : MIN(screenBounds.size.width, screenBounds.size.height);
+  gao  = isLandscape ? MIN(screenBounds.size.width, screenBounds.size.height) : MAX(screenBounds.size.width, screenBounds.size.height);
   
   [UIView animateWithDuration:duration animations:^{
-    // 更新根视图尺寸
-    self.view.bounds = CGRectMake(0, 0, screenWidth, screenHeight);
-    self.view.frame = CGRectMake(0, 0, screenWidth, screenHeight);
-    
-    // 更新悬浮球位置
-    [self updateFloatingBallPosition];
-    
-    // 如果菜单可见，重新调整菜单位置和尺寸
-    if (self->_isMenuVisible) {
-      // 重新计算菜单尺寸
-      CGFloat menuWidth = screenWidth * 0.5;
-      CGFloat menuHeight = screenHeight * 0.5;
-      
-      // 更新菜单frame
-      self.menuView.frame = CGRectMake(screenWidth * 0.25, screenHeight * 0.25, menuWidth, menuHeight);
-      self.menuView.center = CGPointMake(screenWidth / 2, screenHeight / 2);
-      // 重新配置菜单内容
-      [self configSwitchSlider];
+    switch (orientation) {
+      case UIInterfaceOrientationLandscapeLeft:
+        self.view.transform = CGAffineTransformMakeRotation(-M_PI_2);
+        self.view.bounds = CGRectMake(0, 0, kuan, gao);
+        break;
+      case UIInterfaceOrientationLandscapeRight:
+        self.view.transform = CGAffineTransformMakeRotation(M_PI_2);
+        self.view.bounds = CGRectMake(0, 0, kuan, gao);
+        break;
+      case UIInterfaceOrientationPortraitUpsideDown:
+        self.view.transform = CGAffineTransformMakeRotation(M_PI);
+        self.view.bounds = screenBounds;
+        break;
+      default:
+        self.view.transform = CGAffineTransformIdentity;
+        self.view.bounds = screenBounds;
+        break;
     }
-    
-    [self.view setNeedsLayout];
-    [self.view layoutIfNeeded];
-  } completion:^(BOOL finished) {
-    
-    NSLog(@"屏幕旋转完成: 屏幕尺寸 %.0fx%.0f %.fx%.f",
-          screenWidth, screenHeight, self.menuView.center.x, self.menuView.center.y);
+    [self updateFloatingBallPosition];
+    if (self.isMenuVisible) {
+      self.menuView.center = CGPointMake(kuan/2, gao/2); // 使用全局变量
+    }
+    [self.view setNeedsDisplay];
   }];
-}
-
-- (void)orientationDidChange:(NSNotification *)notification {
-  [self handleInterfaceOrientationChange:[[UIApplication sharedApplication] statusBarOrientation] duration:0.3];
 }
 
 @end
