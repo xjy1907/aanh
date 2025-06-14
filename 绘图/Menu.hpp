@@ -12,7 +12,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface cd : UIViewController
+@interface MenuFloatController : UIViewController<UIGestureRecognizerDelegate>
 @property (strong, nonatomic) UIView *basicView;
 @property (strong, nonatomic) UIView *advancedView;
 @property (nonatomic, strong) FBSOrientationObserver *orientationObserver;
@@ -30,8 +30,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, assign) BOOL isDraggingMenu;
 
 - (void)drawImGuiMenu; // 添加声明
-@end
-@interface cd () <UIGestureRecognizerDelegate>
 @end
 
 extern float 雷达大小;

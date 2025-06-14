@@ -90,6 +90,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		061965112DFD77F4008B8D0A /* build.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = build.sh; sourceTree = "<group>"; };
 		0F43B7702B60D397003A435D /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = ../Resources/es.lproj/Localizable.strings; sourceTree = "<group>"; };
 		0F43B7712B60D397003A435D /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = ../Resources/es.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1F0BD8B82D6DAD13008151DA /* entitlements.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = entitlements.plist; sourceTree = "<group>"; };
@@ -281,6 +282,7 @@
 		CC711CF82B5BF550007235A6 = {
 			isa = PBXGroup;
 			children = (
+				061965112DFD77F4008B8D0A /* build.sh */,
 				1F0BD9322D6DC347008151DA /* ImGui 1.91.5 */,
 				1F0BD8B72D6DACDC008151DA /* 绘图 */,
 				CC711D022B5BF550007235A6 /* Products */,

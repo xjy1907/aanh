@@ -12,22 +12,25 @@ VERSION=$1
 VERSION=${VERSION#v}
 
 # Build using Xcode
-xcodebuild clean build archive \
--scheme DZ \
--project DZ.xcodeproj \
--sdk iphoneos \
--destination 'generic/platform=iOS' \
--archivePath DZ \
-CODE_SIGNING_ALLOWED=NO | xcpretty
+xcodebuild build archive \
+    -scheme DZ \
+    -project DZ.xcodeproj \
+    -sdk iphoneos \
+    -destination 'generic/platform=iOS' \
+    -archivePath DZ \
+    CODE_SIGNING_ALLOWED=NO # | xcpretty
 
 chmod 0644 Resources/Info.plist
 chmod 0644 supports/Sandbox-Info.plist
 cp supports/entitlements.plist DZ.xcarchive/Products
 cd DZ.xcarchive/Products/Applications
 codesign --remove-signature DZ.app
+
 cd -
 cd DZ.xcarchive/Products
 mv Applications Payload
+
+# bew install ldid # 伪装签名
 ldid -Sentitlements.plist Payload/DZ.app
 chmod 0644 Payload/DZ.app/Info.plist
 zip -qr DZ.tipa Payload
