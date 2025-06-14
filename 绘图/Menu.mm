@@ -40,11 +40,12 @@ void Startgame(void) {
 @property(nonatomic, strong) UIColor *onColor;                     // 开启时的填充颜色
 @property(nonatomic, strong) UIColor *offColor;                    // 关闭时的边框颜色
 @property(nonatomic, copy) void (^valueChangedHandler)(BOOL isOn); // 值变化回调
+@property(nonatomic, assign) BOOL enabled;                         // 是否启用
 @end
 
 @implementation GestureSwitch {
   UIView *_circleView; // 圆圈视图
-  // UIView *_checkmarkView; // 勾选标记视图 - 暂时注释
+  UIView *_checkmarkView; // 勾选标记视图 - 暂时注释
   CGFloat _circleSize; // 圆圈大小
 }
 
@@ -53,51 +54,55 @@ void Startgame(void) {
   if (self) {
     _circleSize = 20.0; // 圆圈大小调整为20
     _isOn = NO;
+    _enabled = YES; // 默认启用
     _onColor = [UIColor colorWithRed:0.0 green:0.8 blue:0.4 alpha:1.0]; // 绿色主题色
     _offColor = [UIColor colorWithWhite:0.3 alpha:1.0];                 // 深灰色边框
     
     // 圆圈视图
     _circleView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, _circleSize, _circleSize)];
-    _circleView.layer.borderWidth = 2.0;
+    _circleView.layer.borderWidth = 1.0;
     _circleView.layer.borderColor = _offColor.CGColor;
-    _circleView.layer.cornerRadius = _circleSize / 2;           // 圆形
+    _circleView.layer.cornerRadius = 4;           // 圆形
     _circleView.backgroundColor = [UIColor clearColor]; // 默认背景透明
     
     // 勾选标记视图 - 暂时注释
-    /*
-     _checkmarkView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, _circleSize, _circleSize)];
-     _checkmarkView.backgroundColor = [UIColor clearColor];
-     _checkmarkView.hidden = YES; // 初始隐藏
-     
-     // 创建勾选路径
-     CAShapeLayer *checkmarkLayer = [CAShapeLayer layer];
-     UIBezierPath *checkmarkPath = [UIBezierPath bezierPath];
-     [checkmarkPath moveToPoint:CGPointMake(_circleSize * 0.25, _circleSize * 0.5)];
-     [checkmarkPath addLineToPoint:CGPointMake(_circleSize * 0.4, _circleSize * 0.65)];
-     [checkmarkPath addLineToPoint:CGPointMake(_circleSize * 0.75, _circleSize * 0.35)];
-     
-     checkmarkLayer.path = checkmarkPath.CGPath;
-     checkmarkLayer.strokeColor = [UIColor whiteColor].CGColor;
-     checkmarkLayer.fillColor = [UIColor clearColor].CGColor;
-     checkmarkLayer.lineWidth = 2.0;
-     checkmarkLayer.lineCap = kCALineCapRound;
-     checkmarkLayer.lineJoin = kCALineJoinRound;
-     
-     [_checkmarkView.layer addSublayer:checkmarkLayer];
-     */
+    _checkmarkView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, _circleSize, _circleSize)];
+    _checkmarkView.backgroundColor = [UIColor clearColor];
+    _checkmarkView.hidden = YES; // 初始隐藏
+    
+    // 创建勾选路径
+    CAShapeLayer *checkmarkLayer = [CAShapeLayer layer];
+    UIBezierPath *checkmarkPath = [UIBezierPath bezierPath];
+    [checkmarkPath moveToPoint:CGPointMake(_circleSize * 0.25, _circleSize * 0.60)];
+    [checkmarkPath addLineToPoint:CGPointMake(_circleSize * 0.4, _circleSize * 0.75)];
+    [checkmarkPath addLineToPoint:CGPointMake(_circleSize * 0.75, _circleSize * 0.35)];
+    
+    checkmarkLayer.path = checkmarkPath.CGPath;
+    checkmarkLayer.strokeColor = [UIColor whiteColor].CGColor;
+    checkmarkLayer.fillColor = [UIColor clearColor].CGColor;
+    checkmarkLayer.lineWidth = 2.0;
+    checkmarkLayer.lineCap = kCALineCapRound;
+    checkmarkLayer.lineJoin = kCALineJoinRound;
+    
+    [_checkmarkView.layer addSublayer:checkmarkLayer];
     
     // 添加点击手势
     UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)];
     [self addGestureRecognizer:tap];
     
     [self addSubview:_circleView];
-    // [self addSubview:_checkmarkView]; // 暂时注释
+    [self addSubview:_checkmarkView]; // 暂时注释
     [self updateCircleAppearance];
   }
   return self;
 }
 
 - (void)handleTap:(UITapGestureRecognizer *)gesture {
+  // 如果禁用状态，不响应点击
+  if (!self.enabled) {
+    return;
+  }
+  
   self.isOn = !self.isOn;
   [self updateCircleAppearance];
   if (self.valueChangedHandler) {
@@ -106,32 +111,38 @@ void Startgame(void) {
 }
 
 - (void)updateCircleAppearance {
-  [UIView animateWithDuration:0.2
-                   animations:^{
-    if (self.isOn) {
+  [UIView animateWithDuration:0.2 animations:^{
+    if (!self.enabled) {
+      // 禁用状态：显示为灰色
+      self->_circleView.backgroundColor = [UIColor colorWithWhite:0.5 alpha:0.3];
+      self->_circleView.layer.borderColor = [UIColor colorWithWhite:0.5 alpha:0.5].CGColor;
+      self->_checkmarkView.alpha = 0.0;
+      self->_checkmarkView.hidden = YES;
+    } else if (self.isOn) {
       // 打开时填充颜色
       self->_circleView.backgroundColor = self.onColor;
       self->_circleView.layer.borderColor = self.onColor.CGColor;
       // 勾选逻辑暂时注释
-      /*
-       self->_checkmarkView.hidden = NO;
-       self->_checkmarkView.alpha = 1.0;
-       */
+      self->_checkmarkView.hidden = NO;
+      self->_checkmarkView.alpha = 1.0;
     } else {
       // 关闭时清空颜色
       self->_circleView.backgroundColor = [UIColor clearColor];
       self->_circleView.layer.borderColor = self.offColor.CGColor;
       // 勾选逻辑暂时注释
-      /*
-       self->_checkmarkView.alpha = 0.0;
-       self->_checkmarkView.hidden = YES;
-       */
+      self->_checkmarkView.alpha = 0.0;
+      self->_checkmarkView.hidden = YES;
     }
   }];
 }
 
 - (void)setIsOn:(BOOL)isOn {
   _isOn = isOn;
+  [self updateCircleAppearance];
+}
+
+- (void)setEnabled:(BOOL)enabled {
+  _enabled = enabled;
   [self updateCircleAppearance];
 }
 
@@ -144,6 +155,7 @@ void Startgame(void) {
 @property(nonatomic, strong) UIColor *trackColor;
 @property(nonatomic, strong) UIColor *thumbColor;
 @property(nonatomic, copy) void (^valueChangedHandler)(CGFloat newValue);
+@property(nonatomic, assign) BOOL enabled; // 是否启用
 @end
 
 @implementation GestureSlider {
@@ -159,6 +171,7 @@ void Startgame(void) {
     _minValue = 0.0f;
     _maxValue = 1.0f;
     _value = 0.5f;
+    _enabled = YES; // 默认启用
     _trackColor = [UIColor colorWithWhite:0.2 alpha:1.0]; // 深灰色轨道
     _thumbColor = [UIColor colorWithRed:0.0 green:0.8 blue:0.4 alpha:1.0]; // 绿色主题色
     
@@ -196,11 +209,21 @@ void Startgame(void) {
 }
 
 - (void)handlePan:(UIPanGestureRecognizer *)gesture {
+  // 如果禁用状态，不响应拖拽
+  if (!self.enabled) {
+    return;
+  }
+  
   CGPoint location = [gesture locationInView:self];
   [self updateValueWithLocation:location];
 }
 
 - (void)handleTap:(UITapGestureRecognizer *)gesture {
+  // 如果禁用状态，不响应点击
+  if (!self.enabled) {
+    return;
+  }
+  
   CGPoint location = [gesture locationInView:self];
   [self updateValueWithLocation:location];
 }
@@ -231,6 +254,26 @@ void Startgame(void) {
   _value = value;
   [self updateThumbPosition];
 }
+
+- (void)setEnabled:(BOOL)enabled {
+  _enabled = enabled;
+  [self updateAppearance];
+}
+
+- (void)updateAppearance {
+  if (!self.enabled) {
+    // 禁用状态：显示为灰色
+    _trackView.backgroundColor = [UIColor colorWithWhite:0.4 alpha:0.5];
+    _thumbView.backgroundColor = [UIColor colorWithWhite:0.6 alpha:0.8];
+    _thumbView.layer.shadowOpacity = 0.1;
+  } else {
+    // 启用状态：恢复正常颜色
+    _trackView.backgroundColor = _trackColor;
+    _thumbView.backgroundColor = _thumbColor;
+    _thumbView.layer.shadowOpacity = 0.3;
+  }
+}
+
 @end
 
 @interface RootView : UIView
@@ -295,7 +338,7 @@ CGFloat gao = screenBounds.size.height;
 
 - (UIView *)menuView {
   if (!_menuView) {
-    _menuView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, kuan/2, gao * 0.65)];
+    _menuView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, kuan/2, gao * 0.6)];
     _menuView.center = CGPointMake(kuan/2, gao/2);
     _menuView.alpha = 0;
     
@@ -444,11 +487,22 @@ CGFloat gao = screenBounds.size.height;
   CGFloat menuWidth = self.menuView.frame.size.width;
   CGFloat menuHeight = self.menuView.frame.size.height;
   
+  // 添加大标题 "DZ"
+  UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 8, menuWidth, 30)];
+  titleLabel.text = @"DZ";
+  titleLabel.font = [UIFont boldSystemFontOfSize:24];
+  titleLabel.textColor = [UIColor whiteColor];
+  titleLabel.textAlignment = NSTextAlignmentCenter;
+  titleLabel.backgroundColor = [UIColor clearColor];
+  [self.menuView addSubview:titleLabel];
+  
+  [self createSwitchOpen:@"总开关" startY:12 container:self.menuView];
+  
   // 设置三级视图布局
   CGFloat buttonWidth = 80;
   CGFloat buttonHeight = 40;
   CGFloat contentWidth = menuWidth - buttonWidth - 20;
-  CGFloat currentY = 12;
+  CGFloat currentY = 46;
   
   // 创建左侧按钮容器
   UIView *buttonContainer = [[UIView alloc] initWithFrame:CGRectMake(10, currentY, buttonWidth, menuHeight - 24)];
@@ -487,7 +541,12 @@ CGFloat gao = screenBounds.size.height;
   
   // 默认显示第一级
   [self showLevel:0];
+  
+  // 根据总开关状态设置其他控件的启用状态
+  [self updateControlsEnabledState];
 }
+
+#pragma mark - Create
 
 // 创建第一级内容（基础功能）
 - (void)createLevel1Content:(UIView *)container {
@@ -496,19 +555,20 @@ CGFloat gao = screenBounds.size.height;
   level1View.hidden = NO;
   [container addSubview:level1View];
   
-  CGFloat currentY = 12;
+  CGFloat currentY = 8;
   
   // 顶部警告
   UILabel *topWarning = [[UILabel alloc] initWithFrame:CGRectMake(10, currentY, container.frame.size.width - 20, 20)];
   topWarning.text = @"对局结束请关闭总开关";
   topWarning.font = [UIFont boldSystemFontOfSize:14];
   topWarning.textColor = [UIColor colorWithRed:0.0 green:0.8 blue:0.4 alpha:1.0]; // 绿色主题
-  topWarning.textAlignment = NSTextAlignmentCenter;
+  topWarning.textAlignment = NSTextAlignmentLeft;
   [level1View addSubview:topWarning];
+  // 总开关
   currentY += 35;
   
   // 第一组开关
-  NSArray *group1Names = @[@"总开关", @"射线", @"信息", @"骨骼", @"血量", @"雷达", @"BOOS绘制", @"过滤人机", @"阵营模式", @"技能预警"];
+  NSArray *group1Names = @[@"射线", @"信息", @"骨骼", @"血量", @"雷达", @"BOOS绘制", @"过滤人机", @"阵营模式", @"技能预警"];
   currentY = [self createSwitchGroup:group1Names startY:currentY container:level1View];
   
   // 雷达滑条组
@@ -523,15 +583,16 @@ CGFloat gao = screenBounds.size.height;
   level2View.hidden = YES;
   [container addSubview:level2View];
   
-  CGFloat currentY = 12;
+  CGFloat currentY = 8;
   
   // 物资警告
   UILabel *itemWarning = [[UILabel alloc] initWithFrame:CGRectMake(10, currentY, container.frame.size.width - 20, 20)];
   itemWarning.text = @"物资绘制过多可能导致卡顿";
   itemWarning.font = [UIFont systemFontOfSize:14];
   itemWarning.textColor = [UIColor colorWithRed:0.0 green:0.6 blue:1.0 alpha:1.0]; // 蓝色主题
-  itemWarning.textAlignment = NSTextAlignmentCenter;
+  itemWarning.textAlignment = NSTextAlignmentLeft;
   [level2View addSubview:itemWarning];
+  
   currentY += 35;
   
   // 物资开关组
@@ -549,14 +610,14 @@ CGFloat gao = screenBounds.size.height;
   level3View.hidden = YES;
   [container addSubview:level3View];
   
-  CGFloat currentY = 12;
+  CGFloat currentY = 8;
   
   // 高危警告
   UILabel *dangerWarning = [[UILabel alloc] initWithFrame:CGRectMake(10, currentY, container.frame.size.width - 20, 20)];
   dangerWarning.text = @"高危功能封号自理";
   dangerWarning.font = [UIFont boldSystemFontOfSize:14];
   dangerWarning.textColor = [UIColor colorWithRed:1.0 green:0.3 blue:0.3 alpha:1.0]; // 红色主题
-  dangerWarning.textAlignment = NSTextAlignmentCenter;
+  dangerWarning.textAlignment = NSTextAlignmentLeft;
   [level3View addSubview:dangerWarning];
   currentY += 35;
   
@@ -566,6 +627,27 @@ CGFloat gao = screenBounds.size.height;
   
   // 范围滑条
   [self createSliderGroup:@[@"自瞄距离"] startY:currentY + 5 container:level3View];
+}
+
+// 创建开关视图
+- (void)createSwitchOpen:(NSString *)name startY:(CGFloat)startY container:(UIView *)container {
+  CGFloat containerWidth = container.frame.size.width;
+  // 开关
+  GestureSwitch *switcher = [[GestureSwitch alloc] initWithFrame:CGRectMake(containerWidth - 48, startY, 20, 20)];
+  
+  // 根据开关组设置颜色
+  switcher.onColor = [UIColor colorWithRed:0.0 green:0.8 blue:0.4 alpha:1.0]; // 绿色主题
+  switcher.offColor = UIColor.whiteColor; // [UIColor colorWithWhite:0.3 alpha:1.0]; // 深灰色边框
+  
+  // 配置初始状态
+  [self configureSwitchState:switcher forName:name];
+  
+  // 开关回调
+  __weak typeof(self) weakSelf = self;
+  switcher.valueChangedHandler = ^(BOOL isOn) {
+    [weakSelf updateSwitchState:name isOn:isOn];
+  };
+  [container addSubview:switcher];
 }
 
 // 创建开关组
@@ -595,10 +677,10 @@ CGFloat gao = screenBounds.size.height;
     
     // 开关
     GestureSwitch *switcher = [[GestureSwitch alloc] initWithFrame:CGRectMake(containerWidth - 33, 3, 20, 20)];
-    switcher.tag = 100 + i;
+    switcher.tag = 101 + i;
     
     // 根据开关组设置颜色
-    if ([names[i] isEqualToString:@"总开关"] || [names[i] isEqualToString:@"射线"] ||
+    if ([names[i] isEqualToString:@"射线"] ||
         [names[i] isEqualToString:@"信息"] || [names[i] isEqualToString:@"骨骼"] ||
         [names[i] isEqualToString:@"血量"] || [names[i] isEqualToString:@"BOOS绘制"] ||
         [names[i] isEqualToString:@"雷达"] || [names[i] isEqualToString:@"过滤人机"] ||
@@ -738,12 +820,17 @@ CGFloat gao = screenBounds.size.height;
   if (!foundAnyLevelView) {
     NSLog(@"警告：未找到任何级别视图");
   }
+  
+  // 根据总开关状态更新控件启用状态
+  [self updateControlsEnabledState];
 }
 
 // 配置开关状态
 - (void)configureSwitchState:(GestureSwitch *)switcher forName:(NSString *)name {
   if ([name isEqualToString:@"总开关"]) {
     switcher.isOn = 总开关;
+    // 当总开关状态改变时，更新所有其他控件的启用状态
+    [self updateControlsEnabledState];
   } else if ([name isEqualToString:@"射线"]) {
     switcher.isOn = is射线;
   } else if ([name isEqualToString:@"信息"]) {
@@ -795,6 +882,8 @@ CGFloat gao = screenBounds.size.height;
 - (void)updateSwitchState:(NSString *)name isOn:(BOOL)isOn {
   if ([name isEqualToString:@"总开关"]) {
     总开关 = isOn;
+    // 当总开关状态改变时，更新所有其他控件的启用状态
+    [self updateControlsEnabledState];
   } else if ([name isEqualToString:@"射线"]) {
     is射线 = isOn;
   } else if ([name isEqualToString:@"信息"]) {
@@ -921,6 +1010,8 @@ CGFloat gao = screenBounds.size.height;
   }
 }
 
+#pragma mark - Interface
+
 - (void)handleInterfaceOrientationChange:(UIInterfaceOrientation)orientation duration:(NSTimeInterval)duration {
   BOOL isLandscape = UIInterfaceOrientationIsLandscape(orientation);
   CGRect screenBounds = [UIScreen mainScreen].bounds;
@@ -953,6 +1044,41 @@ CGFloat gao = screenBounds.size.height;
     }
     [self.view setNeedsDisplay];
   }];
+}
+
+#pragma mark - TogOn
+
+// 更新所有控件的启用状态
+- (void)updateControlsEnabledState {
+  BOOL masterSwitchOn = 总开关;
+  
+  // 遍历所有级别视图
+  for (UIView *subview in self.menuView.subviews) {
+    for (UIView *contentView in subview.subviews) {
+      if (contentView.tag >= 2000 && contentView.tag <= 2002) {
+        // 遍历级别视图中的所有控件
+        [self updateControlsInView:contentView enabled:masterSwitchOn];
+      }
+    }
+  }
+}
+
+// 递归更新视图中的控件状态
+- (void)updateControlsInView:(UIView *)view enabled:(BOOL)enabled {
+  for (UIView *subview in view.subviews) {
+    // 检查是否是开关控件
+    if ([subview isKindOfClass:[GestureSwitch class]]) {
+      GestureSwitch *switcher = (GestureSwitch *)subview;
+      switcher.enabled = enabled;
+    }
+    // 检查是否是滑条控件
+    else if ([subview isKindOfClass:[GestureSlider class]]) {
+      GestureSlider *slider = (GestureSlider *)subview;
+      slider.enabled = enabled;
+    }
+    // 递归检查子视图
+    [self updateControlsInView:subview enabled:enabled];
+  }
 }
 
 @end
