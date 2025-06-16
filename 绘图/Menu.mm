@@ -694,8 +694,7 @@ CGFloat gao = screenBounds.size.height;
     } else {
       switcher.onColor = [UIColor colorWithRed:1.0 green:0.3 blue:0.3 alpha:1.0]; // 红色主题
     }
-    
-    switcher.offColor = [UIColor colorWithWhite:0.3 alpha:1.0]; // 深灰色边框
+    switcher.offColor = [UIColor colorWithWhite:0.5 alpha:1.0]; // 深灰色边框
     
     // 配置初始状态
     [self configureSwitchState:switcher forName:names[i]];
