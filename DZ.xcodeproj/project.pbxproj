@@ -7,6 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		06D67D952E0CD59F002E20EF /* libchoma.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D67D922E0CD59F002E20EF /* libchoma.dylib */; };
+		06D67D962E0CD59F002E20EF /* libchoma.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 06D67D922E0CD59F002E20EF /* libchoma.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		06D67D972E0CD59F002E20EF /* kfd.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D67D932E0CD59F002E20EF /* kfd.framework */; };
+		06D67D982E0CD59F002E20EF /* kfd.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 06D67D932E0CD59F002E20EF /* kfd.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		06D67D992E0CD59F002E20EF /* libjailbreak.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D67D942E0CD59F002E20EF /* libjailbreak.dylib */; };
+		06D67D9A2E0CD59F002E20EF /* libjailbreak.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 06D67D942E0CD59F002E20EF /* libjailbreak.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		06D67DB32E0CD63D002E20EF /* IOSurface.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D67DB22E0CD63D002E20EF /* IOSurface.framework */; };
 		1F0BD8B92D6DAD13008151DA /* entitlements.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1F0BD8B82D6DAD13008151DA /* entitlements.plist */; };
 		1F0BD9182D6DB7AA008151DA /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F0BD9172D6DB7AA008151DA /* Metal.framework */; };
 		1F0BD91A2D6DB7B9008151DA /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F0BD9192D6DB7B9008151DA /* MetalKit.framework */; };
@@ -89,8 +96,38 @@
 		CC9130A82B62A33A006E3280 /* TSSettingsIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC9130A62B62A33A006E3280 /* TSSettingsIndex.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		06D67D9B2E0CD59F002E20EF /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				06D67D982E0CD59F002E20EF /* kfd.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		06D67DB12E0CD600002E20EF /* Embed Libraries */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 6;
+			files = (
+				06D67D962E0CD59F002E20EF /* libchoma.dylib in Embed Libraries */,
+				06D67D9A2E0CD59F002E20EF /* libjailbreak.dylib in Embed Libraries */,
+			);
+			name = "Embed Libraries";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		061965112DFD77F4008B8D0A /* build.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = build.sh; sourceTree = "<group>"; };
+		06D67D922E0CD59F002E20EF /* libchoma.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libchoma.dylib; path = libraries/libchoma.dylib; sourceTree = "<group>"; };
+		06D67D932E0CD59F002E20EF /* kfd.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = kfd.framework; path = libraries/kfd.framework; sourceTree = "<group>"; };
+		06D67D942E0CD59F002E20EF /* libjailbreak.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libjailbreak.dylib; path = libraries/libjailbreak.dylib; sourceTree = "<group>"; };
+		06D67DB22E0CD63D002E20EF /* IOSurface.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOSurface.framework; path = System/Library/Frameworks/IOSurface.framework; sourceTree = SDKROOT; };
 		0F43B7702B60D397003A435D /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = ../Resources/es.lproj/Localizable.strings; sourceTree = "<group>"; };
 		0F43B7712B60D397003A435D /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = ../Resources/es.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1F0BD8B82D6DAD13008151DA /* entitlements.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = entitlements.plist; sourceTree = "<group>"; };
@@ -224,11 +261,15 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				06D67DB32E0CD63D002E20EF /* IOSurface.framework in Frameworks */,
 				CC711D992B5BFF2F007235A6 /* SpringBoardServices.tbd in Frameworks */,
 				1F0BD91A2D6DB7B9008151DA /* MetalKit.framework in Frameworks */,
 				CC711D9E2B5C0081007235A6 /* AssertionServices.tbd in Frameworks */,
 				1F0BD9182D6DB7AA008151DA /* Metal.framework in Frameworks */,
+				06D67D972E0CD59F002E20EF /* kfd.framework in Frameworks */,
 				CC8DDA9A2B6631DC001C7C9E /* AppIntents.framework in Frameworks */,
+				06D67D992E0CD59F002E20EF /* libjailbreak.dylib in Frameworks */,
+				06D67D952E0CD59F002E20EF /* libchoma.dylib in Frameworks */,
 				CC711D9C2B5C0032007235A6 /* IOKit.tbd in Frameworks */,
 				CC711D9A2B5BFF2F007235A6 /* BackBoardServices.tbd in Frameworks */,
 				CC711D982B5BFF2F007235A6 /* GraphicsServices.tbd in Frameworks */,
@@ -448,6 +489,10 @@
 		CC8DDA972B66318E001C7C9E /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				06D67DB22E0CD63D002E20EF /* IOSurface.framework */,
+				06D67D932E0CD59F002E20EF /* kfd.framework */,
+				06D67D922E0CD59F002E20EF /* libchoma.dylib */,
+				06D67D942E0CD59F002E20EF /* libjailbreak.dylib */,
 				1F0BD9192D6DB7B9008151DA /* MetalKit.framework */,
 				1F0BD9172D6DB7AA008151DA /* Metal.framework */,
 				CC8DDA982B66318E001C7C9E /* AppIntents.framework */,
@@ -483,6 +528,8 @@
 				CC711CFE2B5BF550007235A6 /* Frameworks */,
 				CC711CFF2B5BF550007235A6 /* Resources */,
 				269B5B732D756AD2006B6E6F /* ShellScript */,
+				06D67D9B2E0CD59F002E20EF /* Embed Frameworks */,
+				06D67DB12E0CD600002E20EF /* Embed Libraries */,
 			);
 			buildRules = (
 			);
@@ -905,6 +952,10 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				DEVELOPMENT_TEAM = "-";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/libraries",
+				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "supports/hudapp-prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -950,6 +1001,10 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				DEVELOPMENT_TEAM = "-";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/libraries",
+				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "supports/hudapp-prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (

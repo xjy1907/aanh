@@ -12,24 +12,23 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface MenuFloatController : UIViewController<UIGestureRecognizerDelegate>
-@property (strong, nonatomic) UIView *basicView;
-@property (strong, nonatomic) UIView *advancedView;
-@property (nonatomic, strong) FBSOrientationObserver *orientationObserver;
+@interface MenuFloatController: UIViewController<UIGestureRecognizerDelegate>
+
 @property (nonatomic, strong) UIView *floatingBall;
-@property (nonatomic, strong) UIView *menuView;    // 新增菜单视图
+@property (nonatomic, strong) UIView *menuView; // 新增菜单视图
+@property (nonatomic, strong) UIImageView *menuCacheView; // 新增缓存视图
+
+@property (nonatomic, strong) FBSOrientationObserver *orientationObserver;
+
+@property (nonatomic, assign) BOOL isDraggingMenu;
 @property (nonatomic, assign) BOOL isMenuVisible; // 菜单显示状态
 @property (nonatomic, assign) BOOL shouldHandleTouch;
-@property (nonatomic, assign) NSInteger currentPageIndex; // 0: 第一页, 1: 第二页
-@property (nonatomic, strong) UIView *pageContainer; // 添加 pageContainer 属性
-@property (nonatomic, strong) NSMutableDictionary *switchStates;
-- (void)addTarget:(id)target action:(SEL)action;
-@property (nonatomic, strong) UIScrollView *scrollView; // 用于页面切换
-@property (strong, nonatomic) UIStackView *buttonStack;
-@property (nonatomic, strong) UIImageView *menuCacheView; // 新增缓存视图
-@property (nonatomic, assign) BOOL isDraggingMenu;
 
-- (void)drawImGuiMenu; // 添加声明
+@property (nonatomic, strong) NSMutableDictionary *switchStates;
+
+- (void)drawImGuiMenu;
+- (void)addTarget:(id)target action:(SEL)action;
+
 @end
 
 extern float 雷达大小;
