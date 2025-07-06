@@ -15,9 +15,7 @@
 - (BOOL)_shouldCreateContextAsSecure { return YES; }
 - (BOOL)_ignoresHitTest { return YES; } //触摸
 
-
 @end
-
 
 @implementation HUDMenuWindow
 
@@ -25,7 +23,5 @@
 - (BOOL)_isWindowServerHostingManaged { return NO; }
 - (BOOL)_isSecure { return YES; }
 - (BOOL)_shouldCreateContextAsSecure { return YES; }
-
-//- (BOOL)_ignoresHitTest { return YES; } //触摸调试
 
 @end

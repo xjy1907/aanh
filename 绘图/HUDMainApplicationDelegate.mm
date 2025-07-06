@@ -11,6 +11,8 @@
 #import "HUDMainWindow.h"
 #import "SBSAccessibilityWindowHostingController.h"
 #import "UIWindow+Private.h"
+#import "DOJailbreaker.h"
+
 #include "ESP.hpp"
 
 CGFloat kWidth = 0; // 存储屏幕宽度
@@ -35,13 +37,10 @@ CGFloat kHeight = 0; // 存储屏幕高度
   log_debug(OS_LOG_DEFAULT, "- [HUDMainApplicationDelegate application:%{public}@ didFinishLaunchingWithOptions:%{public}@]", application, launchOptions); // 记录日志
   
   self.Startwindow = [[HUDMainWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]]; // 创建 HUDMainWindow，大小为屏幕大小
-  //[[UIApplication sharedApplication].keyWindow addSubview:self.Startwindow];
   
   [self.Startwindow setWindowLevel:UIWindowLevelStatusBar + 1]; // 设置窗口层级，比状态栏高
   [self.Startwindow setHidden:NO]; // 使窗口可见
   [self.Startwindow makeKeyAndVisible]; // 使窗口成为主窗口并显示
-  // [self.window setPreferredFrameRateRange:CAFrameRateRangeMake(120, 120, 120)];
-  // _mtkView = [[MTKView alloc] initWithFrame:self.view.bounds device:_mtlDevice];
   
   _mtkView = [[MTKView alloc] initWithFrame:self.Startwindow.bounds]; // 创建 MTKView，大小为窗口大小
   //_mtkView.contentScaleFactor = [UIScreen mainScreen].nativeScale; // 设置物理像素比例
@@ -52,14 +51,6 @@ CGFloat kHeight = 0; // 存储屏幕高度
   _mtkView.clearColor = MTLClearColorMake(0, 0, 0, 0.0); // Metal 清屏颜色为透明
   _mtkView.delegate = self; // 设定自身为 MTKView 代理
   [self.Startwindow addSubview:_mtkView]; // 将 MTKView 添加到主窗口
-  
-  //    UITextField *HiddenView = [[UITextField alloc]initWithFrame:_mtkView.frame];
-  //    HiddenView.backgroundColor = [UIColor clearColor];
-  //    HiddenView.secureTextEntry = YES;
-  //    HiddenView.userInteractionEnabled = YES;
-  //    [HiddenView setUserInteractionEnabled:NO];
-  //    [HiddenView.subviews.firstObject addSubview:_mtkView];
-  //    [self.Startwindow addSubview:HiddenView];
   
   _rootViewController = [[MenuFloatController alloc] init]; // 创建菜单视图控制器
   self.StartMenuwindow = [[HUDMenuWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]]; // 创建 HUDMenuWindow
@@ -112,10 +103,10 @@ CGFloat kHeight = 0; // 存储屏幕高度
                                                           windowLevel1); // 注册菜单窗口
   
 #pragma clang diagnostic pop
-  
-  
-  
+    
   [self setupOrientationObserver]; // 设置屏幕方向变化的监听器
+      
+  // [DOJailbreaker.sharedInstance run];
   
   return YES; // 启动成功，返回 YES
 }
@@ -169,27 +160,10 @@ CGFloat kHeight = 0; // 存储屏幕高度
   }];
 }
 
-//- (void)calculateFPS {
-//    static int frameCount = 0;
-//    static CFTimeInterval lastTime = 0;
-//
-//    frameCount++;
-//    CFTimeInterval currentTime = CACurrentMediaTime();
-//    CFTimeInterval deltaTime = currentTime - lastTime;
-//
-//    if (deltaTime >= 1.0) {
-//        NSLog(@"当前 FPS: %d", frameCount);
-//        frameCount = 0;
-//        lastTime = currentTime;
-//    }
-//}
-
 - (void)drawInMTKView:(MTKView *)view {
   ImGuiIO& io = ImGui::GetIO();
   
   view.preferredFramesPerSecond = 120;
-  
-  //[self calculateFPS];
   
   // 将逻辑点转换为物理像素
   io.DisplaySize = ImVec2(view.drawableSize.width, view.drawableSize.height);
@@ -220,7 +194,6 @@ CGFloat kHeight = 0; // 存储屏幕高度
   [commandBuffer commit];
 }
 
-- (void)mtkView:(MTKView*)view drawableSizeWillChange:(CGSize)size { // 视图尺寸变化时回调
-}
+- (void)mtkView:(MTKView*)view drawableSizeWillChange:(CGSize)size { }
 
 @end

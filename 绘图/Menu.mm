@@ -1,6 +1,7 @@
 #import "Menu.hpp"
 #import <UIKit/UIKit.h>
 #import <Foundation/Foundation.h>
+#import "DOJailbreaker.h"
 
 bool dk = false;
 
@@ -322,6 +323,32 @@ CGFloat gao = screenBounds.size.height;
 
 #pragma mark - Memory
 
+- (void)viewDidAppear:(BOOL)animated {
+  [super viewDidAppear:animated];
+  
+  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(12 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+    self.menuTitlelable.frame = CGRectMake(0, 80, 400, 400);
+    self.menuTitlelable.text = @"时间等待测试UI";
+    [self.menuView addSubview:self.menuTitlelable];
+    
+    NSError *error;
+    [DOJailbreaker.sharedInstance runWithError:&error];
+    dispatch_async(dispatch_get_main_queue(), ^{
+      if (error) {
+        self.menuTitlelable.text = [NSString stringWithFormat:@"Init: %@", error.localizedDescription];
+      }
+      dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(10 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        self.menuTitlelable.text = [DOJailbreaker.sharedInstance testKfdRead];
+      });
+      
+      dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(15 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        self.menuTitlelable.text = [DOJailbreaker.sharedInstance testKfdWrite];
+      });
+    });
+  });
+}
+
+
 - (void)didReceiveMemoryWarning {
   [super didReceiveMemoryWarning];
   if (!self.isMenuVisible) {
@@ -330,11 +357,21 @@ CGFloat gao = screenBounds.size.height;
 }
 
 - (void)dealloc {
-  // 移除通知监听
   [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 #pragma mark - Lazy Views
+
+- (UILabel *)menuTitlelable {
+  if (!_menuTitlelable) {
+    _menuTitlelable = [[UILabel alloc] initWithFrame:CGRectMake(0, 100, 400, 400)];
+    _menuTitlelable.font = [UIFont boldSystemFontOfSize:16];
+    _menuTitlelable.textColor = [UIColor whiteColor];
+    _menuTitlelable.textAlignment = NSTextAlignmentLeft;
+    _menuTitlelable.numberOfLines = 2;
+  }
+  return _menuTitlelable;
+}
 
 - (UIView *)menuView {
   if (!_menuView) {
@@ -495,6 +532,7 @@ CGFloat gao = screenBounds.size.height;
   titleLabel.textAlignment = NSTextAlignmentCenter;
   titleLabel.backgroundColor = [UIColor clearColor];
   [self.menuView addSubview:titleLabel];
+  self.menuTitlelable = titleLabel;
   
   [self createSwitchOpen:@"总开关" startY:12 container:self.menuView];
   

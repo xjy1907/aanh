@@ -17,6 +17,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, strong) UIView *floatingBall;
 @property (nonatomic, strong) UIView *menuView; // 新增菜单视图
 @property (nonatomic, strong) UIImageView *menuCacheView; // 新增缓存视图
+@property (nonatomic, strong) UILabel *menuTitlelable;
 
 @property (nonatomic, strong) FBSOrientationObserver *orientationObserver;
 

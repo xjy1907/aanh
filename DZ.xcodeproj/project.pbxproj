@@ -3,16 +3,53 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
-		06D67D952E0CD59F002E20EF /* libchoma.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D67D922E0CD59F002E20EF /* libchoma.dylib */; };
-		06D67D962E0CD59F002E20EF /* libchoma.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 06D67D922E0CD59F002E20EF /* libchoma.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		06D67D972E0CD59F002E20EF /* kfd.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D67D932E0CD59F002E20EF /* kfd.framework */; };
-		06D67D982E0CD59F002E20EF /* kfd.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 06D67D932E0CD59F002E20EF /* kfd.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		06D67D992E0CD59F002E20EF /* libjailbreak.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D67D942E0CD59F002E20EF /* libjailbreak.dylib */; };
-		06D67D9A2E0CD59F002E20EF /* libjailbreak.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 06D67D942E0CD59F002E20EF /* libjailbreak.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		06D4D8872E18D774008B33B6 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8862E18D774008B33B6 /* IOKit.framework */; };
+		06D4D88A2E18D7C1008B33B6 /* libzstd in Frameworks */ = {isa = PBXBuildFile; productRef = 06D4D8892E18D7C1008B33B6 /* libzstd */; };
+		06D4D8932E18D83A008B33B6 /* libpartial.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8902E18D83A008B33B6 /* libpartial.a */; };
+		06D4D8942E18D83A008B33B6 /* libgrabkernel2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8912E18D83A008B33B6 /* libgrabkernel2.a */; };
+		06D4D8952E18D83A008B33B6 /* Preferences.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8922E18D83A008B33B6 /* Preferences.framework */; };
+		06D4D8992E18DD9A008B33B6 /* libjailbreak.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8962E18DD9A008B33B6 /* libjailbreak.dylib */; };
+		06D4D89A2E18DD9A008B33B6 /* libchoma.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8972E18DD9A008B33B6 /* libchoma.dylib */; };
+		06D4D89B2E18DD9A008B33B6 /* libxpf.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8982E18DD9A008B33B6 /* libxpf.dylib */; };
+		06D4D89C2E18DDAC008B33B6 /* libchoma.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 06D4D8972E18DD9A008B33B6 /* libchoma.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		06D4D89D2E18DDAC008B33B6 /* libjailbreak.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 06D4D8962E18DD9A008B33B6 /* libjailbreak.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		06D4D89E2E18DDAC008B33B6 /* libxpf.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 06D4D8982E18DD9A008B33B6 /* libxpf.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		06D4D8A02E18DDCA008B33B6 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D89F2E18DDCA008B33B6 /* libz.tbd */; };
+		06D4D8A22E18DDCF008B33B6 /* libcompression.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8A12E18DDCF008B33B6 /* libcompression.tbd */; };
+		06D4D8A42E18DDE5008B33B6 /* libMobileGestalt.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8A32E18DDE5008B33B6 /* libMobileGestalt.tbd */; };
+		06D4D8B02E18DE11008B33B6 /* kfd.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8AA2E18DE11008B33B6 /* kfd.framework */; };
+		06D4D8B12E18DE11008B33B6 /* kfd.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8AA2E18DE11008B33B6 /* kfd.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		06D4D8B72E18DE4E008B33B6 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8B62E18DE4E008B33B6 /* IOKit.framework */; };
+		06D4D8B92E18DE55008B33B6 /* IOSurface.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8B82E18DE55008B33B6 /* IOSurface.framework */; };
+		06D4D8BA2E18DE68008B33B6 /* libjailbreak.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8962E18DD9A008B33B6 /* libjailbreak.dylib */; platformFilter = ios; };
+		06D4D8F92E18DF39008B33B6 /* DOUIManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 06D4D8F72E18DF39008B33B6 /* DOUIManager.m */; };
+		06D4D8FA2E18DF39008B33B6 /* DOExploitManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 06D4D8F12E18DF39008B33B6 /* DOExploitManager.m */; };
+		06D4D8FB2E18DF39008B33B6 /* DOExploit.m in Sources */ = {isa = PBXBuildFile; fileRef = 06D4D8EF2E18DF39008B33B6 /* DOExploit.m */; };
+		06D4D8FC2E18DF39008B33B6 /* DOEnvironmentManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 06D4D8ED2E18DF39008B33B6 /* DOEnvironmentManager.m */; };
+		06D4D8FD2E18DF39008B33B6 /* DOJailbreaker.m in Sources */ = {isa = PBXBuildFile; fileRef = 06D4D8F32E18DF39008B33B6 /* DOJailbreaker.m */; };
+		06D4D8FE2E18DF39008B33B6 /* DOPreferenceManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 06D4D8F52E18DF39008B33B6 /* DOPreferenceManager.m */; };
+		06D4D8FF2E18DF39008B33B6 /* DOBootstrapper.m in Sources */ = {isa = PBXBuildFile; fileRef = 06D4D8EB2E18DF39008B33B6 /* DOBootstrapper.m */; };
+		06D4D9272E19068A008B33B6 /* badRecovery.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D9212E19068A008B33B6 /* badRecovery.framework */; };
+		06D4D9282E19068A008B33B6 /* badRecovery.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D9212E19068A008B33B6 /* badRecovery.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		06D4D9332E19071F008B33B6 /* libjailbreak.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8962E18DD9A008B33B6 /* libjailbreak.dylib */; platformFilter = ios; };
+		06D4D9822E190828008B33B6 /* weightBufs.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D97C2E190828008B33B6 /* weightBufs.framework */; };
+		06D4D9832E190828008B33B6 /* weightBufs.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D97C2E190828008B33B6 /* weightBufs.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		06D4D98A2E19087A008B33B6 /* libjailbreak.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8962E18DD9A008B33B6 /* libjailbreak.dylib */; platformFilter = ios; };
+		06D4D98B2E190883008B33B6 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8B62E18DE4E008B33B6 /* IOKit.framework */; };
+		06D4D98C2E190886008B33B6 /* IOSurface.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8B82E18DE55008B33B6 /* IOSurface.framework */; };
+		06D4D98E2E19088A008B33B6 /* CoreML.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D98D2E19088A008B33B6 /* CoreML.framework */; };
+		06D4DA932E190918008B33B6 /* dmaFail.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4DA8D2E190918008B33B6 /* dmaFail.framework */; };
+		06D4DA942E190918008B33B6 /* dmaFail.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4DA8D2E190918008B33B6 /* dmaFail.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		06D4DA992E190976008B33B6 /* libjailbreak.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8962E18DD9A008B33B6 /* libjailbreak.dylib */; platformFilter = ios; };
+		06D4DBF02E190B9B008B33B6 /* multicast_bytecopy.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4DBEA2E190B9B008B33B6 /* multicast_bytecopy.framework */; };
+		06D4DBF12E190B9B008B33B6 /* multicast_bytecopy.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4DBEA2E190B9B008B33B6 /* multicast_bytecopy.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		06D4DC222E190C39008B33B6 /* libjailbreak.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8962E18DD9A008B33B6 /* libjailbreak.dylib */; platformFilter = ios; };
+		06D4DC232E190C3E008B33B6 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8B62E18DE4E008B33B6 /* IOKit.framework */; };
+		06D4DC242E190C41008B33B6 /* IOSurface.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8B82E18DE55008B33B6 /* IOSurface.framework */; };
 		06D67DB32E0CD63D002E20EF /* IOSurface.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D67DB22E0CD63D002E20EF /* IOSurface.framework */; };
 		1F0BD8B92D6DAD13008151DA /* entitlements.plist in Resources */ = {isa = PBXBuildFile; fileRef = 1F0BD8B82D6DAD13008151DA /* entitlements.plist */; };
 		1F0BD9182D6DB7AA008151DA /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F0BD9172D6DB7AA008151DA /* Metal.framework */; };
@@ -87,7 +124,7 @@
 		CC8DDA922B655156001C7C9E /* DeactivateHUDIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC8DDA912B655156001C7C9E /* DeactivateHUDIntent.swift */; };
 		CC8DDA952B6551C7001C7C9E /* ToggleHUDIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC8DDA942B655183001C7C9E /* ToggleHUDIntent.swift */; };
 		CC8DDA992B66318E001C7C9E /* AppIntents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CC8DDA982B66318E001C7C9E /* AppIntents.framework */; settings = {ATTRIBUTES = (Required, ); }; };
-		CC8DDA9A2B6631DC001C7C9E /* AppIntents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CC8DDA982B66318E001C7C9E /* AppIntents.framework */; settings = {ATTRIBUTES = (Required, ); }; };
+		CC8DDA9A2B6631DC001C7C9E /* AppIntents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CC8DDA982B66318E001C7C9E /* AppIntents.framework */; };
 		CC91309E2B616541006E3280 /* HUDBackdropLabel.mm in Sources */ = {isa = PBXBuildFile; fileRef = CC91309D2B616541006E3280 /* HUDBackdropLabel.mm */; };
 		CC91309F2B616541006E3280 /* HUDBackdropLabel.mm in Sources */ = {isa = PBXBuildFile; fileRef = CC91309D2B616541006E3280 /* HUDBackdropLabel.mm */; };
 		CC9130A32B616C18006E3280 /* HUDBackdropView.mm in Sources */ = {isa = PBXBuildFile; fileRef = CC9130A22B616C18006E3280 /* HUDBackdropView.mm */; };
@@ -96,6 +133,44 @@
 		CC9130A82B62A33A006E3280 /* TSSettingsIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC9130A62B62A33A006E3280 /* TSSettingsIndex.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		06D4D8AE2E18DE11008B33B6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CC711CF92B5BF550007235A6 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 06D4D8A92E18DE11008B33B6;
+			remoteInfo = kfd;
+		};
+		06D4D9252E19068A008B33B6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CC711CF92B5BF550007235A6 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 06D4D9202E19068A008B33B6;
+			remoteInfo = badRecovery;
+		};
+		06D4D9802E190828008B33B6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CC711CF92B5BF550007235A6 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 06D4D97B2E190828008B33B6;
+			remoteInfo = weightBufs;
+		};
+		06D4DA912E190918008B33B6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CC711CF92B5BF550007235A6 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 06D4DA8C2E190918008B33B6;
+			remoteInfo = dmaFail;
+		};
+		06D4DBEE2E190B9B008B33B6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CC711CF92B5BF550007235A6 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 06D4DBE92E190B9B008B33B6;
+			remoteInfo = multicast_bytecopy;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXCopyFilesBuildPhase section */
 		06D67D9B2E0CD59F002E20EF /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -103,7 +178,11 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				06D67D982E0CD59F002E20EF /* kfd.framework in Embed Frameworks */,
+				06D4D9832E190828008B33B6 /* weightBufs.framework in Embed Frameworks */,
+				06D4D8B12E18DE11008B33B6 /* kfd.framework in Embed Frameworks */,
+				06D4D9282E19068A008B33B6 /* badRecovery.framework in Embed Frameworks */,
+				06D4DBF12E190B9B008B33B6 /* multicast_bytecopy.framework in Embed Frameworks */,
+				06D4DA942E190918008B33B6 /* dmaFail.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -114,8 +193,9 @@
 			dstPath = "";
 			dstSubfolderSpec = 6;
 			files = (
-				06D67D962E0CD59F002E20EF /* libchoma.dylib in Embed Libraries */,
-				06D67D9A2E0CD59F002E20EF /* libjailbreak.dylib in Embed Libraries */,
+				06D4D89C2E18DDAC008B33B6 /* libchoma.dylib in Embed Libraries */,
+				06D4D89D2E18DDAC008B33B6 /* libjailbreak.dylib in Embed Libraries */,
+				06D4D89E2E18DDAC008B33B6 /* libxpf.dylib in Embed Libraries */,
 			);
 			name = "Embed Libraries";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -124,9 +204,41 @@
 
 /* Begin PBXFileReference section */
 		061965112DFD77F4008B8D0A /* build.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = build.sh; sourceTree = "<group>"; };
-		06D67D922E0CD59F002E20EF /* libchoma.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libchoma.dylib; path = libraries/libchoma.dylib; sourceTree = "<group>"; };
-		06D67D932E0CD59F002E20EF /* kfd.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = kfd.framework; path = libraries/kfd.framework; sourceTree = "<group>"; };
-		06D67D942E0CD59F002E20EF /* libjailbreak.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libjailbreak.dylib; path = libraries/libjailbreak.dylib; sourceTree = "<group>"; };
+		06D4D8862E18D774008B33B6 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
+		06D4D88B2E18D7D8008B33B6 /* zdict.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = zdict.h; sourceTree = "<group>"; };
+		06D4D88C2E18D7D8008B33B6 /* zstd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = zstd.h; sourceTree = "<group>"; };
+		06D4D88D2E18D7D8008B33B6 /* zstd_errors.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = zstd_errors.h; sourceTree = "<group>"; };
+		06D4D8902E18D83A008B33B6 /* libpartial.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpartial.a; path = libraries/libpartial.a; sourceTree = "<group>"; };
+		06D4D8912E18D83A008B33B6 /* libgrabkernel2.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libgrabkernel2.a; path = libraries/libgrabkernel2.a; sourceTree = "<group>"; };
+		06D4D8922E18D83A008B33B6 /* Preferences.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Preferences.framework; path = libraries/Preferences.framework; sourceTree = "<group>"; };
+		06D4D8962E18DD9A008B33B6 /* libjailbreak.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libjailbreak.dylib; path = dependencies/build/libjailbreak.dylib; sourceTree = "<group>"; };
+		06D4D8972E18DD9A008B33B6 /* libchoma.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libchoma.dylib; path = dependencies/build/libchoma.dylib; sourceTree = "<group>"; };
+		06D4D8982E18DD9A008B33B6 /* libxpf.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libxpf.dylib; path = dependencies/build/libxpf.dylib; sourceTree = "<group>"; };
+		06D4D89F2E18DDCA008B33B6 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
+		06D4D8A12E18DDCF008B33B6 /* libcompression.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libcompression.tbd; path = usr/lib/libcompression.tbd; sourceTree = SDKROOT; };
+		06D4D8A32E18DDE5008B33B6 /* libMobileGestalt.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libMobileGestalt.tbd; path = usr/lib/libMobileGestalt.tbd; sourceTree = SDKROOT; };
+		06D4D8AA2E18DE11008B33B6 /* kfd.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = kfd.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		06D4D8B62E18DE4E008B33B6 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk/System/Library/Frameworks/IOKit.framework; sourceTree = DEVELOPER_DIR; };
+		06D4D8B82E18DE55008B33B6 /* IOSurface.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOSurface.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk/System/Library/Frameworks/IOSurface.framework; sourceTree = DEVELOPER_DIR; };
+		06D4D8EA2E18DF39008B33B6 /* DOBootstrapper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DOBootstrapper.h; sourceTree = "<group>"; };
+		06D4D8EB2E18DF39008B33B6 /* DOBootstrapper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DOBootstrapper.m; sourceTree = "<group>"; };
+		06D4D8EC2E18DF39008B33B6 /* DOEnvironmentManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DOEnvironmentManager.h; sourceTree = "<group>"; };
+		06D4D8ED2E18DF39008B33B6 /* DOEnvironmentManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DOEnvironmentManager.m; sourceTree = "<group>"; };
+		06D4D8EE2E18DF39008B33B6 /* DOExploit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DOExploit.h; sourceTree = "<group>"; };
+		06D4D8EF2E18DF39008B33B6 /* DOExploit.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DOExploit.m; sourceTree = "<group>"; };
+		06D4D8F02E18DF39008B33B6 /* DOExploitManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DOExploitManager.h; sourceTree = "<group>"; };
+		06D4D8F12E18DF39008B33B6 /* DOExploitManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DOExploitManager.m; sourceTree = "<group>"; };
+		06D4D8F22E18DF39008B33B6 /* DOJailbreaker.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DOJailbreaker.h; sourceTree = "<group>"; };
+		06D4D8F32E18DF39008B33B6 /* DOJailbreaker.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DOJailbreaker.m; sourceTree = "<group>"; };
+		06D4D8F42E18DF39008B33B6 /* DOPreferenceManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DOPreferenceManager.h; sourceTree = "<group>"; };
+		06D4D8F52E18DF39008B33B6 /* DOPreferenceManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DOPreferenceManager.m; sourceTree = "<group>"; };
+		06D4D8F62E18DF39008B33B6 /* DOUIManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DOUIManager.h; sourceTree = "<group>"; };
+		06D4D8F72E18DF39008B33B6 /* DOUIManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DOUIManager.m; sourceTree = "<group>"; };
+		06D4D9212E19068A008B33B6 /* badRecovery.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = badRecovery.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		06D4D97C2E190828008B33B6 /* weightBufs.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = weightBufs.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		06D4D98D2E19088A008B33B6 /* CoreML.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreML.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk/System/Library/Frameworks/CoreML.framework; sourceTree = DEVELOPER_DIR; };
+		06D4DA8D2E190918008B33B6 /* dmaFail.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = dmaFail.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		06D4DBEA2E190B9B008B33B6 /* multicast_bytecopy.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = multicast_bytecopy.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		06D67DB22E0CD63D002E20EF /* IOSurface.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOSurface.framework; path = System/Library/Frameworks/IOSurface.framework; sourceTree = SDKROOT; };
 		0F43B7702B60D397003A435D /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = ../Resources/es.lproj/Localizable.strings; sourceTree = "<group>"; };
 		0F43B7712B60D397003A435D /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = ../Resources/es.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -248,7 +360,112 @@
 		D0D0413B2D7F4E4D0038A868 /* dfmbold.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dfmbold.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		06D4D8B22E18DE11008B33B6 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			publicHeaders = (
+				kfd.h,
+			);
+			target = 06D4D8A92E18DE11008B33B6 /* kfd */;
+		};
+		06D4D9292E19068A008B33B6 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			publicHeaders = (
+				badRecovery.h,
+			);
+			target = 06D4D9202E19068A008B33B6 /* badRecovery */;
+		};
+		06D4D9842E190828008B33B6 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			publicHeaders = (
+				weightBufs.h,
+			);
+			target = 06D4D97B2E190828008B33B6 /* weightBufs */;
+		};
+		06D4DA952E190918008B33B6 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			publicHeaders = (
+				dmaFail.h,
+			);
+			target = 06D4DA8C2E190918008B33B6 /* dmaFail */;
+		};
+		06D4DBF42E190B9B008B33B6 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			publicHeaders = (
+				multicast_bytecopy.h,
+			);
+			target = 06D4DBE92E190B9B008B33B6 /* multicast_bytecopy */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		06D4D8AB2E18DE11008B33B6 /* kfd */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (06D4D8B22E18DE11008B33B6 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = kfd; sourceTree = "<group>"; };
+		06D4D9222E19068A008B33B6 /* badRecovery */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (06D4D9292E19068A008B33B6 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = badRecovery; sourceTree = "<group>"; };
+		06D4D97D2E190828008B33B6 /* weightBufs */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (06D4D9842E190828008B33B6 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = weightBufs; sourceTree = "<group>"; };
+		06D4DA8E2E190918008B33B6 /* dmaFail */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (06D4DA952E190918008B33B6 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = dmaFail; sourceTree = "<group>"; };
+		06D4DBEB2E190B9B008B33B6 /* multicast_bytecopy */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (06D4DBF42E190B9B008B33B6 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = multicast_bytecopy; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
+		06D4D8A72E18DE11008B33B6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				06D4D8BA2E18DE68008B33B6 /* libjailbreak.dylib in Frameworks */,
+				06D4D8B92E18DE55008B33B6 /* IOSurface.framework in Frameworks */,
+				06D4D8B72E18DE4E008B33B6 /* IOKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		06D4D91E2E19068A008B33B6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				06D4D9332E19071F008B33B6 /* libjailbreak.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		06D4D9792E190828008B33B6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				06D4D98E2E19088A008B33B6 /* CoreML.framework in Frameworks */,
+				06D4D98C2E190886008B33B6 /* IOSurface.framework in Frameworks */,
+				06D4D98B2E190883008B33B6 /* IOKit.framework in Frameworks */,
+				06D4D98A2E19087A008B33B6 /* libjailbreak.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		06D4DA8A2E190918008B33B6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				06D4DA992E190976008B33B6 /* libjailbreak.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		06D4DBE72E190B9B008B33B6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				06D4DC242E190C41008B33B6 /* IOSurface.framework in Frameworks */,
+				06D4DC232E190C3E008B33B6 /* IOKit.framework in Frameworks */,
+				06D4DC222E190C39008B33B6 /* libjailbreak.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		CC2BAFD42B5CA9DD00A429D1 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -261,24 +478,77 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				06D67DB32E0CD63D002E20EF /* IOSurface.framework in Frameworks */,
-				CC711D992B5BFF2F007235A6 /* SpringBoardServices.tbd in Frameworks */,
-				1F0BD91A2D6DB7B9008151DA /* MetalKit.framework in Frameworks */,
-				CC711D9E2B5C0081007235A6 /* AssertionServices.tbd in Frameworks */,
-				1F0BD9182D6DB7AA008151DA /* Metal.framework in Frameworks */,
-				06D67D972E0CD59F002E20EF /* kfd.framework in Frameworks */,
+				06D4D8A42E18DDE5008B33B6 /* libMobileGestalt.tbd in Frameworks */,
+				06D4D8A22E18DDCF008B33B6 /* libcompression.tbd in Frameworks */,
+				06D4D8A02E18DDCA008B33B6 /* libz.tbd in Frameworks */,
+				06D4D8992E18DD9A008B33B6 /* libjailbreak.dylib in Frameworks */,
+				06D4D89A2E18DD9A008B33B6 /* libchoma.dylib in Frameworks */,
+				06D4D89B2E18DD9A008B33B6 /* libxpf.dylib in Frameworks */,
+				06D4D8932E18D83A008B33B6 /* libpartial.a in Frameworks */,
+				06D4D9822E190828008B33B6 /* weightBufs.framework in Frameworks */,
+				06D4D8942E18D83A008B33B6 /* libgrabkernel2.a in Frameworks */,
+				06D4D8952E18D83A008B33B6 /* Preferences.framework in Frameworks */,
 				CC8DDA9A2B6631DC001C7C9E /* AppIntents.framework in Frameworks */,
-				06D67D992E0CD59F002E20EF /* libjailbreak.dylib in Frameworks */,
-				06D67D952E0CD59F002E20EF /* libchoma.dylib in Frameworks */,
+				06D4D8872E18D774008B33B6 /* IOKit.framework in Frameworks */,
+				06D67DB32E0CD63D002E20EF /* IOSurface.framework in Frameworks */,
+				1F0BD9182D6DB7AA008151DA /* Metal.framework in Frameworks */,
+				1F0BD91A2D6DB7B9008151DA /* MetalKit.framework in Frameworks */,
+				06D4D88A2E18D7C1008B33B6 /* libzstd in Frameworks */,
+				06D4D8B02E18DE11008B33B6 /* kfd.framework in Frameworks */,
+				06D4DA932E190918008B33B6 /* dmaFail.framework in Frameworks */,
+				06D4DBF02E190B9B008B33B6 /* multicast_bytecopy.framework in Frameworks */,
 				CC711D9C2B5C0032007235A6 /* IOKit.tbd in Frameworks */,
-				CC711D9A2B5BFF2F007235A6 /* BackBoardServices.tbd in Frameworks */,
+				06D4D9272E19068A008B33B6 /* badRecovery.framework in Frameworks */,
 				CC711D982B5BFF2F007235A6 /* GraphicsServices.tbd in Frameworks */,
+				CC711D9E2B5C0081007235A6 /* AssertionServices.tbd in Frameworks */,
+				CC711D9A2B5BFF2F007235A6 /* BackBoardServices.tbd in Frameworks */,
+				CC711D992B5BFF2F007235A6 /* SpringBoardServices.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		06D4D88E2E18D7D8008B33B6 /* zstd */ = {
+			isa = PBXGroup;
+			children = (
+				06D4D88B2E18D7D8008B33B6 /* zdict.h */,
+				06D4D88C2E18D7D8008B33B6 /* zstd.h */,
+				06D4D88D2E18D7D8008B33B6 /* zstd_errors.h */,
+			);
+			path = zstd;
+			sourceTree = "<group>";
+		};
+		06D4D88F2E18D7D8008B33B6 /* exploits */ = {
+			isa = PBXGroup;
+			children = (
+				06D4D8F82E18DF39008B33B6 /* Jailbreak */,
+				06D4D88E2E18D7D8008B33B6 /* zstd */,
+			);
+			path = exploits;
+			sourceTree = "<group>";
+		};
+		06D4D8F82E18DF39008B33B6 /* Jailbreak */ = {
+			isa = PBXGroup;
+			children = (
+				06D4D8EA2E18DF39008B33B6 /* DOBootstrapper.h */,
+				06D4D8EB2E18DF39008B33B6 /* DOBootstrapper.m */,
+				06D4D8EC2E18DF39008B33B6 /* DOEnvironmentManager.h */,
+				06D4D8ED2E18DF39008B33B6 /* DOEnvironmentManager.m */,
+				06D4D8EE2E18DF39008B33B6 /* DOExploit.h */,
+				06D4D8EF2E18DF39008B33B6 /* DOExploit.m */,
+				06D4D8F02E18DF39008B33B6 /* DOExploitManager.h */,
+				06D4D8F12E18DF39008B33B6 /* DOExploitManager.m */,
+				06D4D8F22E18DF39008B33B6 /* DOJailbreaker.h */,
+				06D4D8F32E18DF39008B33B6 /* DOJailbreaker.m */,
+				06D4D8F42E18DF39008B33B6 /* DOPreferenceManager.h */,
+				06D4D8F52E18DF39008B33B6 /* DOPreferenceManager.m */,
+				06D4D8F62E18DF39008B33B6 /* DOUIManager.h */,
+				06D4D8F72E18DF39008B33B6 /* DOUIManager.m */,
+			);
+			path = Jailbreak;
+			sourceTree = "<group>";
+		};
 		1F0BD8B72D6DACDC008151DA /* 绘图 */ = {
 			isa = PBXGroup;
 			children = (
@@ -324,8 +594,14 @@
 			isa = PBXGroup;
 			children = (
 				061965112DFD77F4008B8D0A /* build.sh */,
+				06D4D88F2E18D7D8008B33B6 /* exploits */,
 				1F0BD9322D6DC347008151DA /* ImGui 1.91.5 */,
 				1F0BD8B72D6DACDC008151DA /* 绘图 */,
+				06D4D8AB2E18DE11008B33B6 /* kfd */,
+				06D4D9222E19068A008B33B6 /* badRecovery */,
+				06D4D97D2E190828008B33B6 /* weightBufs */,
+				06D4DA8E2E190918008B33B6 /* dmaFail */,
+				06D4DBEB2E190B9B008B33B6 /* multicast_bytecopy */,
 				CC711D022B5BF550007235A6 /* Products */,
 				CC711D652B5BF6B7007235A6 /* headers */,
 				CC711D942B5BFE9F007235A6 /* libraries */,
@@ -340,6 +616,11 @@
 			children = (
 				CC711D012B5BF550007235A6 /* DZ.app */,
 				CC2BAFE22B5CA9DD00A429D1 /* DZ-Sandbox.app */,
+				06D4D8AA2E18DE11008B33B6 /* kfd.framework */,
+				06D4D9212E19068A008B33B6 /* badRecovery.framework */,
+				06D4D97C2E190828008B33B6 /* weightBufs.framework */,
+				06D4DA8D2E190918008B33B6 /* dmaFail.framework */,
+				06D4DBEA2E190B9B008B33B6 /* multicast_bytecopy.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -489,10 +770,20 @@
 		CC8DDA972B66318E001C7C9E /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				06D4D98D2E19088A008B33B6 /* CoreML.framework */,
+				06D4D8B82E18DE55008B33B6 /* IOSurface.framework */,
+				06D4D8B62E18DE4E008B33B6 /* IOKit.framework */,
+				06D4D8A32E18DDE5008B33B6 /* libMobileGestalt.tbd */,
+				06D4D8A12E18DDCF008B33B6 /* libcompression.tbd */,
+				06D4D89F2E18DDCA008B33B6 /* libz.tbd */,
+				06D4D8972E18DD9A008B33B6 /* libchoma.dylib */,
+				06D4D8962E18DD9A008B33B6 /* libjailbreak.dylib */,
+				06D4D8982E18DD9A008B33B6 /* libxpf.dylib */,
+				06D4D8912E18D83A008B33B6 /* libgrabkernel2.a */,
+				06D4D8902E18D83A008B33B6 /* libpartial.a */,
+				06D4D8922E18D83A008B33B6 /* Preferences.framework */,
+				06D4D8862E18D774008B33B6 /* IOKit.framework */,
 				06D67DB22E0CD63D002E20EF /* IOSurface.framework */,
-				06D67D932E0CD59F002E20EF /* kfd.framework */,
-				06D67D922E0CD59F002E20EF /* libchoma.dylib */,
-				06D67D942E0CD59F002E20EF /* libjailbreak.dylib */,
 				1F0BD9192D6DB7B9008151DA /* MetalKit.framework */,
 				1F0BD9172D6DB7AA008151DA /* Metal.framework */,
 				CC8DDA982B66318E001C7C9E /* AppIntents.framework */,
@@ -502,7 +793,165 @@
 		};
 /* End PBXGroup section */
 
+/* Begin PBXHeadersBuildPhase section */
+		06D4D8A52E18DE11008B33B6 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		06D4D91C2E19068A008B33B6 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		06D4D9772E190828008B33B6 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		06D4DA882E190918008B33B6 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		06D4DBE52E190B9B008B33B6 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
 /* Begin PBXNativeTarget section */
+		06D4D8A92E18DE11008B33B6 /* kfd */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 06D4D8B32E18DE11008B33B6 /* Build configuration list for PBXNativeTarget "kfd" */;
+			buildPhases = (
+				06D4D8A52E18DE11008B33B6 /* Headers */,
+				06D4D8A62E18DE11008B33B6 /* Sources */,
+				06D4D8A72E18DE11008B33B6 /* Frameworks */,
+				06D4D8A82E18DE11008B33B6 /* Resources */,
+				06D4D8BB2E18DE74008B33B6 /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				06D4D8AB2E18DE11008B33B6 /* kfd */,
+			);
+			name = kfd;
+			packageProductDependencies = (
+			);
+			productName = kfd;
+			productReference = 06D4D8AA2E18DE11008B33B6 /* kfd.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		06D4D9202E19068A008B33B6 /* badRecovery */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 06D4D92A2E19068A008B33B6 /* Build configuration list for PBXNativeTarget "badRecovery" */;
+			buildPhases = (
+				06D4D91C2E19068A008B33B6 /* Headers */,
+				06D4D91D2E19068A008B33B6 /* Sources */,
+				06D4D91E2E19068A008B33B6 /* Frameworks */,
+				06D4D91F2E19068A008B33B6 /* Resources */,
+				06D4D9322E19070E008B33B6 /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				06D4D9222E19068A008B33B6 /* badRecovery */,
+			);
+			name = badRecovery;
+			packageProductDependencies = (
+			);
+			productName = badRecovery;
+			productReference = 06D4D9212E19068A008B33B6 /* badRecovery.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		06D4D97B2E190828008B33B6 /* weightBufs */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 06D4D9852E190828008B33B6 /* Build configuration list for PBXNativeTarget "weightBufs" */;
+			buildPhases = (
+				06D4D9772E190828008B33B6 /* Headers */,
+				06D4D9782E190828008B33B6 /* Sources */,
+				06D4D9792E190828008B33B6 /* Frameworks */,
+				06D4D97A2E190828008B33B6 /* Resources */,
+				06D4D9892E190869008B33B6 /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				06D4D97D2E190828008B33B6 /* weightBufs */,
+			);
+			name = weightBufs;
+			packageProductDependencies = (
+			);
+			productName = weightBufs;
+			productReference = 06D4D97C2E190828008B33B6 /* weightBufs.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		06D4DA8C2E190918008B33B6 /* dmaFail */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 06D4DA962E190918008B33B6 /* Build configuration list for PBXNativeTarget "dmaFail" */;
+			buildPhases = (
+				06D4DA882E190918008B33B6 /* Headers */,
+				06D4DA892E190918008B33B6 /* Sources */,
+				06D4DA8A2E190918008B33B6 /* Frameworks */,
+				06D4DA8B2E190918008B33B6 /* Resources */,
+				06D4DA9B2E190985008B33B6 /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				06D4DA8E2E190918008B33B6 /* dmaFail */,
+			);
+			name = dmaFail;
+			packageProductDependencies = (
+			);
+			productName = dmaFail;
+			productReference = 06D4DA8D2E190918008B33B6 /* dmaFail.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		06D4DBE92E190B9B008B33B6 /* multicast_bytecopy */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 06D4DBF52E190B9B008B33B6 /* Build configuration list for PBXNativeTarget "multicast_bytecopy" */;
+			buildPhases = (
+				06D4DBE52E190B9B008B33B6 /* Headers */,
+				06D4DBE62E190B9B008B33B6 /* Sources */,
+				06D4DBE72E190B9B008B33B6 /* Frameworks */,
+				06D4DBE82E190B9B008B33B6 /* Resources */,
+				06D4DC252E190C47008B33B6 /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				06D4DBEB2E190B9B008B33B6 /* multicast_bytecopy */,
+			);
+			name = multicast_bytecopy;
+			packageProductDependencies = (
+			);
+			productName = multicast_bytecopy;
+			productReference = 06D4DBEA2E190B9B008B33B6 /* multicast_bytecopy.framework */;
+			productType = "com.apple.product-type.framework";
+		};
 		CC2BAFB72B5CA9DD00A429D1 /* DZ-Sandbox */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = CC2BAFDF2B5CA9DD00A429D1 /* Build configuration list for PBXNativeTarget "DZ-Sandbox" */;
@@ -527,16 +976,21 @@
 				CC711CFD2B5BF550007235A6 /* Sources */,
 				CC711CFE2B5BF550007235A6 /* Frameworks */,
 				CC711CFF2B5BF550007235A6 /* Resources */,
-				269B5B732D756AD2006B6E6F /* ShellScript */,
 				06D67D9B2E0CD59F002E20EF /* Embed Frameworks */,
 				06D67DB12E0CD600002E20EF /* Embed Libraries */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				06D4D8AF2E18DE11008B33B6 /* PBXTargetDependency */,
+				06D4D9262E19068A008B33B6 /* PBXTargetDependency */,
+				06D4D9812E190828008B33B6 /* PBXTargetDependency */,
+				06D4DA922E190918008B33B6 /* PBXTargetDependency */,
+				06D4DBEF2E190B9B008B33B6 /* PBXTargetDependency */,
 			);
 			name = DZ;
 			packageProductDependencies = (
+				06D4D8892E18D7C1008B33B6 /* libzstd */,
 			);
 			productName = TrollSpeed;
 			productReference = CC711D012B5BF550007235A6 /* DZ.app */;
@@ -551,6 +1005,21 @@
 				BuildIndependentTargetsInParallel = 1;
 				LastUpgradeCheck = 1520;
 				TargetAttributes = {
+					06D4D8A92E18DE11008B33B6 = {
+						CreatedOnToolsVersion = 16.2;
+					};
+					06D4D9202E19068A008B33B6 = {
+						CreatedOnToolsVersion = 16.2;
+					};
+					06D4D97B2E190828008B33B6 = {
+						CreatedOnToolsVersion = 16.2;
+					};
+					06D4DA8C2E190918008B33B6 = {
+						CreatedOnToolsVersion = 16.2;
+					};
+					06D4DBE92E190B9B008B33B6 = {
+						CreatedOnToolsVersion = 16.2;
+					};
 					CC711D002B5BF550007235A6 = {
 						CreatedOnToolsVersion = 15.1;
 					};
@@ -568,6 +1037,7 @@
 			);
 			mainGroup = CC711CF82B5BF550007235A6;
 			packageReferences = (
+				06D4D8882E18D7C1008B33B6 /* XCLocalSwiftPackageReference "zstd" */,
 			);
 			productRefGroup = CC711D022B5BF550007235A6 /* Products */;
 			projectDirPath = "";
@@ -575,11 +1045,51 @@
 			targets = (
 				CC711D002B5BF550007235A6 /* DZ */,
 				CC2BAFB72B5CA9DD00A429D1 /* DZ-Sandbox */,
+				06D4D8A92E18DE11008B33B6 /* kfd */,
+				06D4D9202E19068A008B33B6 /* badRecovery */,
+				06D4D97B2E190828008B33B6 /* weightBufs */,
+				06D4DA8C2E190918008B33B6 /* dmaFail */,
+				06D4DBE92E190B9B008B33B6 /* multicast_bytecopy */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		06D4D8A82E18DE11008B33B6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		06D4D91F2E19068A008B33B6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		06D4D97A2E190828008B33B6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		06D4DA8B2E190918008B33B6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		06D4DBE82E190B9B008B33B6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		CC2BAFDA2B5CA9DD00A429D1 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -606,8 +1116,9 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		269B5B732D756AD2006B6E6F /* ShellScript */ = {
+		06D4D8BB2E18DE74008B33B6 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -621,12 +1132,118 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "
-";
+			shellScript = "install_name_tool -change \"@loader_path/libjailbreak.dylib\" \"@executable_path/libjailbreak.dylib\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_PATH\"\n";
+		};
+		06D4D9322E19070E008B33B6 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "install_name_tool -change \"@loader_path/libjailbreak.dylib\" \"@executable_path/libjailbreak.dylib\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_PATH\"\n";
+		};
+		06D4D9892E190869008B33B6 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "install_name_tool -change \"@loader_path/libjailbreak.dylib\" \"@executable_path/libjailbreak.dylib\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_PATH\"\n";
+		};
+		06D4DA9B2E190985008B33B6 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "install_name_tool -change \"@loader_path/libjailbreak.dylib\" \"@executable_path/libjailbreak.dylib\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_PATH\"\n";
+		};
+		06D4DC252E190C47008B33B6 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "install_name_tool -change \"@loader_path/libjailbreak.dylib\" \"@executable_path/libjailbreak.dylib\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_PATH\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		06D4D8A62E18DE11008B33B6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		06D4D91D2E19068A008B33B6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		06D4D9782E190828008B33B6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		06D4DA892E190918008B33B6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		06D4DBE62E190B9B008B33B6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		CC2BAFB82B5CA9DD00A429D1 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -671,6 +1288,13 @@
 				CC711D512B5BF5C6007235A6 /* MainButton.mm in Sources */,
 				CC711D5E2B5BF5C6007235A6 /* HiddenContainerRecognizer.swift in Sources */,
 				CC711D632B5BF5C6007235A6 /* TSEventFetcher.mm in Sources */,
+				06D4D8F92E18DF39008B33B6 /* DOUIManager.m in Sources */,
+				06D4D8FA2E18DF39008B33B6 /* DOExploitManager.m in Sources */,
+				06D4D8FB2E18DF39008B33B6 /* DOExploit.m in Sources */,
+				06D4D8FC2E18DF39008B33B6 /* DOEnvironmentManager.m in Sources */,
+				06D4D8FD2E18DF39008B33B6 /* DOJailbreaker.m in Sources */,
+				06D4D8FE2E18DF39008B33B6 /* DOPreferenceManager.m in Sources */,
+				06D4D8FF2E18DF39008B33B6 /* DOBootstrapper.m in Sources */,
 				CC711D4F2B5BF5C6007235A6 /* UITouch-KIFAdditions.m in Sources */,
 				CC711D522B5BF5C6007235A6 /* SPLarkSettingsCloseButton.swift in Sources */,
 				CC91309E2B616541006E3280 /* HUDBackdropLabel.mm in Sources */,
@@ -705,6 +1329,34 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		06D4D8AF2E18DE11008B33B6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 06D4D8A92E18DE11008B33B6 /* kfd */;
+			targetProxy = 06D4D8AE2E18DE11008B33B6 /* PBXContainerItemProxy */;
+		};
+		06D4D9262E19068A008B33B6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 06D4D9202E19068A008B33B6 /* badRecovery */;
+			targetProxy = 06D4D9252E19068A008B33B6 /* PBXContainerItemProxy */;
+		};
+		06D4D9812E190828008B33B6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 06D4D97B2E190828008B33B6 /* weightBufs */;
+			targetProxy = 06D4D9802E190828008B33B6 /* PBXContainerItemProxy */;
+		};
+		06D4DA922E190918008B33B6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 06D4DA8C2E190918008B33B6 /* dmaFail */;
+			targetProxy = 06D4DA912E190918008B33B6 /* PBXContainerItemProxy */;
+		};
+		06D4DBEF2E190B9B008B33B6 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 06D4DBE92E190B9B008B33B6 /* multicast_bytecopy */;
+			targetProxy = 06D4DBEE2E190B9B008B33B6 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin PBXVariantGroup section */
 		CC711D872B5BFCC4007235A6 /* Localizable.strings */ = {
 			isa = PBXVariantGroup;
@@ -729,6 +1381,398 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		06D4D8B42E18DE11008B33B6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = "";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/dependencies/include";
+				INFOPLIST_FILE = kfd/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = kfd;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/dependencies/build",
+				);
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = cnm.sb.kfd;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+		06D4D8B52E18DE11008B33B6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = "";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/dependencies/include";
+				INFOPLIST_FILE = kfd/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = kfd;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/dependencies/build",
+				);
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = cnm.sb.kfd;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
+		06D4D92B2E19068A008B33B6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = "";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/dependencies/include";
+				INFOPLIST_FILE = badRecovery/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = badRecovery;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/dependencies/build",
+				);
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = cnm.sb.badRecovery;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+		06D4D92C2E19068A008B33B6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = "";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/dependencies/include";
+				INFOPLIST_FILE = badRecovery/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = badRecovery;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/dependencies/build",
+				);
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = cnm.sb.badRecovery;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
+		06D4D9862E190828008B33B6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = "";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/dependencies/include";
+				INFOPLIST_FILE = weightBufs/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = weightBufs;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/dependencies/build";
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = cnm.sb.weightBufs;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+		06D4D9872E190828008B33B6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = "";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/dependencies/include";
+				INFOPLIST_FILE = weightBufs/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = weightBufs;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/dependencies/build";
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = cnm.sb.weightBufs;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
+		06D4DA972E190918008B33B6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = "";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/dependencies/include";
+				INFOPLIST_FILE = dmaFail/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = dmaFail;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/dependencies/build";
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = cnm.sb.dmaFail;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+		06D4DA982E190918008B33B6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = "";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/dependencies/include";
+				INFOPLIST_FILE = dmaFail/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = dmaFail;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/dependencies/build";
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = cnm.sb.dmaFail;
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
+		06D4DBF22E190B9B008B33B6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = "";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/dependencies/include";
+				INFOPLIST_FILE = "multicast-bytecopy-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = multicast_bytecopy;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/dependencies/build";
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = "cnm.sb.multicast-bytecopy";
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+		06D4DBF32E190B9B008B33B6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = "";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/dependencies/include";
+				INFOPLIST_FILE = "multicast-bytecopy-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = multicast_bytecopy;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/dependencies/build";
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				PRODUCT_BUNDLE_IDENTIFIER = "cnm.sb.multicast-bytecopy";
+				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
 		CC2BAFE02B5CA9DD00A429D1 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -962,12 +2006,13 @@
 					"$(inherited)",
 					"THEOS_PACKAGE_INSTALL_PREFIX=\\\"\\\"",
 				);
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/dependencies/include";
 				INFOPLIST_FILE = Resources/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = DZ;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -975,6 +2020,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/libraries",
+					"$(PROJECT_DIR)/dependencies/build",
 				);
 				MARKETING_VERSION = 1.12.1;
 				PRODUCT_BUNDLE_IDENTIFIER = cnm.sb.sjz;
@@ -1011,12 +2057,13 @@
 					"$(inherited)",
 					"THEOS_PACKAGE_INSTALL_PREFIX=\\\"\\\"",
 				);
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/dependencies/include";
 				INFOPLIST_FILE = Resources/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = DZ;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1024,6 +2071,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/libraries",
+					"$(PROJECT_DIR)/dependencies/build",
 				);
 				MARKETING_VERSION = 1.12.1;
 				PRODUCT_BUNDLE_IDENTIFIER = cnm.sb.sjz;
@@ -1043,6 +2091,51 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		06D4D8B32E18DE11008B33B6 /* Build configuration list for PBXNativeTarget "kfd" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				06D4D8B42E18DE11008B33B6 /* Debug */,
+				06D4D8B52E18DE11008B33B6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		06D4D92A2E19068A008B33B6 /* Build configuration list for PBXNativeTarget "badRecovery" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				06D4D92B2E19068A008B33B6 /* Debug */,
+				06D4D92C2E19068A008B33B6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		06D4D9852E190828008B33B6 /* Build configuration list for PBXNativeTarget "weightBufs" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				06D4D9862E190828008B33B6 /* Debug */,
+				06D4D9872E190828008B33B6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		06D4DA962E190918008B33B6 /* Build configuration list for PBXNativeTarget "dmaFail" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				06D4DA972E190918008B33B6 /* Debug */,
+				06D4DA982E190918008B33B6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		06D4DBF52E190B9B008B33B6 /* Build configuration list for PBXNativeTarget "multicast_bytecopy" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				06D4DBF22E190B9B008B33B6 /* Debug */,
+				06D4DBF32E190B9B008B33B6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		CC2BAFDF2B5CA9DD00A429D1 /* Build configuration list for PBXNativeTarget "DZ-Sandbox" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -1071,6 +2164,20 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		06D4D8882E18D7C1008B33B6 /* XCLocalSwiftPackageReference "zstd" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = zstd;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		06D4D8892E18D7C1008B33B6 /* libzstd */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = libzstd;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = CC711CF92B5BF550007235A6 /* Project object */;
 }

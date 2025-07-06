@@ -14,14 +14,14 @@
 #import "FBSOrientationObserver.h"
 #import "Menu.hpp"
 #include "dfmbold.h"
+
 NS_ASSUME_NONNULL_BEGIN
-
-
 
 extern CGFloat kWidth;
 extern CGFloat kHeight;
 
 @interface HUDMainApplicationDelegate : UIResponder <UIApplicationDelegate, MTKViewDelegate>
+
 @property (nonatomic, strong) UIWindow *Startwindow;
 @property (nonatomic, strong) UIWindow *StartMenuwindow;
 @property (nonatomic, strong) FBSOrientationObserver *orientationObserver;

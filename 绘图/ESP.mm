@@ -9,7 +9,6 @@
 #include <thread>
 #include <unordered_map>
 
-#include <kfd/kfd.h>
 #include "Unity.hpp"
 #include "UtfTool.hpp"
 
@@ -84,36 +83,36 @@ extern "C" kern_return_t mach_vm_region_recurse(vm_map_t map, mach_vm_address_t 
 extern kern_return_t mach_vm_deallocate(vm_map_t target, mach_vm_address_t address, mach_vm_size_t size);
 
 vm_map_offset_t safegetBase(pid_t pid) {
-  /*
-   char path[64];
-   snprintf(path, sizeof(path), "/proc/%d/maps", pid);
-   FILE *maps = fopen(path, "r");
-   if (maps) {
-     vm_map_offset_t base = 0;
-     char buffer[512];
-     while (fgets(buffer, sizeof(buffer), maps)) {
-       if (strstr(buffer, "r-xp")) { // 只获取可执行段
-         sscanf(buffer, "%llx", &base);
-         fclose(maps);
-         return base;
-       }
-     }
-     fclose(maps);
-   }
-   
-   // 备用方案
-   mach_vm_address_t vmoffset = 0; // 修改类型
-   mach_vm_size_t vmsize = 0;
-   uint32_t nesting_depth = 0;
-   struct vm_region_submap_info_64 vbr;
-   mach_msg_type_number_t vbrcount = 16;
-   
-   kern_return_t kret = mach_vm_region_recurse(task,
-                                               &vmoffset, // 这里类型匹配
-                                               &vmsize, &nesting_depth, (vm_region_recurse_info_t)&vbr, &vbrcount);
-   
-   return (kret == KERN_SUCCESS) ? vmoffset : 0;
-   */
+  
+  char path[64];
+  snprintf(path, sizeof(path), "/proc/%d/maps", pid);
+  FILE *maps = fopen(path, "r");
+  if (maps) {
+    vm_map_offset_t base = 0;
+    char buffer[512];
+    while (fgets(buffer, sizeof(buffer), maps)) {
+      if (strstr(buffer, "r-xp")) { // 只获取可执行段
+        sscanf(buffer, "%llx", &base);
+        fclose(maps);
+        return base;
+      }
+    }
+    fclose(maps);
+  }
+  
+  // 备用方案
+  mach_vm_address_t vmoffset = 0; // 修改类型
+  mach_vm_size_t vmsize = 0;
+  uint32_t nesting_depth = 0;
+  struct vm_region_submap_info_64 vbr;
+  mach_msg_type_number_t vbrcount = 16;
+  
+  kern_return_t kret = mach_vm_region_recurse(task,
+                                              &vmoffset, // 这里类型匹配
+                                              &vmsize, &nesting_depth, (vm_region_recurse_info_t)&vbr, &vbrcount);
+  
+  return (kret == KERN_SUCCESS) ? vmoffset : 0;
+  
   // kfd doesn't directly provide base address functionality like mach_vm_region_recurse
   // This function might need to be re-evaluated or replaced with a kfd-compatible alternative
   // For now, returning 0 as a placeholder.
@@ -121,33 +120,32 @@ vm_map_offset_t safegetBase(pid_t pid) {
 }
 
 pid_t getPid(NSString *GameName) {
-  /*
-   size_t length = 0;
-   int name[] = {CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0};                                 // 保持 name 数组类型为 int[]
-   int err = sysctl(name, (sizeof(name) / sizeof(name[0])) - 1, NULL, &length, NULL, 0); // 不进行不必要的强制类型转换
-   
-   if (err == -1)
-     err = errno;
-   if (err == 0) {
-     struct kinfo_proc *procBuffer = (struct kinfo_proc *)malloc(length); // 修正内存分配类型
-     if (procBuffer == NULL) {
-       free(procBuffer);
-       return -1;
-     }
-     err = sysctl(name, (sizeof(name) / sizeof(name[0])) - 1, procBuffer, &length, NULL, 0); // 继续传递原始类型
-     
-     int count = (int)length / sizeof(struct kinfo_proc);
-     for (int i = 0; i < count; ++i) {
-       NSString *procname = [NSString stringWithUTF8String:procBuffer[i].kp_proc.p_comm]; // 使用 NSString* 类型
-       pid_t pid = procBuffer[i].kp_proc.p_pid;
-       if ([GameName rangeOfString:procname options:NSCaseInsensitiveSearch].location != NSNotFound) {
-         free(procBuffer);
-         return pid;
-       }
-     }
-     free(procBuffer);
-   }
-   */
+  
+  size_t length = 0;
+  int name[] = {CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0};                                 // 保持 name 数组类型为 int[]
+  int err = sysctl(name, (sizeof(name) / sizeof(name[0])) - 1, NULL, &length, NULL, 0); // 不进行不必要的强制类型转换
+  
+  if (err == -1)
+    err = errno;
+  if (err == 0) {
+    struct kinfo_proc *procBuffer = (struct kinfo_proc *)malloc(length); // 修正内存分配类型
+    if (procBuffer == NULL) {
+      free(procBuffer);
+      return -1;
+    }
+    err = sysctl(name, (sizeof(name) / sizeof(name[0])) - 1, procBuffer, &length, NULL, 0); // 继续传递原始类型
+    
+    int count = (int)length / sizeof(struct kinfo_proc);
+    for (int i = 0; i < count; ++i) {
+      NSString *procname = [NSString stringWithUTF8String:procBuffer[i].kp_proc.p_comm]; // 使用 NSString* 类型
+      pid_t pid = procBuffer[i].kp_proc.p_pid;
+      if ([GameName rangeOfString:procname options:NSCaseInsensitiveSearch].location != NSNotFound) {
+        free(procBuffer);
+        return pid;
+      }
+    }
+    free(procBuffer);
+  }
   // kfd doesn't directly provide a PID lookup function.
   // This function might need to be replaced with a different method to get the target process's PID.
   // For now, returning -1 as a placeholder.
@@ -155,70 +153,53 @@ pid_t getPid(NSString *GameName) {
 }
 
 task_port_t task_for_pid_workaround(int Pid) {
-  /*
-   host_t myhost = mach_host_self();
-   task_port_t psDefault, psDefault_control;
-   task_array_t tasks;
-   mach_msg_type_number_t numTasks;
-   kern_return_t kr;
-   
-   kr = processor_set_default(myhost, &psDefault);
-   if (kr != KERN_SUCCESS) {
-     NSLog(@"processor_set_default failed: %x", kr);
-     return MACH_PORT_NULL;
-   }
-   
-   kr = host_processor_set_priv(myhost, psDefault, &psDefault_control);
-   if (kr != KERN_SUCCESS) {
-     NSLog(@"host_processor_set_priv failed: %x", kr);
-     return MACH_PORT_NULL;
-   }
-   
-   kr = processor_set_tasks(psDefault_control, &tasks, &numTasks);
-   if (kr != KERN_SUCCESS) {
-     NSLog(@"processor_set_tasks failed: %x", kr);
-     return MACH_PORT_NULL;
-   }
-   
-   for (int i = 0; i < numTasks; i++) {
-     int pid;
-     pid_for_task(tasks[i], &pid);
-     if (pid == Pid)
-       return tasks[i];
-   }
-   */
+  host_t myhost = mach_host_self();
+  task_port_t psDefault, psDefault_control;
+  task_array_t tasks;
+  mach_msg_type_number_t numTasks;
+  kern_return_t kr;
   
+  kr = processor_set_default(myhost, &psDefault);
+  if (kr != KERN_SUCCESS) {
+    NSLog(@"processor_set_default failed: %x", kr);
+    return MACH_PORT_NULL;
+  }
+  
+  kr = host_processor_set_priv(myhost, psDefault, &psDefault_control);
+  if (kr != KERN_SUCCESS) {
+    NSLog(@"host_processor_set_priv failed: %x", kr);
+    return MACH_PORT_NULL;
+  }
+  
+  kr = processor_set_tasks(psDefault_control, &tasks, &numTasks);
+  if (kr != KERN_SUCCESS) {
+    NSLog(@"processor_set_tasks failed: %x", kr);
+    return MACH_PORT_NULL;
+  }
+  
+  for (int i = 0; i < numTasks; i++) {
+    int pid;
+    pid_for_task(tasks[i], &pid);
+    if (pid == Pid)
+      return tasks[i];
+  }
   // kfd does not use task_port_t for memory operations. This function is no longer needed with kfd.
   return MACH_PORT_NULL;
 }
 
 bool getdfm() {
-  /*
-   if (!bOffsetFindDNE) {
-     NSString *gameName = @"DeltaForceClient";
-     pid_t gamePid = getPid(gameName);
-     if (gamePid != -1) {
-       task = task_for_pid_workaround(gamePid);
-       if (task) {
-         libbase = safegetBase(gamePid);
-       }
-     }
-     bOffsetFindDNE = true;
-   }
-   return (task != MACH_PORT_NULL);
-   */
-  
-  if (!bOffsetFindDNE)
-  {
-    int ret = exploit_init("physpuppet");
-    if (ret == 0) {
-      bOffsetFindDNE = true;
-    } else {
-      // kfd exploit initialization failed
-      NSLog(@"exploit_init type 'physpuppet' failed: %x", ret);
+  if (!bOffsetFindDNE) {
+    NSString *gameName = @"DeltaForceClient";
+    pid_t gamePid = getPid(gameName);
+    if (gamePid != -1) {
+      task = task_for_pid_workaround(gamePid);
+      if (task) {
+        libbase = safegetBase(gamePid);
+      }
     }
+    bOffsetFindDNE = true;
   }
-  return bOffsetFindDNE;
+  return (task != MACH_PORT_NULL);
 }
 
 static bool IsValidAddress(long address) {
@@ -241,89 +222,85 @@ bool isWritableRegion(mach_vm_address_t address, mach_vm_size_t size) {
 }
 
 bool readMemory(mach_vm_address_t address, void *buffer, size_t size) {
-  // 2025/06/26: kfd logic
-  return kreadbuf(address, buffer, size) == 0;
   /*
-   mach_vm_size_t outSize = 0;
-   kern_return_t kr = mach_vm_read_overwrite(task, address, size, (mach_vm_address_t)buffer, &outSize);
-   return (kr == KERN_SUCCESS && outSize == size);
+   return kreadbuf(address, buffer, size) == 0;
    */
+  mach_vm_size_t outSize = 0;
+  kern_return_t kr = mach_vm_read_overwrite(task, address, size, (mach_vm_address_t)buffer, &outSize);
+  return (kr == KERN_SUCCESS && outSize == size);
 }
 
 bool safe_vm_read(mach_vm_address_t address, void *buffer, size_t size) {
-  return kreadbuf(address, buffer, size) == 0;
   /*
-   mach_vm_size_t out_size = 0;
-   kern_return_t kr = mach_vm_read_overwrite(task, (mach_vm_address_t)address, (mach_vm_size_t)size, (mach_vm_address_t)buffer, &out_size);
-   
-   if (kr != KERN_SUCCESS || out_size != size) {
-     memset(buffer, 0, size);
-     return false;
-   }
-   return true;
+   return kreadbuf(address, buffer, size) == 0;
    */
+  mach_vm_size_t out_size = 0;
+  kern_return_t kr = mach_vm_read_overwrite(task, (mach_vm_address_t)address, (mach_vm_size_t)size, (mach_vm_address_t)buffer, &out_size);
+  
+  if (kr != KERN_SUCCESS || out_size != size) {
+    memset(buffer, 0, size);
+    return false;
+  }
+  return true;
 }
 
 void *safe_read_memory(mach_vm_address_t address, size_t size) {
   void *buffer = malloc(size);
   if (!buffer)
     return NULL;
-  if (kreadbuf(address, buffer, size) != 0)
-  {
-    free(buffer);
-    return NULL;
-  }
   /*
+   if (kreadbuf(address, buffer, size) != 0)
+   {
+   free(buffer);
+   return NULL;
+   }
+   */
   if (!readMemory(address, buffer, size)) {
     free(buffer);
     return NULL;
   }
-  */
   return buffer;
 }
 
 // 写内存前判断是否可写，避免触发 vm_protect
 bool writeMemory(long address, void *buf, int length) {
-  return kwritebuf(static_cast<uint64_t>(address), buf, static_cast<size_t>(length)) == 0;
   /*
-   if (!isWritableRegion(address, length)) {
-     return false; // 不可写就不写，防止触发反作弊
-   }
-   kern_return_t kr = vm_write(task, address, (vm_address_t)buf, (mach_msg_type_number_t)length);
-   return (kr == KERN_SUCCESS);
+   return kwritebuf(static_cast<uint64_t>(address), buf, static_cast<size_t>(length)) == 0;
    */
+  kern_return_t kr = vm_write(task, address, (vm_address_t)buf, (mach_msg_type_number_t)length);
+  return (kr == KERN_SUCCESS);
 }
 
 bool ReadRemoteBytes(void *buffer, uintptr_t addr, size_t size) {
-  return kreadbuf(addr, buffer, size) == 0;
   /*
-   mach_vm_size_t outSize = 0;
-   int code = mach_vm_read_overwrite(task, (mach_vm_address_t)addr, size, (mach_vm_address_t)buffer, &outSize);
-   return code == KERN_SUCCESS && outSize == size;
+   return kreadbuf(addr, buffer, size) == 0;
    */
+  mach_vm_size_t outSize = 0;
+  int code = mach_vm_read_overwrite(task, (mach_vm_address_t)addr, size, (mach_vm_address_t)buffer, &outSize);
+  return code == KERN_SUCCESS && outSize == size;
 }
 
 template <typename T> T Read(long address) {
   T data;
-  if (kreadbuf(static_cast<uint64_t>(address), &data, sizeof(T)) != 0)
-    memset(&data, 0, sizeof(T));
   /*
-   void *buffer = safe_read_memory(address, sizeof(T));
-   if (buffer) {
-     memcpy(&data, buffer, sizeof(T));
-     free(buffer);
-   } else {
-     memset(&data, 0, sizeof(T));
-   }
+   if (kreadbuf(static_cast<uint64_t>(address), &data, sizeof(T)) != 0)
+   memset(&data, 0, sizeof(T));
    */
+  void *buffer = safe_read_memory(address, sizeof(T));
+  if (buffer) {
+    memcpy(&data, buffer, sizeof(T));
+    free(buffer);
+  } else {
+    memset(&data, 0, sizeof(T));
+  }
   return data;
 }
 
 template <typename T> void Write(long address, T buf) {
-  kwritebuf(static_cast<uint64_t>(address), &buf, sizeof(T));
   /*
-   writeMemory(address, &buf, sizeof(T));
+   kwritebuf(static_cast<uint64_t>(address), &buf, sizeof(T));
    */
+  writeMemory(address, &buf, sizeof(T));
 };
 
 static Vector3 GetRelativeLocation(uintptr_t actor) { return Read<Vector3>(Read<uintptr_t>(actor + 0x180) + 0x220); }
@@ -338,7 +315,6 @@ static bool GetInsideFov(float ScreenWidth, float ScreenHeight, Vector2 PlayerBo
 }
 
 static float GetCenterOffsetForVector(Vector2 point) {
-  
   return sqrt(pow(point.X - CanvasSize.X / 2, 2.0) + pow(point.Y - CanvasSize.Y / 2, 2.0));
 }
 
@@ -1291,7 +1267,7 @@ void GetPlayerData(uintptr_t Player) {
       Draw::DrawLine(ImVec2(Bones_Pos[16].X, Bones_Pos[16].Y), ImVec2(Bones_Pos[17].X, Bones_Pos[17].Y),
                      BoneColos(bIsAI), 2);
     }
-
+    
     float dw = 120;                                  // 矩形的宽度
     float lineHeight = 3;                            // 线条的高度
     float spaceHeight = 1.0;                         // 空白的高度
@@ -1388,27 +1364,27 @@ void GetPlayerData(uintptr_t Player) {
     if (is射线)
       Draw::DrawLine(ImVec2(CanvasSize.X / 2, 10), ImVec2(rect.x + rect.w / 2, rect.y - 65), bIsAI ? Colour_白色 : Colour_红色);
     
-//    if(is躯体){
-//      if(is手臂){
-//        if(Read<float>(Read<long>(Read<long>(Player + 0xec8) + 0x248) + 0x40) < 0.5) {//藏
-//          return;
-//        }
-//      }
-//      if (GetInsideFov(CanvasSize.X, CanvasSize.Y, HeadScreen,Aimbot_Circle_Radius)) {
-//        tDistance = GetCenterOffsetForVector(HeadScreen);
-//        if (tDistance <= Aimbot_Circle_Radius && distance < 范围大小) {
-//          // 仅当当前目标比已记录目标更近时更新
-//          if (tDistance < markDistance) {
-//            needAdjustAim = true;
-//            if (needAdjustAim) {
-//              markDistance = tDistance;
-//              markScreenPos = HeadScreen;
-//              SetControlRotation(Player,Head);
-//            }
-//          }
-//        }
-//      }
-//    }
+    //    if(is躯体){
+    //      if(is手臂){
+    //        if(Read<float>(Read<long>(Read<long>(Player + 0xec8) + 0x248) + 0x40) < 0.5) {//藏
+    //          return;
+    //        }
+    //      }
+    //      if (GetInsideFov(CanvasSize.X, CanvasSize.Y, HeadScreen,Aimbot_Circle_Radius)) {
+    //        tDistance = GetCenterOffsetForVector(HeadScreen);
+    //        if (tDistance <= Aimbot_Circle_Radius && distance < 范围大小) {
+    //          // 仅当当前目标比已记录目标更近时更新
+    //          if (tDistance < markDistance) {
+    //            needAdjustAim = true;
+    //            if (needAdjustAim) {
+    //              markDistance = tDistance;
+    //              markScreenPos = HeadScreen;
+    //              SetControlRotation(Player,Head);
+    //            }
+    //          }
+    //        }
+    //      }
+    //    }
     
   } else {
     
@@ -1654,24 +1630,24 @@ void GetSafeData() {
           float distance = Vector3::Distance(worldLocation, CharacterPos) / 100;
           if (distance > 1 && distance <= 80) {
             
-//            long Name = Read<long>(Read<long>(Read<long>(SafeActor + 0xDB8) + 0x18) +
-//                                   0x28); if (!IsValidAddress(Name)) continue;
-//            
-//            getUTF8(SafeName, Name);
-//            
-//            string NName = SafeName;
-//            
-//            // 检查是否是特定的箱子类型
-//            if (NName == "保险箱" || NName == "航空储物箱" || NName == "电脑机箱")
-//            {
-//              const char* status = (IsOpen == 0) ? "[未开启]" : "[已开启]";
-//              int color = (IsOpen == 0) ? Colour_黄色 : Colour_红色;
-//              
-//              DrawText(string_format("%s\n%s[%.0fM]", NName.c_str(), status,
-//                                     distance),
-//                       ImVec2(screenLocation.X, screenLocation.Y), true, color,
-//                       true, 25);
-//            }
+            //            long Name = Read<long>(Read<long>(Read<long>(SafeActor + 0xDB8) + 0x18) +
+            //                                   0x28); if (!IsValidAddress(Name)) continue;
+            //
+            //            getUTF8(SafeName, Name);
+            //
+            //            string NName = SafeName;
+            //
+            //            // 检查是否是特定的箱子类型
+            //            if (NName == "保险箱" || NName == "航空储物箱" || NName == "电脑机箱")
+            //            {
+            //              const char* status = (IsOpen == 0) ? "[未开启]" : "[已开启]";
+            //              int color = (IsOpen == 0) ? Colour_黄色 : Colour_红色;
+            //
+            //              DrawText(string_format("%s\n%s[%.0fM]", NName.c_str(), status,
+            //                                     distance),
+            //                       ImVec2(screenLocation.X, screenLocation.Y), true, color,
+            //                       true, 25);
+            //            }
             
             Vector2 goodsListScreen = WorldToScreen(worldLocation, Matrix);
             
@@ -1800,7 +1776,7 @@ BOOL shouldKeepDeleting = NO;
 
 void Draw::Startdfm() {
   
-  //    ptrace(PT_DENY_ATTACH, 0, 0, 0);
+  // ptrace(PT_DENY_ATTACH, 0, 0, 0);
   ImGuiIO &io = ImGui::GetIO();
   
   CanvasSize.X = io.DisplaySize.x;
@@ -1818,7 +1794,7 @@ void Draw::Startdfm() {
   AimPosScreen = Vector2(CanvasSize.X, CanvasSize.Y);
   markDis = CanvasSize.X;
   tDis = 0;
-  
+
   getdfm();
   
   if (总开关)
@@ -1868,16 +1844,16 @@ void Draw::Startdfm() {
     if (ClassName.empty())
       continue;
     
-//    if (资源名) {
-//
-//      Vector3 LocationWorldPos = GetRelativeLocation(Actor);
-//      Vector2 LocationScreen = WorldToScreen(LocationWorldPos, Matrix);;
-//
-//      float distance = Vector3::Distance(LocationWorldPos, CharacterPos) / 100;
-//      if (distance <= 200) {
-//        DrawText(ClassName.c_str(), ImVec2(LocationScreen.X, LocationScreen.Y), true, Colour_草绿, true ,20);
-//      }
-//    }
+    //    if (资源名) {
+    //
+    //      Vector3 LocationWorldPos = GetRelativeLocation(Actor);
+    //      Vector2 LocationScreen = WorldToScreen(LocationWorldPos, Matrix);;
+    //
+    //      float distance = Vector3::Distance(LocationWorldPos, CharacterPos) / 100;
+    //      if (distance <= 200) {
+    //        DrawText(ClassName.c_str(), ImVec2(LocationScreen.X, LocationScreen.Y), true, Colour_草绿, true ,20);
+    //      }
+    //    }
     
     if (isContain(ClassName, "DFMCharacter") || isContain(ClassName, "DFMAICharacter") ||
         isContain(ClassName, "DFM_Character") || isContain(ClassName, "Character"))
@@ -1931,14 +1907,14 @@ void Draw::Startdfm() {
   snprintf(fpsText, sizeof(fpsText), "FPS: %.1f", Read<float>(libbase + 0xF8D281C)); // 藏
   DrawText(fpsText, ImVec2(CanvasSize.X * 0.2f, CanvasSize.Y * 0.08f), true, Colour_白色, true, 30);
   
-//  if(is躯体){
-//    DrawCircle(ImVec2(CanvasSize.X/2, CanvasSize.Y/2), Aimbot_Circle_Radius,  Colour_浅蓝);
-//    if (fabs(CanvasSize.X/2 - markScreenPos.X) > 1 || fabs(CanvasSize.Y/2 - markScreenPos.Y) > 1) {
-//      // 绘画攻击目标线
-//      DrawLine(ImVec2(CanvasSize.X/2, CanvasSize.Y/2), ImVec2(markScreenPos.X, markScreenPos.Y),
-//               Colour_绿色); DrawCircleFilled(ImVec2(AimPosScreen.X, AimPosScreen.Y), 3, Colour_黄色);
-//
-//    }
-//  }
-//  DrawText("DFM",ImVec2(CanvasSize.X/2 ,80),true ,纯白,true,60);
+  //  if(is躯体){
+  //    DrawCircle(ImVec2(CanvasSize.X/2, CanvasSize.Y/2), Aimbot_Circle_Radius,  Colour_浅蓝);
+  //    if (fabs(CanvasSize.X/2 - markScreenPos.X) > 1 || fabs(CanvasSize.Y/2 - markScreenPos.Y) > 1) {
+  //      // 绘画攻击目标线
+  //      DrawLine(ImVec2(CanvasSize.X/2, CanvasSize.Y/2), ImVec2(markScreenPos.X, markScreenPos.Y),
+  //               Colour_绿色); DrawCircleFilled(ImVec2(AimPosScreen.X, AimPosScreen.Y), 3, Colour_黄色);
+  //
+  //    }
+  //  }
+  //  DrawText("DFM",ImVec2(CanvasSize.X/2 ,80),true ,纯白,true,60);
 }
