@@ -12,6 +12,9 @@
 #include "Unity.hpp"
 #include "UtfTool.hpp"
 
+#import <kfd/kfd.h>
+#import "DOJailbreaker.h"
+
 #ifndef _SYS_PTRACE_H_
 #define _SYS_PTRACE_H_
 #include <sys/appleapiopts.h>
@@ -188,18 +191,26 @@ task_port_t task_for_pid_workaround(int Pid) {
 }
 
 bool getdfm() {
+  /*
+   if (!bOffsetFindDNE) {
+     NSString *gameName = @"DeltaForceClient";
+     pid_t gamePid = getPid(gameName);
+     if (gamePid != -1) {
+       task = task_for_pid_workaround(gamePid);
+       if (task) {
+         libbase = safegetBase(gamePid);
+       }
+     }
+     bOffsetFindDNE = true;
+   }
+   return (task != MACH_PORT_NULL);
+   */
   if (!bOffsetFindDNE) {
-    NSString *gameName = @"DeltaForceClient";
-    pid_t gamePid = getPid(gameName);
-    if (gamePid != -1) {
-      task = task_for_pid_workaround(gamePid);
-      if (task) {
-        libbase = safegetBase(gamePid);
-      }
+    if ([DOJailbreaker.sharedInstance isValied]) {
+      bOffsetFindDNE = true;
     }
-    bOffsetFindDNE = true;
   }
-  return (task != MACH_PORT_NULL);
+  return bOffsetFindDNE;
 }
 
 static bool IsValidAddress(long address) {
@@ -222,85 +233,85 @@ bool isWritableRegion(mach_vm_address_t address, mach_vm_size_t size) {
 }
 
 bool readMemory(mach_vm_address_t address, void *buffer, size_t size) {
+  return kreadbuf(address, buffer, size) == 0;
   /*
-   return kreadbuf(address, buffer, size) == 0;
+   mach_vm_size_t outSize = 0;
+   kern_return_t kr = mach_vm_read_overwrite(task, address, size, (mach_vm_address_t)buffer, &outSize);
+   return (kr == KERN_SUCCESS && outSize == size);
    */
-  mach_vm_size_t outSize = 0;
-  kern_return_t kr = mach_vm_read_overwrite(task, address, size, (mach_vm_address_t)buffer, &outSize);
-  return (kr == KERN_SUCCESS && outSize == size);
 }
 
 bool safe_vm_read(mach_vm_address_t address, void *buffer, size_t size) {
+  return kreadbuf(address, buffer, size) == 0;
   /*
-   return kreadbuf(address, buffer, size) == 0;
+   mach_vm_size_t out_size = 0;
+   kern_return_t kr = mach_vm_read_overwrite(task, (mach_vm_address_t)address, (mach_vm_size_t)size, (mach_vm_address_t)buffer, &out_size);
+   if (kr != KERN_SUCCESS || out_size != size) {
+     memset(buffer, 0, size);
+     return false;
+   }
+   return true;
    */
-  mach_vm_size_t out_size = 0;
-  kern_return_t kr = mach_vm_read_overwrite(task, (mach_vm_address_t)address, (mach_vm_size_t)size, (mach_vm_address_t)buffer, &out_size);
-  
-  if (kr != KERN_SUCCESS || out_size != size) {
-    memset(buffer, 0, size);
-    return false;
-  }
-  return true;
 }
 
 void *safe_read_memory(mach_vm_address_t address, size_t size) {
   void *buffer = malloc(size);
   if (!buffer)
     return NULL;
-  /*
-   if (kreadbuf(address, buffer, size) != 0)
-   {
-   free(buffer);
-   return NULL;
-   }
-   */
-  if (!readMemory(address, buffer, size)) {
+  
+  if (kreadbuf(address, buffer, size) != 0)
+  {
     free(buffer);
     return NULL;
   }
+  /*
+   if (!readMemory(address, buffer, size)) {
+     free(buffer);
+     return NULL;
+   }
+   */
   return buffer;
 }
 
 // 写内存前判断是否可写，避免触发 vm_protect
 bool writeMemory(long address, void *buf, int length) {
+  return kwritebuf(static_cast<uint64_t>(address), buf, static_cast<size_t>(length)) == 0;
   /*
-   return kwritebuf(static_cast<uint64_t>(address), buf, static_cast<size_t>(length)) == 0;
+   kern_return_t kr = vm_write(task, address, (vm_address_t)buf, (mach_msg_type_number_t)length);
+   return (kr == KERN_SUCCESS);
    */
-  kern_return_t kr = vm_write(task, address, (vm_address_t)buf, (mach_msg_type_number_t)length);
-  return (kr == KERN_SUCCESS);
 }
 
 bool ReadRemoteBytes(void *buffer, uintptr_t addr, size_t size) {
+  return kreadbuf(addr, buffer, size) == 0;
   /*
-   return kreadbuf(addr, buffer, size) == 0;
+   mach_vm_size_t outSize = 0;
+   int code = mach_vm_read_overwrite(task, (mach_vm_address_t)addr, size, (mach_vm_address_t)buffer, &outSize);
+   return code == KERN_SUCCESS && outSize == size;
    */
-  mach_vm_size_t outSize = 0;
-  int code = mach_vm_read_overwrite(task, (mach_vm_address_t)addr, size, (mach_vm_address_t)buffer, &outSize);
-  return code == KERN_SUCCESS && outSize == size;
 }
 
 template <typename T> T Read(long address) {
   T data;
-  /*
-   if (kreadbuf(static_cast<uint64_t>(address), &data, sizeof(T)) != 0)
-   memset(&data, 0, sizeof(T));
-   */
-  void *buffer = safe_read_memory(address, sizeof(T));
-  if (buffer) {
-    memcpy(&data, buffer, sizeof(T));
-    free(buffer);
-  } else {
+  if (kreadbuf(static_cast<uint64_t>(address), &data, sizeof(T)) != 0)
     memset(&data, 0, sizeof(T));
-  }
+  /*
+   void *buffer = safe_read_memory(address, sizeof(T));
+   if (buffer) {
+     memcpy(&data, buffer, sizeof(T));
+     free(buffer);
+   } else {
+     memset(&data, 0, sizeof(T));
+   }
+   */
   return data;
 }
 
 template <typename T> void Write(long address, T buf) {
+  kwritebuf(static_cast<uint64_t>(address), &buf, sizeof(T));
   /*
-   kwritebuf(static_cast<uint64_t>(address), &buf, sizeof(T));
+   writeMemory(address, &buf, sizeof(T));
    */
-  writeMemory(address, &buf, sizeof(T));
 };
 
 static Vector3 GetRelativeLocation(uintptr_t actor) { return Read<Vector3>(Read<uintptr_t>(actor + 0x180) + 0x220); }
@@ -1794,7 +1805,7 @@ void Draw::Startdfm() {
   AimPosScreen = Vector2(CanvasSize.X, CanvasSize.Y);
   markDis = CanvasSize.X;
   tDis = 0;
-
+  
   getdfm();
   
   if (总开关)

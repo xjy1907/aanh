@@ -291,7 +291,6 @@ int exploit_init(const char *flavor)
 
     return 0;
 }
-
 int exploit_deinit(void)
 {
     if (gPrimitives.kreadbuf == kreadbuf) {

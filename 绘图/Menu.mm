@@ -322,32 +322,32 @@ CGFloat gao = screenBounds.size.height;
 }
 
 #pragma mark - Memory
-
-- (void)viewDidAppear:(BOOL)animated {
-  [super viewDidAppear:animated];
-  
-  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(12 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-    self.menuTitlelable.frame = CGRectMake(0, 80, 400, 400);
-    self.menuTitlelable.text = @"时间等待测试UI";
-    [self.menuView addSubview:self.menuTitlelable];
-    
-    NSError *error;
-    [DOJailbreaker.sharedInstance runWithError:&error];
-    dispatch_async(dispatch_get_main_queue(), ^{
-      if (error) {
-        self.menuTitlelable.text = [NSString stringWithFormat:@"Init: %@", error.localizedDescription];
-      }
-      dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(10 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        self.menuTitlelable.text = [DOJailbreaker.sharedInstance testKfdRead];
-      });
-      
-      dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(15 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        self.menuTitlelable.text = [DOJailbreaker.sharedInstance testKfdWrite];
-      });
-    });
-  });
-}
-
+/*
+ - (void)viewDidAppear:(BOOL)animated {
+   [super viewDidAppear:animated];
+   
+   dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+     self.menuTitlelable.frame = CGRectMake(0, 80, 400, 400);
+     self.menuTitlelable.text = @"时间等待测试UI";
+     [self.menuView addSubview:self.menuTitlelable];
+     
+     NSError *error;
+     [DOJailbreaker.sharedInstance runWithError:&error];
+     dispatch_async(dispatch_get_main_queue(), ^{
+       if (error) {
+         self.menuTitlelable.text = [NSString stringWithFormat:@"Init: %@", error.localizedDescription];
+       }
+       dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(10 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+         self.menuTitlelable.text = [DOJailbreaker.sharedInstance testKfdRead];
+       });
+       
+       dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(15 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+         self.menuTitlelable.text = [DOJailbreaker.sharedInstance testKfdWrite];
+       });
+     });
+   });
+ }
+ */
 
 - (void)didReceiveMemoryWarning {
   [super didReceiveMemoryWarning];
