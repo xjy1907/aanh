@@ -1504,8 +1504,8 @@ void Draw::Startdfm() {
   tDis = 0;
   
   getdfm();
-  
   if (总开关) {
+    NSLog(@"[DOJailbreaker] test log");
     NSLog(@"[DOJailbreaker] start machPIDGword (pid:%x base:%lx)", gamePid, libbase);
     GWorld = exploit_machPIDGword(gamePid, libbase);
     NSLog(@"[DOJailbreaker] ended machPIDGword: %lx", GWorld);
