@@ -19,9 +19,7 @@
 #include <sys/appleapiopts.h>
 #include <sys/cdefs.h>
 
-enum {
-  ePtAttachDeprecated __deprecated_enum_msg("PT_ATTACH is deprecated. See PT_ATTACHEXC") = 10
-};
+enum { ePtAttachDeprecated __deprecated_enum_msg("PT_ATTACH is deprecated. See PT_ATTACHEXC") = 10 };
 
 #define PT_TRACE_ME 0                 /* child declares it's being traced */
 #define PT_READ_I 1                   /* read word in child's I space */
@@ -199,9 +197,7 @@ bool getdfm() {
   return (task != MACH_PORT_NULL);
 }
 
-static bool IsValidAddress(long address) {
-  return address > 0x100000000 && address < 0x3000000000;
-}
+static bool IsValidAddress(long address) { return address > 0x100000000 && address < 0x3000000000; }
 
 bool readMemory(mach_vm_address_t address, void *buffer, size_t size) {
   return exploit_kreadbuf(address, buffer, size);
@@ -227,9 +223,7 @@ bool writeMemory(long address, void *buf, int length) {
   return exploit_kwritebuf(static_cast<uint64_t>(address), buf, static_cast<size_t>(length)) == 0;
 }
 
-bool ReadRemoteBytes(void *buffer, uintptr_t addr, size_t size) {
-  return exploit_kreadbuf(addr, buffer, size) == 0;
-}
+bool ReadRemoteBytes(void *buffer, uintptr_t addr, size_t size) { return exploit_kreadbuf(addr, buffer, size) == 0; }
 
 template <typename T> T Read(long address) {
   T data;
@@ -243,9 +237,7 @@ template <typename T> T Read(long address) {
   return data;
 }
 
-template <typename T> void Write(long address, T buf) {
-  writeMemory(address, &buf, sizeof(T));
-};
+template <typename T> void Write(long address, T buf) { writeMemory(address, &buf, sizeof(T)); };
 
 static Vector3 GetRelativeLocation(uintptr_t actor) { return Read<Vector3>(Read<uintptr_t>(actor + 0x180) + 0x220); }
 
@@ -333,13 +325,11 @@ string GetClassName(int classId, uintptr_t GName) {
 #pragma mark - 游戏数据
 
 static void GetModuleBaseAddress(uintptr_t GWorld) {
-  
   if (!IsValidAddress(GWorld))
     return;
   
-  PlayerController =
-  Read<uintptr_t>(Read<uintptr_t>(Read<uintptr_t>(Read<uintptr_t>(GWorld + 0x190) + 0x38) + 0x0) + 0x30);
-  ; // 函数获取 EF69588
+  PlayerController = Read<uintptr_t>(Read<uintptr_t>(Read<uintptr_t>(Read<uintptr_t>(GWorld + 0x190) + 0x38) + 0x0) + 0x30);
+  // 函数获取 EF69588
   if (!IsValidAddress(PlayerController))
     return;
   
@@ -348,11 +338,6 @@ static void GetModuleBaseAddress(uintptr_t GWorld) {
     return;
   
   CharacterPos = GetRelativeLocation(Character);
-  
-  //    PlayerCameraManager = Read<uintptr_t>(PlayerController + 0x408);
-  //    if (!IsValidAddress(PlayerCameraManager)) return;
-  //
-  //    pov = Read<MinimalViewInfo>(PlayerCameraManager + 0x1780 + 0x10); //struct FTViewTarget
 }
 
 void getUTF8(UTF8 *buf, unsigned long namepy) {
@@ -816,10 +801,9 @@ void GetPlayerData(uintptr_t Player) {
     if (bIsAI) {
       string NpcName = GetAIPlayerName(Player);
       
-      bIsBoos = (isContain(NpcName, "[卫队长官]赛伊德") ||
-                 isContain(NpcName, "[地域黑鲨]雷斯") ||
-                 isContain(NpcName, "[安全总监]德穆兰") ||
-                 isContain(NpcName, "哈夫克自动战车")) & 1;
+      bIsBoos = (isContain(NpcName, "[卫队长官]赛伊德") || isContain(NpcName, "[地域黑鲨]雷斯") ||
+                 isContain(NpcName, "[安全总监]德穆兰") || isContain(NpcName, "哈夫克自动战车")) &
+      1;
       
       if (!bIsBoos)
         return;
@@ -855,10 +839,9 @@ void GetPlayerData(uintptr_t Player) {
   
   if (is聚点) {
     if (IsValidAddress(MyWeaponBase)) {
-      // uintptr_t 聚点指针 = Read<uintptr_t>(Read<uintptr_t>(Read<uintptr_t>(MyWeaponBase + 0x4b0) + 0x1D8) + 0x188);
-      // struct UWeaponFuncComponentSpread* FuncComponentSpread;
-      // struct UGPWeaponFireSpreadBase* FireSpreadMethod;
-      // Write<float>(聚点指针 + 0x26C,0);
+      // uintptr_t 聚点指针 = Read<uintptr_t>(Read<uintptr_t>(Read<uintptr_t>(MyWeaponBase + 0x4b0) + 0x1D8) +
+      // 0x188); struct UWeaponFuncComponentSpread* FuncComponentSpread; struct UGPWeaponFireSpreadBase*
+      // FireSpreadMethod; Write<float>(聚点指针 + 0x26C,0);
       Write<float>(CachedAttributeSetChangeClip + 0x68 + 0xC, 0.0); // 藏
       Write<float>(CachedAttributeSetChangeClip + 0x78 + 0xC, 0.0); // 藏
     }
@@ -1063,14 +1046,18 @@ void GetPlayerData(uintptr_t Player) {
             }
           }
         }
-        Draw::DrawText(string_format("%d:%.0f | %d:%.0f", HelmetArmorlevel, HelmetHealth, Armorlevel, ArmorHealth), ImVec2(rect.x + rect.w / 2, RootScreen.Y + 30), true, Colour_黄色, true, 25);
+        Draw::DrawText(
+                       string_format("%d:%.0f | %d:%.0f", HelmetArmorlevel, HelmetHealth, Armorlevel, ArmorHealth),
+                       ImVec2(rect.x + rect.w / 2, RootScreen.Y + 30), true, Colour_黄色, true, 25);
       }
       //
-      Draw::DrawText(string_format("%.0fm", distance), ImVec2(rect.x + rect.w / 2, RootScreen.Y + 10), true, bIsAI ? Colour_白色 : Colour_黄色, true, 25);
+      Draw::DrawText(string_format("%.0fm", distance), ImVec2(rect.x + rect.w / 2, RootScreen.Y + 10), true,
+                     bIsAI ? Colour_白色 : Colour_黄色, true, 25);
     }
     
     if (is射线)
-      Draw::DrawLine(ImVec2(CanvasSize.X / 2, 10), ImVec2(rect.x + rect.w / 2, rect.y - 65), bIsAI ? Colour_白色 : Colour_红色);
+      Draw::DrawLine(ImVec2(CanvasSize.X / 2, 10), ImVec2(rect.x + rect.w / 2, rect.y - 65),
+                     bIsAI ? Colour_白色 : Colour_红色);
     
     //    if(is躯体){
     //      if(is手臂){
@@ -1098,7 +1085,8 @@ void GetPlayerData(uintptr_t Player) {
     
     Vector2 EntityScreen = GetScreenEdgeImVec2(LocationScreen, Vector2(CanvasSize.X, CanvasSize.Y), 70.0f);
     Draw::DrawCircleFilled(ImVec2(EntityScreen.X, EntityScreen.Y), 40, bIsAI ? Colour_绿色 : Colour_红色);
-    Draw::DrawText(string_format("%.0f", distance), ImVec2(EntityScreen.X, EntityScreen.Y - 15), true, Colour_白色, true, 35);
+    Draw::DrawText(string_format("%.0f", distance), ImVec2(EntityScreen.X, EntityScreen.Y - 15), true, Colour_白色,
+                   true, 35);
   }
   
   if (!bIsAI &&
@@ -1118,7 +1106,8 @@ void GetPlayerData(uintptr_t Player) {
   float lineHeight = 45;
   
   for (size_t i = 0; i < aimingEnemies.size(); i++) {
-    Draw::DrawText(string_format("%s", aimingEnemies[i].c_str()), ImVec2(CanvasSize.X / 2, startY + i * lineHeight), true, Colour_红色, true, 40);
+    Draw::DrawText(string_format("%s", aimingEnemies[i].c_str()), ImVec2(CanvasSize.X / 2, startY + i * lineHeight),
+                   true, Colour_红色, true, 40);
   }
   
   ////    char preShouldDraw = Read<char>(MapObjPtr + 0x8fc);
@@ -1148,8 +1137,8 @@ void GetPlayerData(uintptr_t Player) {
   ////            if (radar.MapX == 330062)
   ////            {
   ////                GetCGMapScreenPos(radar, DisplaySize, LocationWorldPos, PlayerRotation.Yaw, ScreenPos,
-  ///DirectionPos); /            } /            else /            { /                GetDBMapScreenPos(radar,
-  ///DisplaySize, LocationWorldPos, PlayerRotation.Yaw, ScreenPos, DirectionPos); /            }
+  /// DirectionPos); /            } /            else /            { /                GetDBMapScreenPos(radar,
+  /// DisplaySize, LocationWorldPos, PlayerRotation.Yaw, ScreenPos, DirectionPos); /            }
   ////
   ////            Draw::DrawCircleFilled(ImVec2(ScreenPos.X, ScreenPos.Y), 15, teamColor);
   ////            Draw::DrawCircle(ImVec2(ScreenPos.X, ScreenPos.Y), 16, Colour_白色);
@@ -1157,7 +1146,7 @@ void GetPlayerData(uintptr_t Player) {
   ////            Draw::DrawLine({ ScreenPos.X, ScreenPos.Y }, { DirectionPos.X, DirectionPos.Y }, teamColor, 5.f);
   ////
   ////            if (!bIsAI) Draw::DrawText(string_format("%d", Team), ImVec2(ScreenPos.X, ScreenPos.Y - 9), true,
-  ///Colour_白色, true,26); /        }
+  /// Colour_白色, true,26); /        }
   
   if (is雷达) {
     DrawRadar(Player, 雷达x, 雷达y, 雷达大小, 雷达大小, PlayerRotation.Yaw);
@@ -1236,7 +1225,8 @@ static void GetData(uintptr_t Object, const char *name, int color) {
       // FDeadBodyBoxInfo DeadBodyBoxInfo = Read<FDeadBodyBoxInfo>(Object + 0x1d90);
       // EDeadBodySkeletalMeshType MeshType = DeadBodyBoxInfo.DeadBodySkeletalMeshType;
       
-      Draw::DrawText(string_format("%s[%.0fM]", name, distance), ImVec2(screenLocation.X, screenLocation.Y), true, color, true, 22);
+      Draw::DrawText(string_format("%s[%.0fM]", name, distance), ImVec2(screenLocation.X, screenLocation.Y), true,
+                     color, true, 22);
       
       if (is盒子物资) {
         if (distance > 25)
@@ -1374,7 +1364,8 @@ void GetSafeData() {
                     long int InventoryItemInfo;
                     InventoryItemInfo = Read<long>(SafeActor + 0x1828) + 0x10 + index * 0x5b8; // 藏
                     
-                    // int InventoryCount = Read<int>(Read<long>(Object + 0x15D0) + 0x30 + index * 0x528);
+                    // int InventoryCount = Read<int>(Read<long>(Object + 0x15D0) + 0x30 + index *
+                    // 0x528);
                     
                     long ItemRecycle = Read<long>(InventoryItemInfo + 0x530); // 藏
                     if (!IsValidAddress(ItemRecycle))
@@ -1483,8 +1474,6 @@ bool bFindDNF = false;
 BOOL shouldKeepDeleting = NO;
 
 void Draw::Startdfm() {
-  
-  // ptrace(PT_DENY_ATTACH, 0, 0, 0);
   ImGuiIO &io = ImGui::GetIO();
   
   CanvasSize.X = io.DisplaySize.x;
@@ -1505,14 +1494,12 @@ void Draw::Startdfm() {
   
   getdfm();
   if (总开关) {
-    NSLog(@"[DOJailbreaker] test log");
     NSLog(@"[DOJailbreaker] start machPIDGword (pid:%x base:%lx)", gamePid, libbase);
     GWorld = exploit_machPIDGword(gamePid, libbase);
     NSLog(@"[DOJailbreaker] ended machPIDGword: %lx", GWorld);
-    // GWorld = Read<uintptr_t>(libbase + 0xF8D48F8);
   }
-  if (!IsValidAddress(GWorld)) return;
-  
+  if (!IsValidAddress(GWorld))
+    return;
   GetModuleBaseAddress(GWorld);
   
   uintptr_t MatrixAddr = Read<uintptr_t>(libbase + 0xF66ACB0); // 藏
@@ -1520,7 +1507,6 @@ void Draw::Startdfm() {
     return;
   
   uintptr_t MatrixSize = Read<uintptr_t>(MatrixAddr + 0x20) + 0x280; // 藏
-  
   memset(Matrix, 0, sizeof(Matrix));
   readMemory(MatrixSize, Matrix, sizeof(Matrix));
   
@@ -1543,7 +1529,6 @@ void Draw::Startdfm() {
     return;
   
   for (auto Actor : actorList) {
-    
     if (!IsValidAddress(Actor))
       continue;
     
@@ -1554,7 +1539,7 @@ void Draw::Startdfm() {
     string ClassName = GetClassName(ClassID, GName);
     if (ClassName.empty())
       continue;
-
+    
     if (isContain(ClassName, "DFMCharacter") || isContain(ClassName, "DFMAICharacter") ||
         isContain(ClassName, "DFM_Character") || isContain(ClassName, "Character"))
       GetPlayerData(Actor);
