@@ -70,6 +70,8 @@ MinimalViewInfo pov;
 pid_t gamePid;
 
 static mach_port_t task;
+extern "C" kern_return_t mach_vm_read_overwrite(vm_map_t target_task, mach_vm_address_t address, mach_vm_size_t size, mach_vm_address_t data,
+                                                mach_vm_size_t *outsize);
 extern "C" kern_return_t mach_vm_region(vm_map_t target_task, mach_vm_address_t *address, mach_vm_size_t *size,
                                         vm_region_flavor_t flavor, vm_region_info_t info,
                                         mach_msg_type_number_t *infoCnt, mach_port_t *object_name);
@@ -199,56 +201,38 @@ bool getdfm() {
 
 static bool IsValidAddress(long address) { return address > 0x100000000 && address < 0x3000000000; }
 
+// return exploit_mach_read(gamePid, address);
 bool readMemory(mach_vm_address_t address, void *buffer, size_t size) {
-  return exploit_kreadbuf(address, buffer, size);
+  mach_vm_size_t outSize = 0;
+  kern_return_t kr = mach_vm_read_overwrite(task, address, size, (mach_vm_address_t)buffer, &outSize);
+  return (kr == KERN_SUCCESS && outSize == size);
 }
 
-bool safe_vm_read(mach_vm_address_t address, void *buffer, size_t size) {
-  return exploit_kreadbuf(address, buffer, size) == 0;
+bool ReadRemoteBytes(void *buffer, uintptr_t addr, size_t size) {
+  mach_vm_size_t outSize = 0;
+  kern_return_t kr = mach_vm_read_overwrite(task, (mach_vm_address_t)addr, size, (mach_vm_address_t)buffer, &outSize);
+  return kr == KERN_SUCCESS && outSize == size;
 }
-
-void *safe_read_memory(mach_vm_address_t address, size_t size) {
-  void *buffer = malloc(size);
-  if (!buffer)
-    return NULL;
-  if (!readMemory(address, buffer, size)) {
-    free(buffer);
-    return NULL;
-  }
-  return buffer;
-}
-
-// 写内存前判断是否可写，避免触发 vm_protect
-bool writeMemory(long address, void *buf, int length) {
-  return exploit_kwritebuf(static_cast<uint64_t>(address), buf, static_cast<size_t>(length)) == 0;
-}
-
-bool ReadRemoteBytes(void *buffer, uintptr_t addr, size_t size) { return exploit_kreadbuf(addr, buffer, size) == 0; }
 
 template <typename T> T Read(long address) {
   T data;
-  void *buffer = safe_read_memory(address, sizeof(T));
-  if (buffer) {
-    memcpy(&data, buffer, sizeof(T));
-    free(buffer);
-  } else {
-    memset(&data, 0, sizeof(T));
-  }
+  // 直接使用 exploit_mach_read 读取 64 位数据
+  uint64_t value = exploit_mach_read(gamePid, static_cast<uint64_t>(address));
+  memcpy(&data, &value, sizeof(T));
   return data;
+}
+
+bool writeMemory(long address, void *buf, int length) {
+  return exploit_kwritebuf(static_cast<uint64_t>(address), buf, static_cast<size_t>(length)) == 0;
+  /*
+   kern_return_t kr = vm_write(task, address, (vm_address_t)buf, (mach_msg_type_number_t)length);
+   return (kr == KERN_SUCCESS);
+   */
 }
 
 template <typename T> void Write(long address, T buf) { writeMemory(address, &buf, sizeof(T)); };
 
 static Vector3 GetRelativeLocation(uintptr_t actor) { return Read<Vector3>(Read<uintptr_t>(actor + 0x180) + 0x220); }
-
-static bool GetInsideFov(float ScreenWidth, float ScreenHeight, Vector2 PlayerBone, float FovRadius) {
-  Vector2 Cenpoint;
-  Cenpoint.X = PlayerBone.X - (ScreenWidth / 2);
-  Cenpoint.Y = PlayerBone.Y - (ScreenHeight / 2);
-  if (Cenpoint.X * Cenpoint.X + Cenpoint.Y * Cenpoint.Y <= FovRadius * FovRadius)
-    return true;
-  return false;
-}
 
 static float GetCenterOffsetForVector(Vector2 point) {
   return sqrt(pow(point.X - CanvasSize.X / 2, 2.0) + pow(point.Y - CanvasSize.Y / 2, 2.0));
@@ -1058,31 +1042,7 @@ void GetPlayerData(uintptr_t Player) {
     if (is射线)
       Draw::DrawLine(ImVec2(CanvasSize.X / 2, 10), ImVec2(rect.x + rect.w / 2, rect.y - 65),
                      bIsAI ? Colour_白色 : Colour_红色);
-    
-    //    if(is躯体){
-    //      if(is手臂){
-    //        if(Read<float>(Read<long>(Read<long>(Player + 0xec8) + 0x248) + 0x40) < 0.5) {//藏
-    //          return;
-    //        }
-    //      }
-    //      if (GetInsideFov(CanvasSize.X, CanvasSize.Y, HeadScreen,Aimbot_Circle_Radius)) {
-    //        tDistance = GetCenterOffsetForVector(HeadScreen);
-    //        if (tDistance <= Aimbot_Circle_Radius && distance < 范围大小) {
-    //          // 仅当当前目标比已记录目标更近时更新
-    //          if (tDistance < markDistance) {
-    //            needAdjustAim = true;
-    //            if (needAdjustAim) {
-    //              markDistance = tDistance;
-    //              markScreenPos = HeadScreen;
-    //              SetControlRotation(Player,Head);
-    //            }
-    //          }
-    //        }
-    //      }
-    //    }
-    
   } else {
-    
     Vector2 EntityScreen = GetScreenEdgeImVec2(LocationScreen, Vector2(CanvasSize.X, CanvasSize.Y), 70.0f);
     Draw::DrawCircleFilled(ImVec2(EntityScreen.X, EntityScreen.Y), 40, bIsAI ? Colour_绿色 : Colour_红色);
     Draw::DrawText(string_format("%.0f", distance), ImVec2(EntityScreen.X, EntityScreen.Y - 15), true, Colour_白色,
@@ -1109,45 +1069,6 @@ void GetPlayerData(uintptr_t Player) {
     Draw::DrawText(string_format("%s", aimingEnemies[i].c_str()), ImVec2(CanvasSize.X / 2, startY + i * lineHeight),
                    true, Colour_红色, true, 40);
   }
-  
-  ////    char preShouldDraw = Read<char>(MapObjPtr + 0x8fc);
-  ////
-  ////        if (preShouldDraw)
-  ////        {
-  ////            int teamColor;
-  ////            switch (Team) {
-  ////                case 1: teamColor = Colour_紫色; break;
-  ////                case 2: teamColor = Colour_蓝色; break;
-  ////                case 3: teamColor = Colour_珊瑚红; break;
-  ////                case 4: teamColor = Colour_黄色; break;
-  ////                case 5: teamColor = Colour_草绿; break;
-  ////                case 6: teamColor = Colour_青色; break;
-  ////                case 7: teamColor = Colour_橙色; break;
-  ////                case 8: teamColor = Colour_橙黄; break;
-  ////                case 9: teamColor = Colour_绿黄; break;
-  ////                case 10: teamColor = Colour_白色; break;
-  ////                default: teamColor = Colour_绿色; break;
-  ////            }
-  ////
-  ////            Vector2 ScreenPos, DirectionPos;
-  ////
-  ////            Mapinfo radar = Read<Mapinfo>(MapObjPtr + 0x828);
-  ////
-  ////            Vector2 DisplaySize = { (float)CanvasSize.X,(float)CanvasSize.Y};
-  ////            if (radar.MapX == 330062)
-  ////            {
-  ////                GetCGMapScreenPos(radar, DisplaySize, LocationWorldPos, PlayerRotation.Yaw, ScreenPos,
-  /// DirectionPos); /            } /            else /            { /                GetDBMapScreenPos(radar,
-  /// DisplaySize, LocationWorldPos, PlayerRotation.Yaw, ScreenPos, DirectionPos); /            }
-  ////
-  ////            Draw::DrawCircleFilled(ImVec2(ScreenPos.X, ScreenPos.Y), 15, teamColor);
-  ////            Draw::DrawCircle(ImVec2(ScreenPos.X, ScreenPos.Y), 16, Colour_白色);
-  ////
-  ////            Draw::DrawLine({ ScreenPos.X, ScreenPos.Y }, { DirectionPos.X, DirectionPos.Y }, teamColor, 5.f);
-  ////
-  ////            if (!bIsAI) Draw::DrawText(string_format("%d", Team), ImVec2(ScreenPos.X, ScreenPos.Y - 9), true,
-  /// Colour_白色, true,26); /        }
-  
   if (is雷达) {
     DrawRadar(Player, 雷达x, 雷达y, 雷达大小, 雷达大小, PlayerRotation.Yaw);
   }
@@ -1322,31 +1243,11 @@ void GetSafeData() {
         
         Vector3 worldLocation = GetRelativeLocation(SafeActor);
         Vector2 screenLocation = WorldToScreen(worldLocation, Matrix);
-        ;
+        
         if (isScreenVisible(screenLocation, Vector2(CanvasSize.X, CanvasSize.Y))) {
           
           float distance = Vector3::Distance(worldLocation, CharacterPos) / 100;
           if (distance > 1 && distance <= 80) {
-            
-            //            long Name = Read<long>(Read<long>(Read<long>(SafeActor + 0xDB8) + 0x18) +
-            //                                   0x28); if (!IsValidAddress(Name)) continue;
-            //
-            //            getUTF8(SafeName, Name);
-            //
-            //            string NName = SafeName;
-            //
-            //            // 检查是否是特定的箱子类型
-            //            if (NName == "保险箱" || NName == "航空储物箱" || NName == "电脑机箱")
-            //            {
-            //              const char* status = (IsOpen == 0) ? "[未开启]" : "[已开启]";
-            //              int color = (IsOpen == 0) ? Colour_黄色 : Colour_红色;
-            //
-            //              DrawText(string_format("%s\n%s[%.0fM]", NName.c_str(), status,
-            //                                     distance),
-            //                       ImVec2(screenLocation.X, screenLocation.Y), true, color,
-            //                       true, 25);
-            //            }
-            
             Vector2 goodsListScreen = WorldToScreen(worldLocation, Matrix);
             
             if (is盒子物资 && distance <= 25) {
@@ -1494,8 +1395,8 @@ void Draw::Startdfm() {
   
   getdfm();
   if (总开关) {
-    NSLog(@"[DOJailbreaker] start machPIDGword (pid:%x base:%lx)", gamePid, libbase);
-    GWorld = exploit_machPIDGword(gamePid, libbase);
+    NSLog(@"[DOJailbreaker] start machPIDGword (pid:%x task:%x base:%lx)", gamePid, task, libbase);
+    GWorld = exploit_mach_read(gamePid, libbase + 0x10947B08);
     NSLog(@"[DOJailbreaker] ended machPIDGword: %lx", GWorld);
   }
   if (!IsValidAddress(GWorld))
@@ -1528,7 +1429,7 @@ void Draw::Startdfm() {
   if (!ReadRemoteBytes(actorList.data(), ActorArray, ActorCount * sizeof(uintptr_t)))
     return;
   
-  for (auto Actor : actorList) {
+  for (auto Actor: actorList) {
     if (!IsValidAddress(Actor))
       continue;
     
