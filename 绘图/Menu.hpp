@@ -40,6 +40,8 @@ extern float 范围大小;
 
 extern bool 总开关,is射线,is信息,is骨骼,is血量,is手持,is雷达,is人机,is阵营,资源名,is物资,is红,is金,is紫,is蓝,is绿,is盒子,is盒子物资,is无后,is聚点,is躯体,is手臂,is加速;
 
+extern uintptr_t GWorld;
+
 void Startgame(void);
 
 NS_ASSUME_NONNULL_END

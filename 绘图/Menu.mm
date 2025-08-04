@@ -14,13 +14,11 @@ NSString *decode(NSString *string) {
 void Startgame(void) {
   if (!dk) {
     // 使用dispatch_after实现2秒延迟
-    // dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
     NSString *LSApplicationWorkspaceNAme = decode(@"TFNBcHBsaWNhdGlvbldvcmtzcGFjZQ==");
     const char *cLSApplicationWorkspaceNAme = [LSApplicationWorkspaceNAme UTF8String];
     Class LSApplicationWorkspace = objc_getClass(cLSApplicationWorkspaceNAme);
     NSObject *workspace = [LSApplicationWorkspace performSelector:@selector(defaultWorkspace)];
     NSArray *allApplications = [workspace performSelector:@selector(allApplications)];
-    
     for (NSObject *appInfo in allApplications) {
       NSString *bundleID = [appInfo performSelector:@selector(bundleIdentifier)];
       NSString *bundleName = decode(@"Y29tLnRlbmNlbnQudG1ncC5kZm0=");
@@ -29,7 +27,6 @@ void Startgame(void) {
       }
     }
     dk = true;
-    // });
   }
 }
 
@@ -348,6 +345,17 @@ CGFloat gao = screenBounds.size.height;
    });
  }
  */
+
+- (void)viewDidAppear:(BOOL)animated {
+  [super viewDidAppear:animated];
+  
+  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+    self.menuTitlelable.frame = CGRectMake(0, 80, 800, 400);
+    NSString *text = [DOJailbreaker.sharedInstance isValied] ? @"InitOK" : @"InitFailed";
+    self.menuTitlelable.text = [NSString stringWithFormat:@"Init: %@ GWorld: %p", text, (void *)GWorld];
+    [self.menuView addSubview:self.menuTitlelable];
+  });
+}
 
 - (void)didReceiveMemoryWarning {
   [super didReceiveMemoryWarning];
@@ -921,6 +929,11 @@ CGFloat gao = screenBounds.size.height;
     总开关 = isOn;
     // 当总开关状态改变时，更新所有其他控件的启用状态
     [self updateControlsEnabledState];
+    if (isOn) {
+      dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        self.menuTitlelable.text = [NSString stringWithFormat:@"Delay 2S GWorld: %p", (void *)GWorld];
+      });
+    }
   } else if ([name isEqualToString:@"射线"]) {
     is射线 = isOn;
   } else if ([name isEqualToString:@"信息"]) {

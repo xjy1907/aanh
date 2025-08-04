@@ -1003,25 +1003,25 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastUpgradeCheck = 1520;
+				LastUpgradeCheck = 1420;
 				TargetAttributes = {
 					06D4D8A92E18DE11008B33B6 = {
-						CreatedOnToolsVersion = 16.2;
+						CreatedOnToolsVersion = 14.2;
 					};
 					06D4D9202E19068A008B33B6 = {
-						CreatedOnToolsVersion = 16.2;
+						CreatedOnToolsVersion = 14.2;
 					};
 					06D4D97B2E190828008B33B6 = {
-						CreatedOnToolsVersion = 16.2;
+						CreatedOnToolsVersion = 14.2;
 					};
 					06D4DA8C2E190918008B33B6 = {
-						CreatedOnToolsVersion = 16.2;
+						CreatedOnToolsVersion = 14.2;
 					};
 					06D4DBE92E190B9B008B33B6 = {
-						CreatedOnToolsVersion = 16.2;
+						CreatedOnToolsVersion = 14.2;
 					};
 					CC711D002B5BF550007235A6 = {
-						CreatedOnToolsVersion = 15.1;
+						CreatedOnToolsVersion = 14.2;
 					};
 				};
 			};
@@ -2012,7 +2012,7 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2063,7 +2063,7 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

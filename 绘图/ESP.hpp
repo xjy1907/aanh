@@ -61,17 +61,11 @@ using namespace std;
 #define 雪白          0xFFFAFAFF  // 雪白色，不透明
 #define 午夜蓝        0xFF701919  // 午夜蓝色，不透明
 
-
-
 struct SaveImage
 {
     int imageID;
     id<MTLTexture> 图片纹理ID = { NULL };
-   
 };
-
-
-
 
 namespace Draw {
 
@@ -81,32 +75,24 @@ inline void DrawLine(ImVec2 startPoint, ImVec2 endPoint, int color, float thickn
 {
     ImGui::GetBackgroundDrawList()->AddLine(startPoint, endPoint, color, thicknes);
 }
-
-
 inline void DrawCircle(ImVec2 center, float radius, int color, float thicknes = 1)
 {
     ImGui::GetBackgroundDrawList()->AddCircle(center, radius, color, radius, thicknes);
 }
-
-
 inline void DrawCircleFilled(ImVec2 center, float radius, int color)
 {
     ImGui::GetBackgroundDrawList()->AddCircleFilled(center, radius, color, radius);
 }
-
-
 inline void DrawRect(ImVec2 min, ImVec2 max, int color, float thicknes)
 {
     ImGui::GetBackgroundDrawList()->AddRect(min, max, color, 5.0, 0.7f, thicknes);
 }
-
-
-inline void DrawRectFilled(const ImVec2& min, const ImVec2& max, ImU32 color, float rounding = 5.0f) {
+// 绘制填充矩形
+inline void DrawRectFilled(const ImVec2& min, const ImVec2& max, ImU32 color, float rounding = 5.0f)
+{
     ImDrawList* drawList = ImGui::GetBackgroundDrawList();
     drawList->AddRectFilled(min, max, color, rounding);
-}// 绘制填充矩形
-
-
+}
 inline void DrawText(string text, ImVec2 pos, bool isCentered, int color, bool outline, float fontSize)
 {
     const char *str = text.c_str();
@@ -127,5 +113,4 @@ inline void DrawText(string text, ImVec2 pos, bool isCentered, int color, bool o
     }
     ImGui::GetBackgroundDrawList()->AddTextX(vec2, color, fontSize, str);
 }
-
 }

@@ -12,7 +12,6 @@
 #include "Unity.hpp"
 #include "UtfTool.hpp"
 
-#import <kfd/kfd.h>
 #import "DOJailbreaker.h"
 
 #ifndef _SYS_PTRACE_H_
@@ -65,17 +64,14 @@ char ChosenName[100];
 std::vector<std::string> aimingEnemies;
 static Vector2 markScreenPos, AimPosScreen, nextPoint, RootScreen;
 Vector3 CharacterPos;
-static bool isHookAngle = false, needAdjustAim = false, sniperrifle = false, isStartTouch = false,
-bOffsetFindDNE = false;
-static long libbase, PlayerCameraManager, Character, PlayerController, GName, MyWeaponBase;
+static bool isHookAngle = false, needAdjustAim = false, sniperrifle = false, bOffsetFindDNE = false;
+static long libbase, Character, PlayerController, GName, MyWeaponBase;
 static float tDis = 0, tDistance = 0, markDistance, markDis, Aimbot_Circle_Radius;
 static int player = 0, robot = 0;
 MinimalViewInfo pov;
+pid_t gamePid;
 
 static mach_port_t task;
-extern "C" kern_return_t mach_vm_read_overwrite(vm_map_t target_task, mach_vm_address_t address, mach_vm_size_t size,
-                                                mach_vm_address_t data, mach_vm_size_t *outsize);
-
 extern "C" kern_return_t mach_vm_region(vm_map_t target_task, mach_vm_address_t *address, mach_vm_size_t *size,
                                         vm_region_flavor_t flavor, vm_region_info_t info,
                                         mach_msg_type_number_t *infoCnt, mach_port_t *object_name);
@@ -83,8 +79,6 @@ extern "C" kern_return_t mach_vm_region(vm_map_t target_task, mach_vm_address_t 
 extern "C" kern_return_t mach_vm_region_recurse(vm_map_t map, mach_vm_address_t *address, mach_vm_size_t *size,
                                                 uint32_t *depth, vm_region_recurse_info_t info,
                                                 mach_msg_type_number_t *infoCnt);
-extern kern_return_t mach_vm_deallocate(vm_map_t target, mach_vm_address_t address, mach_vm_size_t size);
-
 vm_map_offset_t safegetBase(pid_t pid) {
   
   char path[64];
@@ -191,127 +185,66 @@ task_port_t task_for_pid_workaround(int Pid) {
 }
 
 bool getdfm() {
-  /*
-   if (!bOffsetFindDNE) {
-     NSString *gameName = @"DeltaForceClient";
-     pid_t gamePid = getPid(gameName);
-     if (gamePid != -1) {
-       task = task_for_pid_workaround(gamePid);
-       if (task) {
-         libbase = safegetBase(gamePid);
-       }
-     }
-     bOffsetFindDNE = true;
-   }
-   return (task != MACH_PORT_NULL);
-   */
   if (!bOffsetFindDNE) {
-    if ([DOJailbreaker.sharedInstance isValied]) {
-      bOffsetFindDNE = true;
+    NSString *gameName = @"DeltaForceClient";
+    gamePid = getPid(gameName);
+    if (gamePid != -1) {
+      task = task_for_pid_workaround(gamePid);
+      if (task) {
+        libbase = safegetBase(gamePid);
+      }
     }
+    bOffsetFindDNE = true;
   }
-  return bOffsetFindDNE;
+  return (task != MACH_PORT_NULL);
 }
 
 static bool IsValidAddress(long address) {
   return address > 0x100000000 && address < 0x3000000000;
 }
 
-bool isWritableRegion(mach_vm_address_t address, mach_vm_size_t size) {
-  mach_vm_size_t regionSize = size;
-  mach_vm_address_t regionAddr = address;
-  vm_region_basic_info_data_64_t info;
-  mach_msg_type_number_t infoCount = VM_REGION_BASIC_INFO_COUNT_64;
-  mach_port_t object_name;
-  
-  kern_return_t kr = mach_vm_region(task, &regionAddr, &regionSize, VM_REGION_BASIC_INFO_64, (vm_region_info_t)&info,
-                                    &infoCount, &object_name);
-  if (kr != KERN_SUCCESS)
-    return false;
-  
-  return (info.protection & VM_PROT_WRITE); // 判断是否具有写权限
-}
-
 bool readMemory(mach_vm_address_t address, void *buffer, size_t size) {
-  return kreadbuf(address, buffer, size) == 0;
-  /*
-   mach_vm_size_t outSize = 0;
-   kern_return_t kr = mach_vm_read_overwrite(task, address, size, (mach_vm_address_t)buffer, &outSize);
-   return (kr == KERN_SUCCESS && outSize == size);
-   */
+  return exploit_kreadbuf(address, buffer, size);
 }
 
 bool safe_vm_read(mach_vm_address_t address, void *buffer, size_t size) {
-  return kreadbuf(address, buffer, size) == 0;
-  /*
-   mach_vm_size_t out_size = 0;
-   kern_return_t kr = mach_vm_read_overwrite(task, (mach_vm_address_t)address, (mach_vm_size_t)size, (mach_vm_address_t)buffer, &out_size);
-   if (kr != KERN_SUCCESS || out_size != size) {
-     memset(buffer, 0, size);
-     return false;
-   }
-   return true;
-   */
+  return exploit_kreadbuf(address, buffer, size) == 0;
 }
 
 void *safe_read_memory(mach_vm_address_t address, size_t size) {
   void *buffer = malloc(size);
   if (!buffer)
     return NULL;
-  
-  if (kreadbuf(address, buffer, size) != 0)
-  {
+  if (!readMemory(address, buffer, size)) {
     free(buffer);
     return NULL;
   }
-  /*
-   if (!readMemory(address, buffer, size)) {
-     free(buffer);
-     return NULL;
-   }
-   */
   return buffer;
 }
 
 // 写内存前判断是否可写，避免触发 vm_protect
 bool writeMemory(long address, void *buf, int length) {
-  return kwritebuf(static_cast<uint64_t>(address), buf, static_cast<size_t>(length)) == 0;
-  /*
-   kern_return_t kr = vm_write(task, address, (vm_address_t)buf, (mach_msg_type_number_t)length);
-   return (kr == KERN_SUCCESS);
-   */
+  return exploit_kwritebuf(static_cast<uint64_t>(address), buf, static_cast<size_t>(length)) == 0;
 }
 
 bool ReadRemoteBytes(void *buffer, uintptr_t addr, size_t size) {
-  return kreadbuf(addr, buffer, size) == 0;
-  /*
-   mach_vm_size_t outSize = 0;
-   int code = mach_vm_read_overwrite(task, (mach_vm_address_t)addr, size, (mach_vm_address_t)buffer, &outSize);
-   return code == KERN_SUCCESS && outSize == size;
-   */
+  return exploit_kreadbuf(addr, buffer, size) == 0;
 }
 
 template <typename T> T Read(long address) {
   T data;
-  if (kreadbuf(static_cast<uint64_t>(address), &data, sizeof(T)) != 0)
+  void *buffer = safe_read_memory(address, sizeof(T));
+  if (buffer) {
+    memcpy(&data, buffer, sizeof(T));
+    free(buffer);
+  } else {
     memset(&data, 0, sizeof(T));
-  /*
-   void *buffer = safe_read_memory(address, sizeof(T));
-   if (buffer) {
-     memcpy(&data, buffer, sizeof(T));
-     free(buffer);
-   } else {
-     memset(&data, 0, sizeof(T));
-   }
-   */
+  }
   return data;
 }
 
 template <typename T> void Write(long address, T buf) {
-  kwritebuf(static_cast<uint64_t>(address), &buf, sizeof(T));
-  /*
-   writeMemory(address, &buf, sizeof(T));
-   */
+  writeMemory(address, &buf, sizeof(T));
 };
 
 static Vector3 GetRelativeLocation(uintptr_t actor) { return Read<Vector3>(Read<uintptr_t>(actor + 0x180) + 0x220); }
@@ -748,76 +681,6 @@ void DrawRadar(uintptr_t player, int radarX, int radarY, int radarWidth, int rad
   }
 }
 
-// void 恢复视角限制(float pitchMin, float pitchMax, float yawMin, float yawMax, float rollMin, float rollMax){
-//     float ViewPitchMin = PlayerCameraManager + 0x3ff4;
-//     float ViewPitchMax = PlayerCameraManager + 0x3ff8;
-//     float ViewYawMin = PlayerCameraManager + 0x3ffc;
-//     float ViewYawMax = PlayerCameraManager + 0x4000;
-//     float ViewRollMin = PlayerCameraManager + 0x4004;
-//     float ViewRollMax = PlayerCameraManager + 0x4008;
-//
-//     Write(ViewPitchMin, pitchMin);
-//     Write(ViewPitchMax, pitchMax);
-//     Write(ViewYawMin, yawMin);
-//     Write(ViewYawMax, yawMax);
-//     Write(ViewRollMin, rollMin);
-//     Write(ViewRollMax, rollMax);
-// }
-//
-// void SetControlRotation(long Actor,Vector3 AimPos){
-//
-//     bool isFiringLast = false;
-//
-//     if(!Character) return;
-//
-//     long BlackBoard = Read<long>(Character + 0xe08);
-//     if (!IsValidAddress(BlackBoard)) return;
-//     bool bIsWeaponFiring = Read<bool>(BlackBoard + 0x4be);
-//     bool bIsGunADS = Read<bool>(BlackBoard + 0x4bd);
-//
-//     float originalPitchMin = 0.0f;
-//     float originalPitchMax = 0.0f;
-//     float originalYawMin = 0.0f;
-//     float originalYawMax = 0.0f;
-//     float originalRollMin = 0.0f;
-//     float originalRollMax = 0.0f;
-//
-//
-//     float pitch = atan2f(AimPos.Z, sqrt(AimPos.X * AimPos.X + AimPos.Y * AimPos.Y)) * 57.29577951308f;
-//     float yaw = atan2f(AimPos.Y, AimPos.X) * 57.29577951308f;
-//
-//     float ViewPitchMin = PlayerCameraManager + 0x3ff4;
-//     float ViewPitchMax = PlayerCameraManager + 0x3ff8;
-//     float ViewYawMin = PlayerCameraManager + 0x3ffc;
-//     float ViewYawMax = PlayerCameraManager + 0x4000;
-//     float ViewRollMin = PlayerCameraManager + 0x4004;
-//     float ViewRollMax = PlayerCameraManager + 0x4008;
-//
-//     if(bIsWeaponFiring && !isFiringLast && isHookAngle){
-//
-//         originalPitchMin = Read<float>(ViewPitchMin);
-//         originalPitchMax = Read<float>(ViewPitchMax);
-//         originalYawMin = Read<float>(ViewYawMin);
-//         originalYawMax = Read<float>(ViewYawMax);
-//         originalRollMin = Read<float>(ViewRollMin);
-//         originalRollMax = Read<float>(ViewRollMax);
-//
-//         Write(ViewPitchMin, pitch);
-//         Write(ViewPitchMax, pitch);
-//         Write(ViewYawMin, yaw);
-//         Write(ViewYawMax, yaw);
-//         Write(ViewRollMin, 0);
-//         Write(ViewRollMax, 0);
-//
-//     } else if(!bIsWeaponFiring && isFiringLast && isHookAngle){
-//
-//         恢复视角限制(originalPitchMin, originalPitchMax, originalYawMin, originalYawMax, originalRollMin,
-//         originalRollMax);
-//     }
-//
-//     isFiringLast = bIsWeaponFiring; // 更新上一帧的开火状态
-// }
-
 float currentAimRadius = 300;
 float targetAimRadius = 300;
 float transitionSpeed = 3;
@@ -844,172 +707,6 @@ void SetAimRadius(float distance) {
     Aimbot_Circle_Radius = currentAimRadius;
   }
 }
-
-// void SetControlRotation(long Actor,Vector3 AimPos){
-//
-//     if(!Character) return;
-//
-//     long BlackBoard = Read<long>(Character + 0xe30);//UGPBlackboardComponent* BlackBoard;//藏
-//     if (!IsValidAddress(BlackBoard)) return;
-//     bool bIsWeaponFiring = Read<bool>(BlackBoard + 0x4fe);//bIsFiring//藏
-////    bool bIsGunADS = Read<bool>(BlackBoard + 0x4fd);
-//
-//    uintptr_t WeaponDataComponentFiring = Read<long>(MyWeaponBase + 0x1308);//struct ABP_Weapon_Swarms_C :
-//    AZoyaSwarmsWeapon  ->   struct UWeaponThrowableDataComponentFiring* WeaponThrowableDataComponentFiring; // Offset:
-//    0x10a8
-//
-//    float bulletSpeed = Read<float>(WeaponDataComponentFiring + 0x468 + 0x44);//struct FWeaponFireRepInfo FireInfo; //
-//    Offset: 0x650 // Size: 0x78 //struct FWeaponFireRepInfo  -> float InitSpeed; // Offset: 0x34 // Size: 0x04
-//    //NSLog(@"DH666 bulletSpeed %f", bulletSpeed);
-//
-//    //子弹飞行时间
-//    float bulletFlyTime = get3dDistance(CharacterPos, AimPos, bulletSpeed) * 1.2;
-//
-//    //移动加坐标
-//    Vector3 moveCoord = Read<Vector3>(Read<long>(Actor + 0x3d8) + 0x10c);//人物向量 //struct
-//    UCharacterMovementComponent* CharacterMovement; //struct FVector Velocity;
-//
-//    AimPos.X += moveCoord.X * bulletFlyTime;
-//    AimPos.Y += moveCoord.Y * bulletFlyTime;
-//    AimPos.Z += moveCoord.Z * bulletFlyTime;
-//
-//    uintptr_t ControlRotation = PlayerController + 0x3d8;//FRotator ControlRotation;//藏
-//
-//    CharacterPos.Z += 55;
-//
-//    // 目标位置角度
-//    FRotator Rotation = CalcAngle(AimPos - CharacterPos);
-//
-//    // 自己位置角度
-//    FRotator mouseCoord = Read<FRotator>(ControlRotation);
-//
-//    //开火压枪
-////    if (bIsWeaponFiring) {
-////        //枪械压枪幅度
-////        float recoil = 0.05;
-////        float recoilTimes = 4.5 - get3dDistance(CharacterPos, AimPos, 10000);
-////        recoilTimes += get3dDistance(CharacterPos, AimPos, 10000) * 0.9;
-////
-////        //步枪启动压枪
-////        Rotation.Pitch -= recoilTimes * recoil;
-////    }
-//
-//    // 平滑自瞄角度
-//    FRotator aimbotRotation;
-//    aimbotRotation = mouseCoord + Clamp(Rotation - mouseCoord) * (0.02*15);
-//
-//    if (bIsWeaponFiring) {
-//
-//        if(!isnan(aimbotRotation.Pitch) && !isnan(aimbotRotation.Yaw)) {
-//
-//            Write(ControlRotation, aimbotRotation.Pitch);
-//            Write(ControlRotation + 4, aimbotRotation.Yaw);
-//
-//        }
-//    }
-//}
-
-// 8    18 左小腿
-// 48   8.5 左小臂
-
-// void GetRange(float RengeIndex, bool Ret) {
-//
-//     uintptr_t RangeV1 = Read<uintptr_t>(libbase + 0xF74B7C0);
-//     if (!IsValidAddress(RangeV1)) return;
-//
-//     uintptr_t RangeV2 = Read<uintptr_t>(RangeV1 + 0x8);
-//     if (!IsValidAddress(RangeV2)) return;
-//
-//     uintptr_t RangeV3 = Read<uintptr_t>(RangeV2 + 0x1E8);
-//     if (!IsValidAddress(RangeV3)) return;
-//
-//     uintptr_t GameRange = Read<uintptr_t>(RangeV3 + 0x40);
-//     if (!IsValidAddress(GameRange)) return;
-//
-//
-//     uintptr_t RangeV5 = Read<uintptr_t>(GameRange + 0x8);
-//     if (!IsValidAddress(RangeV5)) return;
-//
-//     uintptr_t RangeV6 = Read<uintptr_t>(RangeV5 + 0x48);
-//     if (!IsValidAddress(RangeV6)) return;
-//
-//     float quti = Read<float>(RangeV6 + 0x48);
-//
-//
-//
-//     uintptr_t RangeV7 = Read<uintptr_t>(GameRange + 0x50);
-//     if (!IsValidAddress(RangeV7)) return;
-//
-//     uintptr_t RangeV8 = Read<uintptr_t>(RangeV7 + 0x48);
-//     if (!IsValidAddress(RangeV8)) return;
-//
-//     float youbi = Read<float>(RangeV8 + 0x48);
-//
-//
-//
-//
-//     uintptr_t RangeV9 = Read<uintptr_t>(GameRange + 0x70);
-//     if (!IsValidAddress(RangeV9)) return;
-//
-//     uintptr_t RangeR1 = Read<uintptr_t>(RangeV9 + 0x48);
-//     if (!IsValidAddress(RangeR1)) return;
-//
-//     float zuobi = Read<float>(RangeR1 + 0x48);
-//
-//
-//     if (Ret == true) {
-//         if (quti == RengeIndex) return;
-//         if (zuobi == RengeIndex) return;
-//         if (youbi == RengeIndex) return;
-//         if(is手臂){
-//             Write<float>(RangeV8 + 0x48, RengeIndex);
-//             Write<float>(RangeR1 + 0x48, RengeIndex);
-//         }
-//         if(is躯体) Write<float>(RangeV6 + 0x48, RengeIndex);
-//     } else {
-//         Write<float>(RangeV6 + 0x48, 22.75f);
-//         Write<float>(RangeV8 + 0x48, 10.75f);
-//         Write<float>(RangeR1 + 0x48, 10.0f);
-//         if (quti == 22.75f) return;
-//         if (zuobi == 10.75f) return;
-//         if (youbi == 10.0f) return;
-//     };
-// }
-
-// void GetRange(float RengeIndex, bool Ret) {
-//
-//     uintptr_t RangeV1 = Read<uintptr_t>(libbase + 0xF74B7C0);
-//     if (!IsValidAddress(RangeV1)) return;
-//
-//     uintptr_t RangeV2 = Read<uintptr_t>(RangeV1 + 0x8);
-//     if (!IsValidAddress(RangeV2)) return;
-//
-//     uintptr_t RangeV3 = Read<uintptr_t>(RangeV2 + 0x1e8);
-//     if (!IsValidAddress(RangeV3)) return;
-//
-//     uintptr_t RangeV4 = Read<uintptr_t>(RangeV3 + 0x40);
-//     if (!IsValidAddress(RangeV4)) return;
-//
-//     uintptr_t RangeV5 = Read<uintptr_t>(RangeV4 + 0x8);
-//     if (!IsValidAddress(RangeV5)) return;
-//
-//     uintptr_t RangeV6 = Read<uintptr_t>(RangeV5 + 0x48);
-//     if (!IsValidAddress(RangeV6)) return;
-//
-//     float RangeSize = Read<float>(RangeV6 + 0x48);
-//
-//     Draw::DrawText(string_format("%f",RangeSize), ImVec2(CanvasSize.X/2, CanvasSize.Y*0.02f+100), true, Colour_红色,
-//     true, 40);
-//
-//
-//     if (Ret == true) {
-//         if (RangeSize == RengeIndex) return;
-//         Write<float>(RangeV6 + 0x48, RengeIndex);
-//     } else {
-//         if (RangeSize == 18.0f) return;
-//         Write<float>(RangeV6 + 0x48, 18.0f);
-//     };
-// }
 
 void GetDBMapScreenPos(Mapinfo Map, Vector2 DisplaySize, Vector3 Pos, float Pitch, Vector2 &ScreenPos,
                        Vector2 &Direction) {
@@ -1808,10 +1505,13 @@ void Draw::Startdfm() {
   
   getdfm();
   
-  if (总开关)
-    GWorld = Read<uintptr_t>(libbase + 0xF8D48F8);
-  if (!IsValidAddress(GWorld))
-    return;
+  if (总开关) {
+    NSLog(@"[DOJailbreaker] start machPIDGword (pid:%x base:%lx)", gamePid, libbase);
+    GWorld = exploit_machPIDGword(gamePid, libbase);
+    NSLog(@"[DOJailbreaker] ended machPIDGword: %lx", GWorld);
+    // GWorld = Read<uintptr_t>(libbase + 0xF8D48F8);
+  }
+  if (!IsValidAddress(GWorld)) return;
   
   GetModuleBaseAddress(GWorld);
   
@@ -1854,52 +1554,12 @@ void Draw::Startdfm() {
     string ClassName = GetClassName(ClassID, GName);
     if (ClassName.empty())
       continue;
-    
-    //    if (资源名) {
-    //
-    //      Vector3 LocationWorldPos = GetRelativeLocation(Actor);
-    //      Vector2 LocationScreen = WorldToScreen(LocationWorldPos, Matrix);;
-    //
-    //      float distance = Vector3::Distance(LocationWorldPos, CharacterPos) / 100;
-    //      if (distance <= 200) {
-    //        DrawText(ClassName.c_str(), ImVec2(LocationScreen.X, LocationScreen.Y), true, Colour_草绿, true ,20);
-    //      }
-    //    }
-    
+
     if (isContain(ClassName, "DFMCharacter") || isContain(ClassName, "DFMAICharacter") ||
         isContain(ClassName, "DFM_Character") || isContain(ClassName, "Character"))
       GetPlayerData(Actor);
-    else if (isContain(ClassName, "InventoryPickup"))
-      
-      if (is物资) {
-        GetSuppliesData(Actor);
-      }
-    if (资源名) {
-      if (isContain(ClassName, "BP_AntiTankGrenade_BulletPreview_C") ||
-          isContain(ClassName, "ThrowPerviewDynamicActor"))
-        GetWarningData(Actor, "瞄准中", Colour_橙色);
-      else if (isContain(ClassName, "AbilityBullet_AntiTankGrenade"))
-        GetWarningData(Actor, "三连炮", Colour_红色);
-      else if (isContain(ClassName, "AbilityBullet_AirCannon"))
-        GetWarningData(Actor, "虎蹲炮", Colour_红色);
-      else if (isContain(ClassName, "ProjectileC4"))
-        GetWarningData(Actor, "C4", Colour_红色);
-      else if (isContain(ClassName, "SuppressionMine"))
-        GetWarningData(Actor, "陷阱", Colour_红色);
-      else if (isContain(ClassName, "ThrowableProjectileDefault"))
-        GetWarningData(Actor, "手雷", Colour_红色);
-      else if (isContain(ClassName, "IncendiaryArea"))
-        GetWarningData(Actor, "燃烧弹", Colour_红色);
-      else if (isContain(ClassName, "GuidedCruiseMissile"))
-        GetWarningData(Actor, "巡飞弹", Colour_红色);
-      else if (isContain(ClassName, "SubMissile"))
-        GetWarningData(Actor, "小飞弹", Colour_红色);
-      else if (isContain(ClassName, "FireArrowActor"))
-        GetWarningData(Actor, "电击", Colour_红色);
-    }
     
     if (is盒子) {
-      
       if (isContain(ClassName, "Inventory_DeadBody"))
         GetData(Actor, "谷辉合", Colour_青色);
     }
@@ -1915,17 +1575,6 @@ void Draw::Startdfm() {
              true, Colour_红色, true, 40);
   }
   thread_local static char fpsText[32];
-  snprintf(fpsText, sizeof(fpsText), "FPS: %.1f", Read<float>(libbase + 0xF8D281C)); // 藏
+  snprintf(fpsText, sizeof(fpsText), "FPS: %.1f", Read<float>(libbase + 0x109459C4)); // 藏
   DrawText(fpsText, ImVec2(CanvasSize.X * 0.2f, CanvasSize.Y * 0.08f), true, Colour_白色, true, 30);
-  
-  //  if(is躯体){
-  //    DrawCircle(ImVec2(CanvasSize.X/2, CanvasSize.Y/2), Aimbot_Circle_Radius,  Colour_浅蓝);
-  //    if (fabs(CanvasSize.X/2 - markScreenPos.X) > 1 || fabs(CanvasSize.Y/2 - markScreenPos.Y) > 1) {
-  //      // 绘画攻击目标线
-  //      DrawLine(ImVec2(CanvasSize.X/2, CanvasSize.Y/2), ImVec2(markScreenPos.X, markScreenPos.Y),
-  //               Colour_绿色); DrawCircleFilled(ImVec2(AimPosScreen.X, AimPosScreen.Y), 3, Colour_黄色);
-  //
-  //    }
-  //  }
-  //  DrawText("DFM",ImVec2(CanvasSize.X/2 ,80),true ,纯白,true,60);
 }
