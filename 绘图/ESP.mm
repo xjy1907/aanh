@@ -184,7 +184,7 @@ task_port_t task_for_pid_workaround(int Pid) {
   return MACH_PORT_NULL;
 }
 
-bool getdfm() {
+bool getDeltaForceClientMachBase() {
   if (!bOffsetFindDNE) {
     NSString *gameName = @"DeltaForceClient";
     gamePid = getPid(gameName);
@@ -200,35 +200,109 @@ bool getdfm() {
 }
 
 static bool IsValidAddress(long address) { return address > 0x100000000 && address < 0x3000000000; }
+#if 0
+bool readMemory(mach_vm_address_t address, void *buffer, size_t size) {
+  if (!buffer || size == 0 || !IsValidAddress(address)) {
+    return false;
+  }
+  uint8_t *buf = static_cast<uint8_t *>(buffer);
+  size_t bytes_read = 0;
+  
+  while (bytes_read < size) {
+    size_t chunk_size = std::min(size - bytes_read, sizeof(uint64_t));
+    uint64_t value = exploit_mach_read(gamePid, address + bytes_read);
+    memcpy(buf + bytes_read, &value, chunk_size);
+    bytes_read += chunk_size;
+  }
+  
+  return true;
+}
 
-// return exploit_mach_read(gamePid, address);
+// 使用 exploit_mach_read 替换 mach_vm_read_overwrite
+bool ReadRemoteBytes(void *buffer, uintptr_t addr, size_t size) {
+  if (!buffer || size == 0 || !IsValidAddress(addr)) {
+    return false;
+  }
+  
+  uint8_t *buf = static_cast<uint8_t *>(buffer);
+  size_t bytes_read = 0;
+  
+  while (bytes_read < size) {
+    size_t chunk_size = std::min(size - bytes_read, sizeof(uint64_t));
+    uint64_t value = exploit_mach_read(gamePid, addr + bytes_read);
+    memcpy(buf + bytes_read, &value, chunk_size);
+    bytes_read += chunk_size;
+  }
+  
+  return true;
+}
+
+template <typename T> T Read(long address) {
+  T data;
+  if (!IsValidAddress(address)) {
+    memset(&data, 0, sizeof(T));
+    return data;
+  }
+  if (!readMemory(static_cast<mach_vm_address_t>(address), &data, sizeof(T))) {
+    memset(&data, 0, sizeof(T));
+  }
+  return data;
+}
+
+bool writeMemory(long address, void *buf, int length) {
+  return exploit_kwritebuf(static_cast<uint64_t>(address), buf, static_cast<size_t>(length)) == 0;
+}
+#else
 bool readMemory(mach_vm_address_t address, void *buffer, size_t size) {
   mach_vm_size_t outSize = 0;
   kern_return_t kr = mach_vm_read_overwrite(task, address, size, (mach_vm_address_t)buffer, &outSize);
   return (kr == KERN_SUCCESS && outSize == size);
 }
 
+bool safe_vm_read(mach_vm_address_t address, void *buffer, size_t size) {
+  mach_vm_size_t out_size = 0;
+  kern_return_t kr = mach_vm_read_overwrite(task, (mach_vm_address_t)address, (mach_vm_size_t)size, (mach_vm_address_t)buffer, &out_size);
+  if (kr != KERN_SUCCESS || out_size != size) {
+    memset(buffer, 0, size);
+    return false;
+  }
+  return true;
+}
+
+void *safe_read_memory(mach_vm_address_t address, size_t size) {
+  void *buffer = malloc(size);
+  if (!buffer)
+    return NULL;
+  if (!readMemory(address, buffer, size)) {
+    free(buffer);
+    return NULL;
+  }
+  return buffer;
+}
+
 bool ReadRemoteBytes(void *buffer, uintptr_t addr, size_t size) {
   mach_vm_size_t outSize = 0;
-  kern_return_t kr = mach_vm_read_overwrite(task, (mach_vm_address_t)addr, size, (mach_vm_address_t)buffer, &outSize);
-  return kr == KERN_SUCCESS && outSize == size;
+  int code = mach_vm_read_overwrite(task, (mach_vm_address_t)addr, size, (mach_vm_address_t)buffer, &outSize);
+  return code == KERN_SUCCESS && outSize == size;
 }
 
 template <typename T> T Read(long address) {
   T data;
-  // 直接使用 exploit_mach_read 读取 64 位数据
-  uint64_t value = exploit_mach_read(gamePid, static_cast<uint64_t>(address));
-  memcpy(&data, &value, sizeof(T));
+  void *buffer = safe_read_memory(address, sizeof(T));
+  if (buffer) {
+    memcpy(&data, buffer, sizeof(T));
+    free(buffer);
+  } else {
+    memset(&data, 0, sizeof(T));
+  }
   return data;
 }
 
 bool writeMemory(long address, void *buf, int length) {
-  return exploit_kwritebuf(static_cast<uint64_t>(address), buf, static_cast<size_t>(length)) == 0;
-  /*
-   kern_return_t kr = vm_write(task, address, (vm_address_t)buf, (mach_msg_type_number_t)length);
-   return (kr == KERN_SUCCESS);
-   */
+  kern_return_t kr = vm_write(task, address, (vm_address_t)buf, (mach_msg_type_number_t)length);
+  return (kr == KERN_SUCCESS);
 }
+#endif
 
 template <typename T> void Write(long address, T buf) { writeMemory(address, &buf, sizeof(T)); };
 
@@ -1392,12 +1466,13 @@ void Draw::Startdfm() {
   AimPosScreen = Vector2(CanvasSize.X, CanvasSize.Y);
   markDis = CanvasSize.X;
   tDis = 0;
-  
-  getdfm();
+  NSLog(@"[DOJailbreaker] start read libbase");
+  getDeltaForceClientMachBase();
+  NSLog(@"[DOJailbreaker] ended read libbase: %lx", libbase);
   if (总开关) {
-    NSLog(@"[DOJailbreaker] start machPIDGword (pid:%x task:%x base:%lx)", gamePid, task, libbase);
+    NSLog(@"[DOJailbreaker] start exploit_mach_read gworld (pid:%x task:%x base:%lx)", gamePid, task, libbase);
     GWorld = exploit_mach_read(gamePid, libbase + 0x10947B08);
-    NSLog(@"[DOJailbreaker] ended machPIDGword: %lx", GWorld);
+    NSLog(@"[DOJailbreaker] ended exploit_mach_read gworld: %lx", GWorld);
   }
   if (!IsValidAddress(GWorld))
     return;
