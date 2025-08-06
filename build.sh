@@ -37,3 +37,4 @@ zip -qr DZ.tipa Payload
 cd -
 mkdir -p packages
 mv DZ.xcarchive/Products/DZ.tipa packages/DZ_$VERSION.tipa
+mv DZ.xcarchive packages/DZ.xcarchive

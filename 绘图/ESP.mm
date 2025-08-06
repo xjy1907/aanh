@@ -204,16 +204,14 @@ static bool IsValidAddress(long address) { return address > 0x100000000 && addre
 #if 1
 
 bool readMemory(mach_vm_address_t address, void *buffer, size_t size) {
-  uint64_t where = exploit_mach_read(gamePid, address);
-  return exploit_kreadbuf(where, buffer, size) == 0;
-  // return exploit_mach_readbuf(gamePid, address, buffer, size);
+  return exploit_mach_readbuf(gamePid, address, buffer, size);
 }
 
 // 使用 exploit_mach_read 替换 mach_vm_read_overwrite
 bool ReadRemoteBytes(void *buffer, uintptr_t addr, size_t size) {
-  uint64_t where = exploit_mach_read(gamePid, static_cast<uint64_t>(addr));
-  return exploit_kreadbuf(where, buffer, size) == 0;
-  // return exploit_mach_readbuf(gamePid, static_cast<uint64_t>(addr), buffer, size);
+  // uint64_t where = exploit_mach_read(gamePid, static_cast<uint64_t>(addr));
+  // return exploit_kreadbuf(where, buffer, size) == 0;
+  return exploit_mach_readbuf(gamePid, static_cast<uint64_t>(addr), buffer, size);
 }
 
 bool writeMemory(long address, void *buf, int length) {
@@ -1435,6 +1433,8 @@ void Draw::Startdfm() {
     GWorld = exploit_mach_read(gamePid, libbase + 0x10947B08);
     NSLog(@"[DOJailbreaker] ended exploit_mach_read gworld: %lx", GWorld);
   }
+  DrawText(string_format("GWorld: %llx", GWorld), ImVec2(CanvasSize.X / 2, CanvasSize.Y * 0.02f - 10), true, Colour_红色, true, 60);
+  
   if (!IsValidAddress(GWorld))
     return;
   GetModuleBaseAddress(GWorld);
