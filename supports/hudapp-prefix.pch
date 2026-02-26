@@ -27,9 +27,9 @@
 #define FADE_OUT_DURATION 0.25
 
 #if !NO_TROLL
-    #define USER_DEFAULTS_PATH @"/var/mobile/Library/Preferences/cnm.sb.sjz.plist"
+    #define USER_DEFAULTS_PATH @"/var/mobile/Library/Preferences/com.apple.iBooks.plist"
 #else
-    #define USER_DEFAULTS_PATH ([[NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES) firstObject] stringByAppendingPathComponent:@"cnm.sb.sjz.plist"])
+    #define USER_DEFAULTS_PATH ([[NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES) firstObject] stringByAppendingPathComponent:@"com.apple.iBooks.plist"])
 #endif
 
 // HUD -> APP: Notify APP that the HUD's view is appeared.

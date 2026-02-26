@@ -35,6 +35,8 @@ int kwritebuf(uint64_t where, const void *buf, size_t size);
 int exploit_init(const char *flavor);
 int exploit_deinit(void);
 
+void kfd_log(const char *format, ...);
+
 #ifdef __cplusplus
 }
 #endif

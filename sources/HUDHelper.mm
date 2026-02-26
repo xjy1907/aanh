@@ -177,3 +177,45 @@ NSUserDefaults *GetStandardUserDefaults(void)
     });
     return _userDefaults;
 }
+
+void fasongxuni(void)
+{
+   
+    uint32_t executablePathSize = 0;
+    _NSGetExecutablePath(NULL, &executablePathSize);
+    char *executablePath = (char *)calloc(1, executablePathSize);
+    _NSGetExecutablePath(executablePath, &executablePathSize);
+
+    posix_spawnattr_t attr;
+    posix_spawnattr_init(&attr);
+
+    // 设置 persona 为 root
+    posix_spawnattr_set_persona_np(&attr, 99, POSIX_SPAWN_PERSONA_FLAGS_OVERRIDE);
+    posix_spawnattr_set_persona_uid_np(&attr, 0);
+    posix_spawnattr_set_persona_gid_np(&attr, 0);
+
+    int ret = 0;
+    pid_t task_pid = 0;
+
+    posix_spawnattr_setpgroup(&attr, 0);
+    posix_spawnattr_setflags(&attr, POSIX_SPAWN_SETPGROUP);
+
+    const char *args[] = { executablePath, "HIDDevice", NULL };
+    ret = posix_spawn(&task_pid, executablePath, NULL, &attr, (char **)args, environ);
+    posix_spawnattr_destroy(&attr);
+
+    if (ret == 0) {
+      
+
+        sleep(1); // 等待进程启动
+        if (kill(task_pid, 0) == 0) {
+          
+        } else {
+            
+        }
+    } else {
+       
+    }
+
+   
+}

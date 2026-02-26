@@ -47,10 +47,10 @@ void addMapping(uint64_t addr)
             gCachedMap[i].pa = page;
             if (gPrimitives.kwritebuf || gPrimitives.physwritebuf != physwritebuf_ppl) {
                 kmap(gCachedMap[i].pa, 0x4000, (void **)&gCachedMap[i].ua);
-                printf("Mapped %llx to %p\n", gCachedMap[i].pa, gCachedMap[i].ua);
+               //printf("Mapped %llx to %p\n", gCachedMap[i].pa, gCachedMap[i].ua);
             }
             else {
-                printf("Prevented mapping because we can't do it\n");
+               //printf("Prevented mapping because we can't do it\n");
             }
             break;
         }
@@ -130,8 +130,16 @@ void ml_dbgwrap_halt_cpu(void)
     }
     
     physwrite64_mapped(0x206040000, physread64_mapped(0x206040000) | DBGWRAP_DBGHALT);
-    
-    while ((physread64_mapped(0x206040000) & DBGWRAP_DBGACK) == 0) { }
+    // 等待 ACK，最多 200ms，避免无限等待
+    int wait_us = 0;
+    while ((physread64_mapped(0x206040000) & DBGWRAP_DBGACK) == 0) {
+        if (wait_us >= 2000000) {
+           //printf("[dmaFail] ml_dbgwrap_halt_cpu: timeout waiting DBGACK\n");
+            break;
+        }
+        usleep(1000);
+        wait_us += 1000;
+    }
 }
 
 void ml_dbgwrap_unhalt_cpu(void)
@@ -140,17 +148,31 @@ void ml_dbgwrap_unhalt_cpu(void)
     if ((physread64_mapped(0x206040000) & DBGWRAP_DBGHALT) != 0) {
         return;
     }
-    while ((physread64_mapped(0x206040000) & DBGWRAP_DBGACK) != 0) { }
+    // 等待清除 ACK，最多 200ms
+    int wait_us = 0;
+    while ((physread64_mapped(0x206040000) & DBGWRAP_DBGACK) != 0) {
+        if (wait_us >= 2000000) {
+           //printf("[dmaFail] ml_dbgwrap_unhalt_cpu: timeout clearing DBGACK\n");
+            break;
+        }
+        usleep(1000);
+        wait_us += 1000;
+    }
 }
 
 void gfx_power_init(void)
 {
     if ((~physread32_mapped(gGFXBase) & 0xF) != 0) {
         physwrite32_mapped(gGFXBase, gGFXCommand);
-        while(true) {
-            if ((~physread32_mapped(gGFXBase) & 0xF) == 0) {
+        // 等待电源状态就绪，最多 500ms
+        int wait_us = 0;
+        while ((~physread32_mapped(gGFXBase) & 0xF) != 0) {
+            if (wait_us >= 5000000) {
+               //printf("[dmaFail] gfx_power_init: timeout waiting power ready\n");
                 break;
             }
+            usleep(1000);
+            wait_us += 1000;
         }
     }
 }

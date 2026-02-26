@@ -5,19 +5,19 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleDisplayName</key>
-	<string>DZ</string>
+	<string>Books</string>
 	<key>CFBundleExecutable</key>
-	<string>DZ-Sandbox</string>
+	<string>Books-Sandbox</string>
 	<key>CFBundleIconFile</key>
 	<string>icon.png</string>
 	<key>CFBundleIconName</key>
 	<string>AppIcon</string>
 	<key>CFBundleIdentifier</key>
-	<string>cnm.sb.sjz-sandbox</string>
+	<string>com.apple.iBooks-sandbox</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>DZ</string>
+	<string>Books</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -28,7 +28,7 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>cnm.sb.sjz</string>
+			<string>com.apple.iBooks</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>trollspeed</string>

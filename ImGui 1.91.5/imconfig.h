@@ -1,15 +1,15 @@
 //-----------------------------------------------------------------------------
 // DEAR IMGUI COMPILE-TIME OPTIONS
-// Runtime options (clipboard callbacks, enabling various features, etc.) can generally be set via the ImGuiIO structure.
-// You can use ImGui::SetAllocatorFunctions() before calling ImGui::CreateContext() to rewire memory allocation functions.
+// Runtime options (clipboard callbacks, enabling various features, etc.) can generally be set via the BBZGUIIO structure.
+// You can use BBZGUI::SetAllocatorFunctions() before calling BBZGUI::CreateContext() to rewire memory allocation functions.
 //-----------------------------------------------------------------------------
-// A) You may edit imconfig.h (and not overwrite it when updating Dear ImGui, or maintain a patch/rebased branch with your modifications to it)
+// A) You may edit imconfig.h (and not overwrite it when updating Dear BBZGUI, or maintain a patch/rebased branch with your modifications to it)
 // B) or '#define IMGUI_USER_CONFIG "my_imgui_config.h"' in your project and then add directives in your own file without touching this template.
 //-----------------------------------------------------------------------------
-// You need to make sure that configuration settings are defined consistently _everywhere_ Dear ImGui is used, which include the imgui*.cpp
-// files but also _any_ of your code that uses Dear ImGui. This is because some compile-time options have an affect on data structures.
+// You need to make sure that configuration settings are defined consistently _everywhere_ Dear BBZGUI is used, which include the imgui*.cpp
+// files but also _any_ of your code that uses Dear BBZGUI. This is because some compile-time options have an affect on data structures.
 // Defining those options in imconfig.h will ensure every compilation unit gets to see the same data structure layouts.
-// Call IMGUI_CHECKVERSION() from your .cpp file to verify that the data structures your files are using are matching the ones imgui.cpp is using.
+// Call IMGUI_CHECKVERSION() from your .cpp file to verify that the data structures your files are using are matching the ones BBZGui.cpp is using.
 //-----------------------------------------------------------------------------
 
 #pragma once
@@ -20,9 +20,9 @@
 //#define IM_ASSERT(_EXPR)  ((void)(_EXPR))     // Disable asserts
 
 //---- Define attributes of all API symbols declarations, e.g. for DLL under Windows
-// Using Dear ImGui via a shared library is not recommended, because of function call overhead and because we don't guarantee backward nor forward ABI compatibility.
+// Using Dear BBZGUI via a shared library is not recommended, because of function call overhead and because we don't guarantee backward nor forward ABI compatibility.
 // - Windows DLL users: heaps and globals are not shared across DLL boundaries! You will need to call SetCurrentContext() + SetAllocatorFunctions()
-//   for each static/DLL boundary you are calling from. Read "Context and Memory Allocators" section of imgui.cpp for more details.
+//   for each static/DLL boundary you are calling from. Read "Context and Memory Allocators" section of BBZGui.cpp for more details.
 //#define IMGUI_API __declspec(dllexport)                   // MSVC Windows: DLL export
 //#define IMGUI_API __declspec(dllimport)                   // MSVC Windows: DLL import
 //#define IMGUI_API __attribute__((visibility("default")))  // GCC/Clang: override visibility when set is hidden
@@ -30,8 +30,8 @@
 //---- Don't define obsolete functions/enums/behaviors. Consider enabling from time to time after updating to clean your code of obsolete function/names.
 //#define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 
-//---- Disable all of Dear ImGui or don't implement standard windows/tools.
-// It is very strongly recommended to NOT disable the demo windows and debug tool during development. They are extremely useful in day to day work. Please read comments in imgui_demo.cpp.
+//---- Disable all of Dear BBZGUI or don't implement standard windows/tools.
+// It is very strongly recommended to NOT disable the demo windows and debug tool during development. They are extremely useful in day to day work. Please read comments in BBZGui_demo.cpp.
 //#define IMGUI_DISABLE                                     // Disable everything: all headers and source files will be empty.
 //#define IMGUI_DISABLE_DEMO_WINDOWS                        // Disable demo windows: ShowDemoWindow()/ShowStyleEditor() will be empty.
 //#define IMGUI_DISABLE_DEBUG_TOOLS                         // Disable metrics/debugger and other debug tools: ShowMetricsWindow(), ShowDebugLogWindow() and ShowIDStackToolWindow() will be empty.
@@ -47,14 +47,14 @@
 //#define IMGUI_DISABLE_DEFAULT_MATH_FUNCTIONS              // Don't implement ImFabs/ImSqrt/ImPow/ImFmod/ImCos/ImSin/ImAcos/ImAtan2 so you can implement them yourself.
 //#define IMGUI_DISABLE_FILE_FUNCTIONS                      // Don't implement ImFileOpen/ImFileClose/ImFileRead/ImFileWrite and ImFileHandle at all (replace them with dummies)
 //#define IMGUI_DISABLE_DEFAULT_FILE_FUNCTIONS              // Don't implement ImFileOpen/ImFileClose/ImFileRead/ImFileWrite and ImFileHandle so you can implement them yourself if you don't want to link with fopen/fclose/fread/fwrite. This will also disable the LogToTTY() function.
-//#define IMGUI_DISABLE_DEFAULT_ALLOCATORS                  // Don't implement default allocators calling malloc()/free() to avoid linking with them. You will need to call ImGui::SetAllocatorFunctions().
+//#define IMGUI_DISABLE_DEFAULT_ALLOCATORS                  // Don't implement default allocators calling malloc()/free() to avoid linking with them. You will need to call BBZGUI::SetAllocatorFunctions().
 //#define IMGUI_DISABLE_SSE                                 // Disable use of SSE intrinsics even if available
 
 //---- Enable Test Engine / Automation features.
 //#define IMGUI_ENABLE_TEST_ENGINE                          // Enable imgui_test_engine hooks. Generally set automatically by include "imgui_te_config.h", see Test Engine for details.
 
-//---- Include imgui_user.h at the end of imgui.h as a convenience
-// May be convenient for some users to only explicitly include vanilla imgui.h and have extra stuff included.
+//---- Include imgui_user.h at the end of BBZGui.h as a convenience
+// May be convenient for some users to only explicitly include vanilla BBZGui.h and have extra stuff included.
 //#define IMGUI_INCLUDE_IMGUI_USER_H
 //#define IMGUI_USER_H_FILENAME         "my_folder/my_imgui_user.h"
 
@@ -65,7 +65,7 @@
 //#define IMGUI_USE_WCHAR32
 
 //---- Avoid multiple STB libraries implementations, or redefine path/filenames to prioritize another version
-// By default the embedded implementations are declared static and not available outside of Dear ImGui sources files.
+// By default the embedded implementations are declared static and not available outside of Dear BBZGUI sources files.
 //#define IMGUI_STB_TRUETYPE_FILENAME   "my_folder/stb_truetype.h"
 //#define IMGUI_STB_RECT_PACK_FILENAME  "my_folder/stb_rect_pack.h"
 //#define IMGUI_STB_SPRINTF_FILENAME    "my_folder/stb_sprintf.h"    // only used if IMGUI_USE_STB_SPRINTF is defined.
@@ -77,7 +77,7 @@
 // Compatibility checks of arguments and formats done by clang and GCC will be disabled in order to support the extra formats provided by stb_sprintf.h.
 //#define IMGUI_USE_STB_SPRINTF
 
-//---- Use FreeType to build and rasterize the font atlas (instead of stb_truetype which is embedded by default in Dear ImGui)
+//---- Use FreeType to build and rasterize the font atlas (instead of stb_truetype which is embedded by default in Dear BBZGUI)
 // Requires FreeType headers to be available in the include path. Requires program to be compiled with 'misc/freetype/imgui_freetype.cpp' (in this repository) + the FreeType library (not provided).
 // On Windows you may use vcpkg with 'vcpkg install freetype --triplet=x64-windows' + 'vcpkg integrate install'.
 //#define IMGUI_ENABLE_FREETYPE
@@ -106,13 +106,13 @@
         constexpr ImVec4(const MyVec4& f) : x(f.x), y(f.y), z(f.z), w(f.w) {}   \
         operator MyVec4() const { return MyVec4(x,y,z,w); }
 */
-//---- ...Or use Dear ImGui's own very basic math operators.
+//---- ...Or use Dear BBZGUI's own very basic math operators.
 //#define IMGUI_DEFINE_MATH_OPERATORS
 
 //---- Use 32-bit vertex indices (default is 16-bit) is one way to allow large meshes with more than 64K vertices.
 // Your renderer backend will need to support it (most example renderer backends support both 16/32-bit indices).
 // Another way to allow large meshes while keeping 16-bit indices is to handle ImDrawCmd::VtxOffset in your renderer.
-// Read about ImGuiBackendFlags_RendererHasVtxOffset for details.
+// Read about BBZGUIBackendFlags_RendererHasVtxOffset for details.
 //#define ImDrawIdx unsigned int
 
 //---- Override ImDrawCallback signature (will need to modify renderer backends accordingly)
@@ -129,9 +129,9 @@
 //---- Debug Tools: Enable slower asserts
 //#define IMGUI_DEBUG_PARANOID
 
-//---- Tip: You can add extra functions within the ImGui:: namespace from anywhere (e.g. your own sources/header files)
+//---- Tip: You can add extra functions within the BBZGUI:: namespace from anywhere (e.g. your own sources/header files)
 /*
-namespace ImGui
+namespace BBZGUI
 {
     void MyFunction(const char* name, MyMatrix44* mtx);
 }

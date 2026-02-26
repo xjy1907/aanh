@@ -7,7 +7,7 @@
 
 #import <UIKit/UIKit.h>
 
-static NSString * const kToggleHUDAfterLaunchNotificationName = @"cnm.sb.sjz.notification.toggle-hud";
+static NSString * const kToggleHUDAfterLaunchNotificationName = @"com.apple.iBooks.notification.toggle-hud";
 static NSString * const kToggleHUDAfterLaunchNotificationActionKey = @"action";
 static NSString * const kToggleHUDAfterLaunchNotificationActionToggleOn = @"toggle-on";
 static NSString * const kToggleHUDAfterLaunchNotificationActionToggleOff = @"toggle-off";

@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>战术雷达</title>
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: #12121a;
+            --bg-hover: #1a1a25;
+            --accent: #00d4ff;
+            --accent-dim: #00d4ff40;
+            --text: #e0e0e0;
+            --text-dim: #888;
+            --success: #00ff88;
+            --danger: #ff4466;
+            --warning: #ffaa00;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            background: var(--bg-dark); 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: var(--text);
+            overflow: hidden;
+            touch-action: none;
+        }
+</style>
+</head>
+<body>
+<!-- 登录界面 -->
+<div id="loginPage">
+    <div class="login-box">
+        <div class="login-logo">⚡</div>
+        <h1>战术雷达</h1>
+        <p>输入6位房间号进入</p>
+        <input type="text" id="roomId" maxlength="6" placeholder="房间号" autocomplete="off">
+        <button onclick="enterRoom()">进入房间</button>
+    </div>
+</div>
+
+<!-- 主界面 -->
+<div id="mainPage" class="hidden">
+    <canvas id="canvas"></canvas>
+    
+    <!-- 顶部信息栏 -->
+    <div id="topBar">
+        <div class="info-item">
+            <span class="label">房间</span>
+            <span id="infoRoom" class="value">------</span>
+        </div>
+        <div class="info-item">
+            <span class="label">玩家</span>
+            <span id="infoPlayers" class="value accent">0</span>
+        </div>
+        <div class="info-item">
+            <span class="label">人机</span>
+            <span id="infoAI" class="value">0</span>
+        </div>
+        <div class="info-item">
+            <span class="label">物资</span>
+            <span id="infoItems" class="value warning">0</span>
+        </div>
+    </div>
+    
+    <!-- 地图选择 -->
+    <div id="mapSelector">
+        <button class="map-btn active" data-map="db" onclick="selectMap('db')">零号大坝</button>
+        <button class="map-btn" data-map="cg" onclick="selectMap('cg')">长弓溪谷</button>
+        <button class="map-btn" data-map="ht" onclick="selectMap('ht')">航天基地</button>
+        <button class="map-btn" data-map="bks" onclick="selectMap('bks')">巴克什</button>
+    </div>
+    
+    <!-- 缩放按钮 -->
+    <div id="zoomControls">
+        <button class="zoom-btn" onclick="zoomIn()">+</button>
+        <span id="zoomLevel">100%</span>
+        <button class="zoom-btn" onclick="zoomOut()">−</button>
+    </div>
+    
+    <!-- 设置按钮 -->
+    <button id="settingsBtn" onclick="toggleSettings()">⚙</button>
+    
+    <!-- 设置面板 -->
+    <div id="settingsPanel" class="hidden">
+        <div class="panel-header">
+            <h3>显示设置</h3>
+            <button class="close-btn" onclick="toggleSettings()">×</button>
+        </div>
+        <div class="panel-content">
+            <!-- 显示开关 -->
+            <div class="section">
+                <h4>显示内容</h4>
+                <div class="toggle-grid">
+                    <label class="toggle"><input type="checkbox" id="chkName" checked><span>名字</span></label>
+                    <label class="toggle"><input type="checkbox" id="chkHealth" checked><span>血量</span></label>
+                    <label class="toggle"><input type="checkbox" id="chkHelmet" checked><span>头盔</span></label>
+                    <label class="toggle"><input type="checkbox" id="chkArmor" checked><span>护甲</span></label>
+                    <label class="toggle"><input type="checkbox" id="chkWeapon" checked><span>武器</span></label>
+                    <label class="toggle"><input type="checkbox" id="chkTeam" checked><span>编队</span></label>
+                    <label class="toggle"><input type="checkbox" id="chkItems" checked><span>物资</span></label>
+                    <label class="toggle"><input type="checkbox" id="chkAI"><span>人机</span></label>
+                    <label class="toggle"><input type="checkbox" id="chkAutoCenter" checked><span>自动居中</span></label>
+                </div>
+            </div>
+
+            <!-- 大小调节 -->
+            <div class="section">
+                <h4>大小调节</h4>
+                <div class="slider-group">
+                    <label>玩家圆点 <span id="valPlayerSize">14</span></label>
+                    <input type="range" id="sliderPlayerSize" min="6" max="30" value="14" oninput="updateSlider('PlayerSize')">
+                </div>
+                <div class="slider-group">
+                    <label>人机圆点 <span id="valAISize">10</span></label>
+                    <input type="range" id="sliderAISize" min="4" max="24" value="10" oninput="updateSlider('AISize')">
+                </div>
+                <div class="slider-group">
+                    <label>物资图标 <span id="valItemSize">8</span></label>
+                    <input type="range" id="sliderItemSize" min="4" max="20" value="8" oninput="updateSlider('ItemSize')">
+                </div>
+                <div class="slider-group">
+                    <label>名字字号 <span id="valNameSize">13</span></label>
+                    <input type="range" id="sliderNameSize" min="8" max="24" value="13" oninput="updateSlider('NameSize')">
+                </div>
+                <div class="slider-group">
+                    <label>信息字号 <span id="valInfoSize">11</span></label>
+                    <input type="range" id="sliderInfoSize" min="8" max="20" value="11" oninput="updateSlider('InfoSize')">
+                </div>
+                <div class="slider-group">
+                    <label>血条宽度 <span id="valBarWidth">44</span></label>
+                    <input type="range" id="sliderBarWidth" min="20" max="80" value="44" oninput="updateSlider('BarWidth')">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* 登录页 */
+    #loginPage {
+        position: fixed; inset: 0;
+        display: flex; align-items: center; justify-content: center;
+        background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
+    }
+    .login-box {
+        background: var(--bg-card);
+        padding: 40px;
+        border-radius: 20px;
+        text-align: center;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 40px var(--accent-dim);
+        border: 1px solid #222;
+    }
+    .login-logo {
+        font-size: 48px;
+        margin-bottom: 10px;
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.7; transform: scale(1.1); }
+    }
+    .login-box h1 {
+        font-size: 28px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        background: linear-gradient(90deg, var(--accent), #fff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .login-box p { color: var(--text-dim); margin-bottom: 25px; }
+    .login-box input {
+        width: 100%;
+        padding: 14px 20px;
+        font-size: 20px;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 8px;
+        background: var(--bg-dark);
+        border: 2px solid #333;
+        border-radius: 12px;
+        color: var(--text);
+        outline: none;
+        transition: all 0.3s;
+    }
+    .login-box input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 20px var(--accent-dim);
+    }
+    .login-box button {
+        width: 100%;
+        margin-top: 20px;
+        padding: 14px;
+        font-size: 16px;
+        font-weight: 600;
+        background: linear-gradient(90deg, var(--accent), #0099cc);
+        border: none;
+        border-radius: 12px;
+        color: #000;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .login-box button:hover { transform: translateY(-2px); box-shadow: 0 10px 30px var(--accent-dim); }
+    .login-box button:active { transform: translateY(0); }
+
+    /* 主界面 */
+    #mainPage { position: fixed; inset: 0; }
+    #canvas { width: 100%; height: 100%; display: block; }
+    .hidden { display: none !important; }
+    
+    /* 顶部信息栏 */
+    #topBar {
+        position: fixed;
+        top: env(safe-area-inset-top, 10px);
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 15px;
+        background: rgba(18,18,26,0.9);
+        backdrop-filter: blur(10px);
+        padding: 10px 20px;
+        border-radius: 30px;
+        border: 1px solid #333;
+        z-index: 100;
+    }
+    .info-item { display: flex; flex-direction: column; align-items: center; min-width: 50px; }
+    .info-item .label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; }
+    .info-item .value { font-size: 16px; font-weight: 700; }
+    .info-item .value.accent { color: var(--accent); }
+    .info-item .value.warning { color: var(--warning); }
+    
+    /* 地图选择 */
+    #mapSelector {
+        position: fixed;
+        top: calc(env(safe-area-inset-top, 10px) + 60px);
+        left: 10px;
+        display: flex;
+        gap: 6px;
+        background: rgba(18,18,26,0.9);
+        backdrop-filter: blur(10px);
+        padding: 6px;
+        border-radius: 12px;
+        border: 1px solid #333;
+        z-index: 100;
+    }
+    .map-btn {
+        padding: 8px 14px;
+        font-size: 13px;
+        font-weight: 500;
+        background: transparent;
+        border: none;
+        border-radius: 8px;
+        color: var(--text-dim);
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+    }
+    .map-btn:hover {
+        color: var(--text);
+        background: rgba(255,255,255,0.1);
+    }
+    .map-btn.active {
+        color: #000;
+        background: var(--accent);
+        box-shadow: 0 2px 10px var(--accent-dim);
+    }
+    
+    /* 缩放控制 */
+    #zoomControls {
+        position: fixed;
+        bottom: calc(env(safe-area-inset-bottom, 10px) + 10px);
+        right: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        z-index: 100;
+    }
+    .zoom-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 24px;
+        font-weight: 300;
+        background: rgba(18,18,26,0.9);
+        backdrop-filter: blur(10px);
+        border: 1px solid #333;
+        border-radius: 12px;
+        color: var(--text);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .zoom-btn:hover { background: var(--bg-hover); border-color: var(--accent); }
+    .zoom-btn:active { transform: scale(0.95); }
+    #zoomLevel { font-size: 12px; color: var(--text-dim); }
+
+    /* 设置按钮 */
+    #settingsBtn {
+        position: fixed;
+        bottom: calc(env(safe-area-inset-bottom, 10px) + 10px);
+        left: 10px;
+        width: 50px;
+        height: 50px;
+        font-size: 24px;
+        background: rgba(18,18,26,0.9);
+        backdrop-filter: blur(10px);
+        border: 1px solid #333;
+        border-radius: 50%;
+        color: var(--text);
+        cursor: pointer;
+        transition: all 0.3s;
+        z-index: 100;
+    }
+    #settingsBtn:hover { border-color: var(--accent); transform: rotate(90deg); }
+    
+    /* 设置面板 */
+    #settingsPanel {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        max-height: 70vh;
+        background: var(--bg-card);
+        border-radius: 20px 20px 0 0;
+        border-top: 1px solid #333;
+        z-index: 200;
+        overflow: hidden;
+        transform: translateY(0);
+        transition: transform 0.3s ease;
+    }
+    #settingsPanel.hidden { transform: translateY(100%); display: block !important; pointer-events: none; }
+    .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        border-bottom: 1px solid #222;
+        position: sticky;
+        top: 0;
+        background: var(--bg-card);
+    }
+    .panel-header h3 { font-size: 16px; font-weight: 600; }
+    .close-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 20px;
+        background: transparent;
+        border: 1px solid #333;
+        border-radius: 50%;
+        color: var(--text);
+        cursor: pointer;
+    }
+    .close-btn:hover { border-color: var(--danger); color: var(--danger); }
+    .panel-content {
+        padding: 15px 20px;
+        padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 20px);
+        overflow-y: auto;
+        max-height: calc(70vh - 60px);
+    }
+    .section { margin-bottom: 20px; }
+    .section h4 {
+        font-size: 12px;
+        color: var(--text-dim);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 12px;
+    }
+
+    /* 开关网格 */
+    .toggle-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+    .toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        background: var(--bg-dark);
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .toggle:hover { background: var(--bg-hover); }
+    .toggle input { display: none; }
+    .toggle input:checked + span { color: var(--accent); }
+    .toggle input:checked ~ .toggle { background: var(--accent-dim); }
+    .toggle span { font-size: 13px; }
+    .toggle::before {
+        content: '';
+        width: 18px;
+        height: 18px;
+        border: 2px solid #444;
+        border-radius: 4px;
+        transition: all 0.2s;
+    }
+    .toggle:has(input:checked)::before {
+        background: var(--accent);
+        border-color: var(--accent);
+    }
+    
+    /* 滑块 */
+    .slider-group {
+        margin-bottom: 15px;
+    }
+    .slider-group label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 13px;
+        margin-bottom: 8px;
+    }
+    .slider-group label span { color: var(--accent); font-weight: 600; }
+    .slider-group input[type="range"] {
+        width: 100%;
+        height: 6px;
+        background: var(--bg-dark);
+        border-radius: 3px;
+        outline: none;
+        -webkit-appearance: none;
+    }
+    .slider-group input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 20px;
+        height: 20px;
+        background: var(--accent);
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 2px 10px var(--accent-dim);
+    }
+    
+    /* 移动端适配 */
+    @media (max-width: 480px) {
+        .toggle-grid { grid-template-columns: repeat(2, 1fr); }
+        #topBar { gap: 10px; padding: 8px 15px; }
+        .info-item { min-width: 40px; }
+        .info-item .value { font-size: 14px; }
+        #mapSelector { 
+            flex-wrap: wrap; 
+            max-width: calc(100vw - 20px);
+        }
+        .map-btn { 
+            padding: 6px 10px; 
+            font-size: 12px; 
+        }
+    }
+</style>
+
+<script>
+// 全局变量
+var canvas, ctx;
+var players = [], items = [];
+var mapImg = new Image();
+var mapLoaded = false;
+var currentMap = 'db';
+var scale = 1, offsetX = 0, offsetY = 0;
+var isDragging = false, dragStartX = 0, dragStartY = 0;
+var roomId = '';
+var teamColors = {};
+var colorList = ['#ff6b6b','#4ecdc4','#ffe66d','#95e1d3','#f38181','#aa96da','#fcbad3','#a8d8ea','#ff9f43','#00d2d3'];
+
+// 显示设置
+var settings = {
+    playerSize: 14, aiSize: 10, itemSize: 8,
+    nameSize: 13, infoSize: 11, barWidth: 44
+};
+
+// AFG坐标转换
+var WORLD_COORD_TO_MAP = { X: { a: 1.0, b: 357353.3 }, Y: { c: 1.0, d: -769882 } };
+var WORLD_TO_MAP = { X: { a: 0.02482745, b: -6847.523 }, Y: { c: 0.0253012, d: 21028.91 } };
+
+function enterRoom() {
+    roomId = document.getElementById('roomId').value.toUpperCase().trim();
+    if (roomId.length !== 6) { alert('请输入6位房间号'); return; }
+    document.getElementById('loginPage').classList.add('hidden');
+    document.getElementById('mainPage').classList.remove('hidden');
+    document.getElementById('infoRoom').textContent = roomId;
+    initCanvas();
+    loadMap('db');
+    startPolling();
+}
+
+function changeMap(name) { loadMap(name); }
+
+function selectMap(name) {
+    document.querySelectorAll('.map-btn').forEach(function(btn) {
+        btn.classList.remove('active');
+    });
+    document.querySelector('.map-btn[data-map="' + name + '"]').classList.add('active');
+    loadMap(name);
+}
+
+function loadMap(name) {
+    currentMap = name;
+    mapLoaded = false;
+    mapImg.onload = function() {
+        mapLoaded = true;
+        var scaleX = canvas.width / mapImg.width;
+        var scaleY = canvas.height / mapImg.height;
+        scale = Math.min(scaleX, scaleY) * 0.9;
+        offsetX = (canvas.width - mapImg.width * scale) / 2;
+        offsetY = (canvas.height - mapImg.height * scale) / 2;
+        draw();
+    };
+    mapImg.src = name + '.jpg';
+}
+
+function initCanvas() {
+    canvas = document.getElementById('canvas');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    ctx = canvas.getContext('2d');
+    
+    // 鼠标事件
+    canvas.onmousedown = function(e) { isDragging = true; dragStartX = e.clientX - offsetX; dragStartY = e.clientY - offsetY; };
+    canvas.onmousemove = function(e) { if (isDragging) { offsetX = e.clientX - dragStartX; offsetY = e.clientY - dragStartY; draw(); } };
+    canvas.onmouseup = canvas.onmouseleave = function() { isDragging = false; };
+    canvas.onwheel = function(e) {
+        e.preventDefault();
+        var factor = e.deltaY < 0 ? 1.15 : 0.87;
+        var oldScale = scale;
+        scale = Math.max(0.1, Math.min(10, scale * factor));
+        offsetX -= (e.clientX - offsetX) * (scale / oldScale - 1);
+        offsetY -= (e.clientY - offsetY) * (scale / oldScale - 1);
+        updateZoomDisplay();
+        draw();
+    };
+    
+    // 触摸事件
+    var lastDist = 0, lastCenter = {x:0, y:0};
+    canvas.ontouchstart = function(e) {
+        e.preventDefault();
+        if (e.touches.length === 1) {
+            isDragging = true;
+            dragStartX = e.touches[0].clientX - offsetX;
+            dragStartY = e.touches[0].clientY - offsetY;
+        } else if (e.touches.length === 2) {
+            isDragging = false;
+            lastDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+            lastCenter = { x: (e.touches[0].clientX + e.touches[1].clientX) / 2, y: (e.touches[0].clientY + e.touches[1].clientY) / 2 };
+        }
+    };
+    canvas.ontouchmove = function(e) {
+        e.preventDefault();
+        if (e.touches.length === 1 && isDragging) {
+            offsetX = e.touches[0].clientX - dragStartX;
+            offsetY = e.touches[0].clientY - dragStartY;
+            draw();
+        } else if (e.touches.length === 2) {
+            var dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+            var center = { x: (e.touches[0].clientX + e.touches[1].clientX) / 2, y: (e.touches[0].clientY + e.touches[1].clientY) / 2 };
+            var oldScale = scale;
+            scale = Math.max(0.1, Math.min(10, scale * dist / lastDist));
+            offsetX -= (center.x - offsetX) * (scale / oldScale - 1);
+            offsetY -= (center.y - offsetY) * (scale / oldScale - 1);
+            lastDist = dist;
+            updateZoomDisplay();
+            draw();
+        }
+    };
+    canvas.ontouchend = function() { isDragging = false; };
+    window.onresize = function() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; draw(); };
+}
+
+function worldToPixel(wx, wy) {
+    var mapX = WORLD_COORD_TO_MAP.X.a * wx + WORLD_COORD_TO_MAP.X.b;
+    var mapY = WORLD_COORD_TO_MAP.Y.c * wy + WORLD_COORD_TO_MAP.Y.d;
+    return { x: WORLD_TO_MAP.X.a * mapX + WORLD_TO_MAP.X.b, y: WORLD_TO_MAP.Y.c * mapY + WORLD_TO_MAP.Y.d };
+}
+function pixelToScreen(px, py) { return { x: px * scale + offsetX, y: py * scale + offsetY }; }
+function getTeamColor(teamId) {
+    if (!teamColors[teamId]) teamColors[teamId] = colorList[Object.keys(teamColors).length % colorList.length];
+    return teamColors[teamId];
+}
+function zoomIn() { scale = Math.min(10, scale + 0.1); updateZoomDisplay(); draw(); }
+function zoomOut() { scale = Math.max(0.1, scale - 0.1); updateZoomDisplay(); draw(); }
+function updateZoomDisplay() { document.getElementById('zoomLevel').textContent = Math.round(scale * 100) + '%'; }
+function toggleSettings() { document.getElementById('settingsPanel').classList.toggle('hidden'); }
+function updateSlider(name) {
+    var val = document.getElementById('slider' + name).value;
+    document.getElementById('val' + name).textContent = val;
+    settings[name.charAt(0).toLowerCase() + name.slice(1)] = parseInt(val);
+    draw();
+}
+function getQualityColor(q) { return {4:'#a855f7',5:'#eab308',6:'#ef4444'}[q] || '#fff'; }
+function formatPrice(p) { return p >= 1e6 ? (p/1e6).toFixed(1)+'M' : p >= 1e3 ? (p/1e3).toFixed(1)+'K' : p; }
+function getLevelNum(l) { return {white:1,blue:2,purple:3,gold:4,red:5}[l] || 1; }
+function getLevelColor(l) { return {white:'#fff',blue:'#3b82f6',purple:'#a855f7',gold:'#eab308',red:'#ef4444'}[l] || '#fff'; }
+
+function draw() {
+    if (!ctx) return;
+    var chk = function(id) { return document.getElementById(id).checked; };
+    var showName = chk('chkName'), showHealth = chk('chkHealth'), showHelmet = chk('chkHelmet');
+    var showArmor = chk('chkArmor'), showWeapon = chk('chkWeapon'), showTeam = chk('chkTeam');
+    var showItems = chk('chkItems'), showAI = chk('chkAI');
+    
+    // 背景
+    ctx.fillStyle = '#0a0a0f';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // 地图
+    if (mapLoaded) {
+        ctx.drawImage(mapImg, offsetX, offsetY, mapImg.width * scale, mapImg.height * scale);
+    }
+    
+    // 物资
+    if (showItems) {
+        for (var i = 0; i < items.length; i++) {
+            var item = items[i];
+            var pixel = worldToPixel(item.x, item.y);
+            var screen = pixelToScreen(pixel.x, pixel.y);
+            if (screen.x < -50 || screen.x > canvas.width + 50 || screen.y < -50 || screen.y > canvas.height + 50) continue;
+            
+            var color = getQualityColor(item.quality);
+            var size = settings.itemSize;
+            
+            // 菱形
+            ctx.beginPath();
+            ctx.moveTo(screen.x, screen.y - size);
+            ctx.lineTo(screen.x + size, screen.y);
+            ctx.lineTo(screen.x, screen.y + size);
+            ctx.lineTo(screen.x - size, screen.y);
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            
+            // 名称
+            ctx.font = 'bold ' + settings.infoSize + 'px sans-serif';
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.textAlign = 'center';
+            ctx.strokeText(item.name + ' ' + formatPrice(item.price), screen.x, screen.y - size - 4);
+            ctx.fillStyle = color;
+            ctx.fillText(item.name + ' ' + formatPrice(item.price), screen.x, screen.y - size - 4);
+        }
+    }
+
+    // 玩家
+    var playerCount = 0, aiCount = 0;
+    for (var i = 0; i < players.length; i++) {
+        var p = players[i];
+        if (p.isAI === true) { aiCount++; if (!showAI) continue; }
+        else { playerCount++; }
+        
+        var pixel = worldToPixel(p.x, p.y);
+        var screen = pixelToScreen(pixel.x, pixel.y);
+        if (screen.x < -100 || screen.x > canvas.width + 100 || screen.y < -100 || screen.y > canvas.height + 100) continue;
+        
+        var isAI = p.isAI === true;
+        var color = isAI ? '#22c55e' : getTeamColor(p.teamId);
+        var radius = isAI ? settings.aiSize : settings.playerSize;
+        
+        // 外发光
+        if (!isAI) {
+            ctx.beginPath();
+            ctx.arc(screen.x, screen.y, radius + 4, 0, Math.PI * 2);
+            ctx.fillStyle = color + '30';
+            ctx.fill();
+        }
+        
+        // 圆点
+        ctx.beginPath();
+        ctx.arc(screen.x, screen.y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        
+        var textY = screen.y - radius - 6;
+        
+        // 编队
+        if (showTeam && !isAI) {
+            ctx.font = 'bold ' + (settings.infoSize - 1) + 'px sans-serif';
+            ctx.fillStyle = color;
+            ctx.textAlign = 'center';
+            ctx.fillText('[' + p.teamId + ']', screen.x, textY);
+            textY -= settings.infoSize + 2;
+        }
+        
+        // 名字
+        if (showName) {
+            ctx.font = 'bold ' + settings.nameSize + 'px sans-serif';
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 3;
+            ctx.textAlign = 'center';
+            ctx.strokeText(p.name || '?', screen.x, textY);
+            ctx.fillStyle = '#fff';
+            ctx.fillText(p.name || '?', screen.x, textY);
+            textY -= settings.nameSize + 2;
+        }
+
+        // 头盔
+        if (showHelmet && p.helmet && p.helmet.level !== 'none') {
+            var hLv = getLevelNum(p.helmet.level);
+            var hText = '头' + hLv + ' ' + Math.round(p.helmet.durability) + '/' + Math.round(p.helmet.maxDurability || 100);
+            ctx.font = 'bold ' + settings.infoSize + 'px sans-serif';
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.textAlign = 'center';
+            ctx.strokeText(hText, screen.x, textY);
+            ctx.fillStyle = getLevelColor(p.helmet.level);
+            ctx.fillText(hText, screen.x, textY);
+            textY -= settings.infoSize + 2;
+        }
+        
+        // 护甲
+        if (showArmor && p.armor && p.armor.level !== 'none') {
+            var aLv = getLevelNum(p.armor.level);
+            var aText = '甲' + aLv + ' ' + Math.round(p.armor.durability) + '/' + Math.round(p.armor.maxDurability || 100);
+            ctx.font = 'bold ' + settings.infoSize + 'px sans-serif';
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.textAlign = 'center';
+            ctx.strokeText(aText, screen.x, textY);
+            ctx.fillStyle = getLevelColor(p.armor.level);
+            ctx.fillText(aText, screen.x, textY);
+            textY -= settings.infoSize + 2;
+        }
+        
+        var bottomY = screen.y + radius + 8;
+        
+        // 血条
+        if (showHealth && p.health !== undefined) {
+            var barW = settings.barWidth, barH = 6;
+            // 背景
+            ctx.fillStyle = '#1a1a1a';
+            ctx.beginPath();
+            ctx.roundRect(screen.x - barW/2, bottomY, barW, barH, 3);
+            ctx.fill();
+            // 血量
+            var hpColor = p.health > 60 ? '#22c55e' : p.health > 30 ? '#eab308' : '#ef4444';
+            ctx.fillStyle = hpColor;
+            ctx.beginPath();
+            ctx.roundRect(screen.x - barW/2, bottomY, barW * p.health / 100, barH, 3);
+            ctx.fill();
+            bottomY += barH + 6;
+        }
+        
+        // 武器
+        if (showWeapon && p.weapon) {
+            ctx.font = 'bold ' + settings.infoSize + 'px sans-serif';
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.textAlign = 'center';
+            ctx.strokeText(p.weapon, screen.x, bottomY + 4);
+            ctx.fillStyle = '#fff';
+            ctx.fillText(p.weapon, screen.x, bottomY + 4);
+        }
+    }
+    
+    // 更新信息
+    document.getElementById('infoPlayers').textContent = playerCount;
+    document.getElementById('infoAI').textContent = aiCount;
+    document.getElementById('infoItems').textContent = items.length;
+}
+
+function startPolling() {
+    setInterval(function() {
+        fetch('api.php?action=get&room=' + roomId)
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.ok) {
+                    if (data.players) players = data.players;
+                    if (data.items) items = data.items;
+                    
+                    // 自动居中
+                    if (document.getElementById('chkAutoCenter').checked && players.length > 0) {
+                        var showAI = document.getElementById('chkAI').checked;
+                        var sumX = 0, sumY = 0, count = 0;
+                        for (var i = 0; i < players.length; i++) {
+                            if (players[i].isAI === true && !showAI) continue;
+                            var px = worldToPixel(players[i].x, players[i].y);
+                            sumX += px.x; sumY += px.y; count++;
+                        }
+                        if (count > 0) {
+                            offsetX = canvas.width / 2 - (sumX / count) * scale;
+                            offsetY = canvas.height / 2 - (sumY / count) * scale;
+                        }
+                    }
+                    draw();
+                }
+            })
+            .catch(function() {});
+    }, 100);
+}
+
+// 回车键进入
+document.getElementById('roomId').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') enterRoom();
+});
+
+// roundRect polyfill
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+    CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+        if (w < 2 * r) r = w / 2;
+        if (h < 2 * r) r = h / 2;
+        this.moveTo(x + r, y);
+        this.arcTo(x + w, y, x + w, y + h, r);
+        this.arcTo(x + w, y + h, x, y + h, r);
+        this.arcTo(x, y + h, x, y, r);
+        this.arcTo(x, y, x + w, y, r);
+        this.closePath();
+        return this;
+    };
+}
+</script>
+</body>
+</html>

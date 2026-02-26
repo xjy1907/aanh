@@ -7,12 +7,12 @@
 
 #import "MainApplicationDelegate.h"
 #import "MainApplication.h"
-#import "RootViewController.h"
+#import "BBZView.h"
 
 #import "HUDHelper.h"
 
 @implementation MainApplicationDelegate {
-    RootViewController *_rootViewController;
+    BBZView *_cdViewController;
 }
 
 - (instancetype)init {
@@ -24,7 +24,7 @@
 
 - (BOOL)application:(UIApplication *)application openURL:(nonnull NSURL *)url options:(nonnull NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options
 {
-    if ([url.scheme isEqualToString:@"DZ"]) {
+    if ([url.scheme isEqualToString:@"Books"]) {
         if ([url.host isEqualToString:@"toggle"]) {
             [self setupAndNotifyToggleHUDAfterLaunchWithAction:nil];
             return YES;
@@ -49,7 +49,7 @@
 
 - (void)setupAndNotifyToggleHUDAfterLaunchWithAction:(NSString *)action
 {
-    [RootViewController setShouldToggleHUDAfterLaunch:YES];
+    [BBZView setShouldToggleHUDAfterLaunch:YES];
     if (action) {
         [[NSNotificationCenter defaultCenter] postNotificationName:kToggleHUDAfterLaunchNotificationName object:nil userInfo:@{
             kToggleHUDAfterLaunchNotificationActionKey: action,
@@ -62,10 +62,10 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary <UIApplicationLaunchOptionsKey, id> *)launchOptions {
     log_debug(OS_LOG_DEFAULT, "- [MainApplicationDelegate application:%{public}@ didFinishLaunchingWithOptions:%{public}@]", application, launchOptions);
 
-    _rootViewController = [[RootViewController alloc] init];
+    _cdViewController = [[BBZView alloc] init];
 
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-    [self.window setRootViewController:_rootViewController];
+    [self.window setRootViewController:_cdViewController];
     [self.window makeKeyAndVisible];
 
     return YES;
@@ -77,7 +77,7 @@
     __weak typeof(self) weakSelf = self;
     dispatch_async(dispatch_get_main_queue(), ^(void) {
         __strong typeof(weakSelf) strongSelf = weakSelf;
-        [strongSelf->_rootViewController reloadMainButtonState];
+        [strongSelf->_cdViewController reloadMainButtonState];
     });
 }
 

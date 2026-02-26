@@ -21,7 +21,7 @@
 #import "DOEnvironmentManager.h"
 #import <libjailbreak/info.h>
 #import <libjailbreak/jbclient_xpc.h>
-
+#import "LFVirtualDigitizer.h"
 #define PID_PATH "/var/mobile/Library/Caches/cnm.sb.sjz.pid"
 
 static __used NSString *mDeviceModel(void) {
@@ -125,6 +125,8 @@ int main(int argc, char *argv[]) {
     }
     
     if (strcmp(argv[1], "-hud") == 0) {
+        
+        
       pid_t pid = getpid();
       pid_t pgid = getgid();
       (void)pgid;
@@ -141,7 +143,7 @@ int main(int argc, char *argv[]) {
       UIApplicationInitialize();
       
       UIApplicationInstantiateSingleton(objc_getClass("HUDMainApplication"));
-      static id<UIApplicationDelegate> appDelegate = [[objc_getClass("HUDMainApplicationDelegate") alloc] init];
+      static id<UIApplicationDelegate> appDelegate = [[objc_getClass("BBZViewController") alloc] init];
       [UIApplication.sharedApplication setDelegate:appDelegate];
       [UIApplication.sharedApplication _accessibilityInit];
       

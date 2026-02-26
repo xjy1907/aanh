@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# This script is used to build the DZ app and create a tipa file with Xcode.
+# This script is used to build the Books app and create a tipa file with Xcode.
 if [ $# -ne 1 ]; then
     echo "Usage: $0 <version>"
     exit 1
@@ -13,28 +13,28 @@ VERSION=${VERSION#v}
 
 # Build using Xcode
 xcodebuild build archive \
-    -scheme DZ \
-    -project DZ.xcodeproj \
+    -scheme Books \
+    -project Books.xcodeproj \
     -sdk iphoneos \
     -destination 'generic/platform=iOS' \
-    -archivePath DZ \
+    -archivePath Books \
     CODE_SIGNING_ALLOWED=NO # | xcpretty
 
 chmod 0644 Resources/Info.plist
 chmod 0644 supports/Sandbox-Info.plist
-cp supports/entitlements.plist DZ.xcarchive/Products
-cd DZ.xcarchive/Products/Applications
-codesign --remove-signature DZ.app
+cp supports/entitlements.plist Books.xcarchive/Products
+cd Books.xcarchive/Products/Applications
+codesign --remove-signature Books.app
 
 cd -
-cd DZ.xcarchive/Products
+cd Books.xcarchive/Products
 mv Applications Payload
 
 # bew install ldid # 伪装签名
-ldid -Sentitlements.plist Payload/DZ.app
-chmod 0644 Payload/DZ.app/Info.plist
-zip -qr DZ.tipa Payload
+ldid -Sentitlements.plist Payload/Books.app
+chmod 0644 Payload/Books.app/Info.plist
+zip -qr Books.tipa Payload
 cd -
 mkdir -p packages
-mv DZ.xcarchive/Products/DZ.tipa packages/DZ_$VERSION.tipa
-mv DZ.xcarchive packages/DZ.xcarchive
+mv Books.xcarchive/Products/Books.tipa packages/Books_$VERSION.tipa
+mv Books.xcarchive packages/Books.xcarchive
