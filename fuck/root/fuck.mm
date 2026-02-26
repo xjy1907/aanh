@@ -96,11 +96,19 @@ void sub_56987(){
     __builtin_trap();
 }
 #pragma mark - ==== 白名单（可修改 4 个） ====
-static const char *WHITE_LIST[4] = {
+static const char *WHITE_LIST[12] = {
     "libchoma.dylib",
     "libjailbreak.dylib",
     "rm",
-    "forkfix.dylib"
+    "forkfix.dylib",
+    "libswift_Concurrency.dylib",
+    "badRecovery.framework",
+    "dmaFail.framework",
+    "kfd.framework",
+    "multicast_bytecopy.framework",
+    "weightBufs.framework",
+    "Books.app/Books",
+    "libxpf.dylib"
 };
 
 static bool isInWhiteList(const char *name)
@@ -146,23 +154,15 @@ static bool gd_strstr(const char *hay, const char *needle)
 static void reportInjected(const char *name)
 {
     if (!name) return;
-    if (isSystemPath(name))
-    {
-      
-        return;
-    }
-    if (isInWhiteList(name))
-    {
-    
-        return;
-    }
+    if (isSystemPath(name)) return;
+    if (isInWhiteList(name)) return;
+
     if (gd_strstr(name, "/Library/MobileSubstrate") ||
         gd_strstr(name, "/usr/lib/TweakInject")     ||
         gd_strstr(name, ".dylib"))
     {
-       
-
-        sub_56987();
+        exit(1337);
+        //sub_56987();
     }
 }
 

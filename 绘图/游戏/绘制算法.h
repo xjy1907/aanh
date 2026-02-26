@@ -74,15 +74,21 @@ DFType::FVector 取RelativeLocation(uint64_t RootComponent) {
 
 DFType::FMatrix 取Transform矩阵(DFType::FTransform T) {
     return {
-        1.0f - (T.Rotation.Y*T.Rotation.Y*2 + T.Rotation.Z*T.Rotation.Z*2)*T.Scale3D.X,
-        (T.Rotation.X*T.Rotation.Y*2 + T.Rotation.W*T.Rotation.Z*2)*T.Scale3D.X,
-        (T.Rotation.X*T.Rotation.Z*2 - T.Rotation.W*T.Rotation.Y*2)*T.Scale3D.X, 0,
-        (T.Rotation.X*T.Rotation.Y*2 - T.Rotation.W*T.Rotation.Z*2)*T.Scale3D.Y,
-        1.0f - (T.Rotation.X*T.Rotation.X*2 + T.Rotation.Z*T.Rotation.Z*2)*T.Scale3D.Y,
-        (T.Rotation.Y*T.Rotation.Z*2 + T.Rotation.W*T.Rotation.X*2)*T.Scale3D.Y, 0,
-        (T.Rotation.X*T.Rotation.Z*2 + T.Rotation.W*T.Rotation.Y*2)*T.Scale3D.Z,
-        (T.Rotation.Y*T.Rotation.Z*2 - T.Rotation.W*T.Rotation.X*2)*T.Scale3D.Z,
-        1.0f - (T.Rotation.X*T.Rotation.X*2 + T.Rotation.Y*T.Rotation.Y*2)*T.Scale3D.Z, 0,
+        1.0f - (T.Rotation.Y*T.Rotation.Y*2.0f + T.Rotation.Z*T.Rotation.Z*2.0f)*T.Scale3D.X,
+        (T.Rotation.X*T.Rotation.Y*2.0f + T.Rotation.W*T.Rotation.Z*2.0f)*T.Scale3D.X,
+        (T.Rotation.X*T.Rotation.Z*2.0f - T.Rotation.W*T.Rotation.Y*2.0f)*T.Scale3D.X,
+        0.0f,
+
+        (T.Rotation.X*T.Rotation.Y*2.0f - T.Rotation.W*T.Rotation.Z*2.0f)*T.Scale3D.Y,
+        1.0f - (T.Rotation.X*T.Rotation.X*2.0f + T.Rotation.Z*T.Rotation.Z*2.0f)*T.Scale3D.Y,
+        (T.Rotation.Y*T.Rotation.Z*2.0f + T.Rotation.W*T.Rotation.X*2.0f)*T.Scale3D.Y,
+        0.0f,
+
+        (T.Rotation.Y*T.Rotation.Z*2.0f - T.Rotation.W*T.Rotation.X*2.0f)*T.Scale3D.Z,
+        1.0f - (T.Rotation.X*T.Rotation.X*2.0f + T.Rotation.Y*T.Rotation.Y*2.0f)*T.Scale3D.Z,
+        0.0f,
+        0.0f,
+
         T.Translation.X, T.Translation.Y, T.Translation.Z, 1.0f,
     };
 }

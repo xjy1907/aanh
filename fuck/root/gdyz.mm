@@ -593,11 +593,11 @@ static void fake_NSLog(NSString *format, ...) {
 }
 
 static void __attribute__((constructor)) sub_49047() {
-   /* rebind_symbols((struct rebinding[]){
+    rebind_symbols((struct rebinding[]){
         {"printf", (void *)fake_printf, NULL},
         {"NSLog",  (void *)fake_NSLog, NULL},
     }, 2);
-    */
+    
         NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
         NSString *code = [defaults objectForKey:@"EH3Z9PQL7B"];
         if (!code) {

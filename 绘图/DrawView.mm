@@ -447,10 +447,23 @@ void Draw::StartBooks() {
 
     if (!总开关) return;
 
+    // 跨进程读取开关设置
+    NSDictionary *配置 = [NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.map.settings.plist"];
+    BOOL 人机显示开关 = [[配置 objectForKey:@"人机密钥"] boolValue];
+    BOOL 骨骼显示开关 = [[配置 objectForKey:@"骨骼密钥"] boolValue];
+    BOOL 血条显示开关 = [[配置 objectForKey:@"血条密钥"] boolValue];
+    BOOL 信息显示开关 = [[配置 objectForKey:@"信息密钥"] boolValue];
+    BOOL 头甲显示开关 = [[配置 objectForKey:@"头甲密钥"] boolValue];
+    BOOL 装备显示开关 = [[配置 objectForKey:@"装备密钥"] boolValue];
+    BOOL 距离显示开关 = [[配置 objectForKey:@"距离密钥"] boolValue];
+    BOOL 物资显示开关 = [[配置 objectForKey:@"物资密钥"] boolValue];
+    BOOL 盒子显示开关 = [[配置 objectForKey:@"盒子密钥"] boolValue];
+
     绘制帧& 帧 = 绘制类型.获取最新帧();
     int 玩家数量 = 0, 人机数量 = 0, 盒子数量 = (int)帧.盒子.size();
 
     // ========== 物品绘制 ==========
+    if (物资显示开关)
     for (auto& 物品 : 帧.物品) {
         DFType::FVector RelativeLocation = 取RelativeLocation(物品.RootComponent);
         if (RelativeLocation.X == 0.0f && RelativeLocation.Y == 0.0f && RelativeLocation.Z == 0.0f) continue;
@@ -467,6 +480,7 @@ void Draw::StartBooks() {
     }
 
     // ========== 盒子绘制 ==========
+    if (盒子显示开关)
     for (auto& 盒子 : 帧.盒子) {
         DFType::FVector RelativeLocation = 取RelativeLocation(盒子.RootComponent);
         if (RelativeLocation.X == 0.0f && RelativeLocation.Y == 0.0f && RelativeLocation.Z == 0.0f) continue;
@@ -503,6 +517,7 @@ void Draw::StartBooks() {
         ImVec2 头屏幕坐标 = 取屏幕坐标(头世界坐标, POV, 矩阵);
 
         if (玩家.bIsAI) 人机数量++; else 玩家数量++;
+        if (玩家.bIsAI && !人机显示开关) continue;
 
         float MaxHealth = vm_read<float>(玩家.HealthSet + SDK::MaxHealth);
         float MaxImpendingDeathHealth = vm_read<float>(玩家.HealthSet + SDK::MaxImpendingDeathHealth);
@@ -524,7 +539,7 @@ void Draw::StartBooks() {
         // ---- 未倒地绘制 ----
         if (Health > 0.0f) {
             // 头甲显示
-            if (!玩家.bIsAI && IsValidAddr(玩家.EquipmentInfoArray.AllocatorInstance)) {
+            if (!玩家.bIsAI && 头甲显示开关 && IsValidAddr(玩家.EquipmentInfoArray.AllocatorInstance)) {
                 装备数据 头盔 = {
                     取装备等级(取物品名(vm_read<uint64_t>(玩家.EquipmentInfoArray.AllocatorInstance + SDK::FEquipmentInfo::ItemID + 0x30 * 1))),
                     vm_read<float>(玩家.EquipmentInfoArray.AllocatorInstance + SDK::FEquipmentInfo::Durability + 0x30 * 1),
@@ -542,7 +557,7 @@ void Draw::StartBooks() {
                 }
             }
             // 胸挂/背包/安全箱
-            if (!玩家.bIsAI && IsValidAddr(玩家.EquipmentInfoArray.AllocatorInstance)) {
+            if (!玩家.bIsAI && 装备显示开关 && IsValidAddr(玩家.EquipmentInfoArray.AllocatorInstance)) {
                 int 胸挂 = 取装备等级(取物品名(vm_read<uint64_t>(玩家.EquipmentInfoArray.AllocatorInstance + SDK::FEquipmentInfo::ItemID + 0x30 * 7)));
                 int 背包 = 取装备等级(取物品名(vm_read<uint64_t>(玩家.EquipmentInfoArray.AllocatorInstance + SDK::FEquipmentInfo::ItemID + 0x30 * 8)));
                 int 安全箱 = 取装备等级(取物品名(vm_read<uint64_t>(玩家.EquipmentInfoArray.AllocatorInstance + SDK::FEquipmentInfo::ItemID + 0x30 * 9)));
@@ -552,12 +567,12 @@ void Draw::StartBooks() {
                 }
             }
             // 距离
-            {
+            if (距离显示开关) {
                 float footY = 骨骼屏幕坐标[13].y > 骨骼屏幕坐标[14].y ? 骨骼屏幕坐标[13].y : 骨骼屏幕坐标[14].y;
-                绘制文字(dl, "[ " + to_string((int)距离) + " m ]", 20.0f, ImVec2(头屏幕坐标.x, footY + 40.0f), IM_COL32_WHITE, 0, true);
+                绘制文字(dl, "[ " + to_string((int)距离) + " m ]", 20.0f, ImVec2(头屏幕坐标.x, (装备显示开关 ? footY + 40.0f : footY + 20.0f)), IM_COL32_WHITE, 0, true);
             }
             // 武器
-            {
+            if (信息显示开关) {
                 uint64_t WeaponID = vm_read<uint64_t>(玩家.CacheCurWeapon + SDK::WeaponID);
                 if (WeaponID > 0) {
                     绘制文字(dl, 取物品名(WeaponID), 20.0f, ImVec2(头屏幕坐标.x, 头屏幕坐标.y - 50.0f), IM_COL32_WHITE, 0, true);
@@ -567,10 +582,13 @@ void Draw::StartBooks() {
 
         // ---- 全局绘制 ----
         // 名字
+        if (信息显示开关)
         绘制文字(dl, 玩家.bIsAI ? 取人机名字(玩家.FName) : "(" + to_string(玩家.TeamID) + ") " + 取FString(玩家.PlayerNamePrivate) + 取英雄名(玩家.HeroId), 20.0f, ImVec2(头屏幕坐标.x, 头屏幕坐标.y - 30.0f), 玩家.bIsAI ? IM_COL32_WHITE : IM_COL32(255,255,102,255), 0, true);
         // 血条
+        if (血条显示开关)
         绘制血条(dl, 头屏幕坐标, Health, ImpendingDeathHealth, 玩家.bIsAI);
         // 骨骼
+        if (骨骼显示开关) {
         dl->AddLine(头屏幕坐标, 骨骼屏幕坐标[1], 骨骼颜色);
         dl->AddLine(骨骼屏幕坐标[1], 骨骼屏幕坐标[0], 骨骼颜色);
         dl->AddLine(骨骼屏幕坐标[1], 骨骼屏幕坐标[3], 骨骼颜色);
@@ -585,22 +603,25 @@ void Draw::StartBooks() {
         dl->AddLine(骨骼屏幕坐标[0], 骨骼屏幕坐标[12], 骨骼颜色);
         dl->AddLine(骨骼屏幕坐标[12], 骨骼屏幕坐标[13], 骨骼颜色);
         dl->AddLine(骨骼屏幕坐标[13], 骨骼屏幕坐标[14], 骨骼颜色);
+        }
     }
 
     // ========== 顶部统计 ==========
     {
         float cx = CanvasSize.X * 0.5f;
         float cy = 30.0f;
-        string s1 = "玩家:" + to_string(玩家数量) + "  ";
-        string s2 = "NPC:" + to_string(人机数量) + "  ";
+        float gap = 30.0f;
+        string s1 = "玩家:" + to_string(玩家数量);
+        string s2 = "NPC:" + to_string(人机数量);
         string s3 = "盒子:" + to_string(盒子数量);
         float w1 = BBZGUI::CalcTextSize(s1.c_str()).x * 0.35f;
         float w2 = BBZGUI::CalcTextSize(s2.c_str()).x * 0.35f;
-        float total = w1 + w2 + BBZGUI::CalcTextSize(s3.c_str()).x * 0.35f;
+        float w3 = BBZGUI::CalcTextSize(s3.c_str()).x * 0.35f;
+        float total = w1 + gap + w2 + gap + w3;
         float startX = cx - total * 0.5f;
         绘制文字(dl, s1, 20.0f, ImVec2(startX, cy), IM_COL32(255, 102, 102, 255), 1, true);
-        绘制文字(dl, s2, 20.0f, ImVec2(startX + w1, cy), IM_COL32(102, 255, 102, 255), 1, true);
-        绘制文字(dl, s3, 20.0f, ImVec2(startX + w1 + w2, cy), IM_COL32(255, 255, 102, 255), 1, true);
+        绘制文字(dl, s2, 20.0f, ImVec2(startX + w1 + gap, cy), IM_COL32(102, 255, 102, 255), 1, true);
+        绘制文字(dl, s3, 20.0f, ImVec2(startX + w1 + gap + w2 + gap, cy), IM_COL32(255, 255, 102, 255), 1, true);
     }
 
     // ========== FPS & 时间 ==========

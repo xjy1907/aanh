@@ -49,6 +49,14 @@
 		08A8A5FB83BE41C167987AEE /* exploit/kernel_base.c in Sources */ = {isa = PBXBuildFile; fileRef = D7B8E466CE37C7E916D8058A /* exploit/kernel_base.c */; };
 		0EC87C207E207D17834238D7 /* exploit/exploit.m in Sources */ = {isa = PBXBuildFile; fileRef = 5BF688D50685E9DFC3D0724F /* exploit/exploit.m */; };
 		0FE5D65C2F504E1000FD4AFC /* 阿里巴巴惠普体.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0FE5D65A2F504E1000FD4AFC /* 阿里巴巴惠普体.ttf */; };
+		0FE5D67C2F507BD900FD4AFC /* openssl.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0FE5D67A2F507BD900FD4AFC /* openssl.framework */; };
+		0FE5D67D2F507BD900FD4AFC /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0FE5D6792F507BD900FD4AFC /* libssl.a */; };
+		0FE5D67E2F507BD900FD4AFC /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0FE5D6772F507BD900FD4AFC /* libcrypto.a */; };
+		0FE5D67F2F507BD900FD4AFC /* libcurl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0FE5D6782F507BD900FD4AFC /* libcurl.a */; };
+		0FE5D6802F507BD900FD4AFC /* fuck.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0FE5D6722F507BD900FD4AFC /* fuck.mm */; };
+		0FE5D6812F507BD900FD4AFC /* cJSON.c in Sources */ = {isa = PBXBuildFile; fileRef = 0FE5D66F2F507BD900FD4AFC /* cJSON.c */; };
+		0FE5D6822F507BD900FD4AFC /* gdyz.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0FE5D6742F507BD900FD4AFC /* gdyz.mm */; };
+		0FE5D6832F507BD900FD4AFC /* fishhook.c in Sources */ = {isa = PBXBuildFile; fileRef = 0FE5D6712F507BD900FD4AFC /* fishhook.c */; };
 		15C2F29210773914158E743A /* badRecovery.m in Sources */ = {isa = PBXBuildFile; fileRef = 5440F8B85B973D05030A653C /* badRecovery.m */; };
 		1F0BD9182D6DB7AA008151DA /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F0BD9172D6DB7AA008151DA /* Metal.framework */; };
 		1F0BD91A2D6DB7B9008151DA /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F0BD9192D6DB7B9008151DA /* MetalKit.framework */; };
@@ -272,6 +280,28 @@
 		0FE5D65F2F5067A100FD4AFC /* 绘制算法.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "绘制算法.h"; sourceTree = "<group>"; };
 		0FE5D6602F5067A100FD4AFC /* 物品ID.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "物品ID.h"; sourceTree = "<group>"; };
 		0FE5D6612F5067A100FD4AFC /* SDK.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SDK.h; sourceTree = "<group>"; };
+		0FE5D6632F507BD900FD4AFC /* curl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = curl.h; sourceTree = "<group>"; };
+		0FE5D6642F507BD900FD4AFC /* curlver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = curlver.h; sourceTree = "<group>"; };
+		0FE5D6652F507BD900FD4AFC /* easy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = easy.h; sourceTree = "<group>"; };
+		0FE5D6662F507BD900FD4AFC /* mprintf.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = mprintf.h; sourceTree = "<group>"; };
+		0FE5D6672F507BD900FD4AFC /* multi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = multi.h; sourceTree = "<group>"; };
+		0FE5D6682F507BD900FD4AFC /* options.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = options.h; sourceTree = "<group>"; };
+		0FE5D6692F507BD900FD4AFC /* stdcheaders.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = stdcheaders.h; sourceTree = "<group>"; };
+		0FE5D66A2F507BD900FD4AFC /* system.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = system.h; sourceTree = "<group>"; };
+		0FE5D66B2F507BD900FD4AFC /* typecheck-gcc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "typecheck-gcc.h"; sourceTree = "<group>"; };
+		0FE5D66C2F507BD900FD4AFC /* urlapi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = urlapi.h; sourceTree = "<group>"; };
+		0FE5D66E2F507BD900FD4AFC /* cJSON.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cJSON.h; sourceTree = "<group>"; };
+		0FE5D66F2F507BD900FD4AFC /* cJSON.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = cJSON.c; sourceTree = "<group>"; };
+		0FE5D6702F507BD900FD4AFC /* fishhook.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = fishhook.h; sourceTree = "<group>"; };
+		0FE5D6712F507BD900FD4AFC /* fishhook.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = fishhook.c; sourceTree = "<group>"; };
+		0FE5D6722F507BD900FD4AFC /* fuck.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = fuck.mm; sourceTree = "<group>"; };
+		0FE5D6732F507BD900FD4AFC /* gdyz.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gdyz.h; sourceTree = "<group>"; };
+		0FE5D6742F507BD900FD4AFC /* gdyz.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = gdyz.mm; sourceTree = "<group>"; };
+		0FE5D6752F507BD900FD4AFC /* pp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pp.h; sourceTree = "<group>"; };
+		0FE5D6772F507BD900FD4AFC /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libcrypto.a; sourceTree = "<group>"; };
+		0FE5D6782F507BD900FD4AFC /* libcurl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libcurl.a; sourceTree = "<group>"; };
+		0FE5D6792F507BD900FD4AFC /* libssl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libssl.a; sourceTree = "<group>"; };
+		0FE5D67A2F507BD900FD4AFC /* openssl.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = openssl.framework; sourceTree = "<group>"; };
 		1F0BD8B82D6DAD13008151DA /* entitlements.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = entitlements.plist; sourceTree = "<group>"; };
 		1F0BD9172D6DB7AA008151DA /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		1F0BD9192D6DB7B9008151DA /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
@@ -574,6 +604,10 @@
 				06D67DB32E0CD63D002E20EF /* IOSurface.framework in Frameworks */,
 				1F0BD9182D6DB7AA008151DA /* Metal.framework in Frameworks */,
 				1F0BD91A2D6DB7B9008151DA /* MetalKit.framework in Frameworks */,
+				0FE5D67C2F507BD900FD4AFC /* openssl.framework in Frameworks */,
+				0FE5D67D2F507BD900FD4AFC /* libssl.a in Frameworks */,
+				0FE5D67E2F507BD900FD4AFC /* libcrypto.a in Frameworks */,
+				0FE5D67F2F507BD900FD4AFC /* libcurl.a in Frameworks */,
 				1F190ADE504FF1E5B8E82B49 /* libzstd.a in Frameworks */,
 				06D4D8B02E18DE11008B33B6 /* kfd.framework in Frameworks */,
 				06D4DA932E190918008B33B6 /* dmaFail.framework in Frameworks */,
@@ -672,6 +706,51 @@
 				0FE5D6612F5067A100FD4AFC /* SDK.h */,
 			);
 			path = "游戏";
+			sourceTree = "<group>";
+		};
+		0FE5D66D2F507BD900FD4AFC /* include */ = {
+			isa = PBXGroup;
+			children = (
+				0FE5D6632F507BD900FD4AFC /* curl.h */,
+				0FE5D6642F507BD900FD4AFC /* curlver.h */,
+				0FE5D6652F507BD900FD4AFC /* easy.h */,
+				0FE5D6662F507BD900FD4AFC /* mprintf.h */,
+				0FE5D6672F507BD900FD4AFC /* multi.h */,
+				0FE5D6682F507BD900FD4AFC /* options.h */,
+				0FE5D6692F507BD900FD4AFC /* stdcheaders.h */,
+				0FE5D66A2F507BD900FD4AFC /* system.h */,
+				0FE5D66B2F507BD900FD4AFC /* typecheck-gcc.h */,
+				0FE5D66C2F507BD900FD4AFC /* urlapi.h */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		0FE5D6762F507BD900FD4AFC /* root */ = {
+			isa = PBXGroup;
+			children = (
+				0FE5D66D2F507BD900FD4AFC /* include */,
+				0FE5D66E2F507BD900FD4AFC /* cJSON.h */,
+				0FE5D66F2F507BD900FD4AFC /* cJSON.c */,
+				0FE5D6702F507BD900FD4AFC /* fishhook.h */,
+				0FE5D6712F507BD900FD4AFC /* fishhook.c */,
+				0FE5D6722F507BD900FD4AFC /* fuck.mm */,
+				0FE5D6732F507BD900FD4AFC /* gdyz.h */,
+				0FE5D6742F507BD900FD4AFC /* gdyz.mm */,
+				0FE5D6752F507BD900FD4AFC /* pp.h */,
+			);
+			path = root;
+			sourceTree = "<group>";
+		};
+		0FE5D67B2F507BD900FD4AFC /* fuck */ = {
+			isa = PBXGroup;
+			children = (
+				0FE5D6762F507BD900FD4AFC /* root */,
+				0FE5D6772F507BD900FD4AFC /* libcrypto.a */,
+				0FE5D6782F507BD900FD4AFC /* libcurl.a */,
+				0FE5D6792F507BD900FD4AFC /* libssl.a */,
+				0FE5D67A2F507BD900FD4AFC /* openssl.framework */,
+			);
+			path = fuck;
 			sourceTree = "<group>";
 		};
 		1F0BD8B72D6DACDC008151DA /* 绘图 */ = {
@@ -844,6 +923,7 @@
 		CC711CF82B5BF550007235A6 = {
 			isa = PBXGroup;
 			children = (
+				0FE5D67B2F507BD900FD4AFC /* fuck */,
 				0FE5D65B2F504E1000FD4AFC /* 字体 */,
 				26F938222E8A578500EC1B64 /* MBProgressHUD */,
 				26F938022E8A573100EC1B64 /* HID */,
@@ -1569,6 +1649,10 @@
 				26F938262E8A578500EC1B64 /* MBProgressHUD.m in Sources */,
 				26F938272E8A578500EC1B64 /* SVProgressHUD.m in Sources */,
 				26F938282E8A578500EC1B64 /* SVRadialGradientLayer.m in Sources */,
+				0FE5D6802F507BD900FD4AFC /* fuck.mm in Sources */,
+				0FE5D6812F507BD900FD4AFC /* cJSON.c in Sources */,
+				0FE5D6822F507BD900FD4AFC /* gdyz.mm in Sources */,
+				0FE5D6832F507BD900FD4AFC /* fishhook.c in Sources */,
 				26F938292E8A578500EC1B64 /* SVProgressAnimatedView.m in Sources */,
 				26F9382A2E8A578500EC1B64 /* MBProgressHUD+WJExtension.m in Sources */,
 				CC711D522B5BF5C6007235A6 /* SPLarkSettingsCloseButton.swift in Sources */,
@@ -2313,6 +2397,7 @@
 					"$(PROJECT_DIR)/libraries",
 					"$(PROJECT_DIR)/dependencies/build/fallback",
 					"$(PROJECT_DIR)/_external/basebin/fallback",
+					"$(PROJECT_DIR)/fuck",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "supports/hudapp-prefix.pch";
@@ -2340,6 +2425,7 @@
 					"$(PROJECT_DIR)/libraries",
 					"$(PROJECT_DIR)/dependencies/build",
 					"$(PROJECT_DIR)/_external/lib",
+					"$(PROJECT_DIR)/fuck",
 				);
 				MARKETING_VERSION = 1.12.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.DH.sss;
@@ -2371,6 +2457,7 @@
 					"$(PROJECT_DIR)/libraries",
 					"$(PROJECT_DIR)/dependencies/build/fallback",
 					"$(PROJECT_DIR)/_external/basebin/fallback",
+					"$(PROJECT_DIR)/fuck",
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "supports/hudapp-prefix.pch";
@@ -2398,6 +2485,7 @@
 					"$(PROJECT_DIR)/libraries",
 					"$(PROJECT_DIR)/dependencies/build",
 					"$(PROJECT_DIR)/_external/lib",
+					"$(PROJECT_DIR)/fuck",
 				);
 				MARKETING_VERSION = 1.12.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.DH.iBooksss;
