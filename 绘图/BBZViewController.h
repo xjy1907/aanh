@@ -27,6 +27,7 @@ extern CGFloat BBZHeight;
 @property (nonatomic, strong) UIWindow *BBZwindow;
 @property (nonatomic, strong) UIWindow *BBZMenu;
 @property (nonatomic, strong) FBSOrientationObserver *orientationObserver;
+@property (nonatomic, strong) CADisplayLink *displayLink;
 
 @property (nonatomic, assign) double lastTime;
 

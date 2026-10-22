@@ -7,6 +7,7 @@
 
 #import <objc/runtime.h>
 #import <objc/message.h>
+#import <QuartzCore/CADisplayLink.h>
 #import "BBZViewController.h"
 #import "HonyWindow.h"
 #import "SBSAccessibilityWindowHostingController.h"
@@ -77,9 +78,9 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
         _MetalView.contentScaleFactor = [UIScreen mainScreen].nativeScale; // 设置物理像素比例，确保 iPad Pro 渲染清晰
         _MetalView.device = MTLCreateSystemDefaultDevice(); // 绑定默认 Metal 设备
         _MetalView.opaque = NO; // 设置透明
-        _MetalView.enableSetNeedsDisplay = NO;
-        _MetalView.paused = NO;
-        _MetalView.preferredFramesPerSecond = 120;
+        // 对标 wasd：暂停自动刷新，由 CADisplayLink 手动触发，避免 120fps 空转
+        _MetalView.enableSetNeedsDisplay = YES;
+        _MetalView.paused = YES;
         _MetalView.backgroundColor = UIColor.clearColor; // 设置背景色透明
         _MetalView.clearColor = MTLClearColorMake(0, 0, 0, 0.0); // Metal 清屏颜色为透明
         _MetalView.delegate = self; // 设定自身为 MTKView 代理
@@ -106,6 +107,15 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
             [rootVC.view addSubview:_MetalView];
         }
 
+        // 对标 wasd：CADisplayLink 驱动绘制；限 60fps，ProMotion 机型也别空烧 CPU
+        self.displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(displayLinkCallback:)];
+        if (@available(iOS 15.0, *)) {
+            self.displayLink.preferredFrameRateRange = CAFrameRateRangeMake(30, 60, 60);
+        } else {
+            self.displayLink.preferredFramesPerSecond = 60;
+        }
+        [self.displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+
         // 调试用 UIKit 字条已关闭（按需求不再绘制 AB HUD ALIVE）
         // _hudAliveLabel = ...
         
@@ -127,21 +137,17 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
         
         BBZGUIIO& io = BBZGUI::GetIO(); (void)io; // 获取 BBZGUI 输入输出对象
         BBZGUI::StyleColorsClassic(); // 设定 BBZGUI 主题为经典样式
+        // 对标 wasd：关线条抗锯齿，少算半个像素、少画顶点
+        BBZGUI::GetStyle().AntiAliasedLines = false;
+        BBZGUI::GetStyle().AntiAliasedFill = false;
         
-        // 三角洲字体加载方式
+        // 字体：只保留 Default + 简中常用，避免 ChineseFull/多语种 atlas 膨胀拖渲染
         ImFontConfig config;
         config.FontDataOwnedByAtlas = false;
         ImVector<ImWchar> ranges;
         ImFontGlyphRangesBuilder builder;
         builder.AddRanges(io.Fonts->GetGlyphRangesDefault());
-        builder.AddRanges(io.Fonts->GetGlyphRangesGreek());
-        builder.AddRanges(io.Fonts->GetGlyphRangesKorean());
-        builder.AddRanges(io.Fonts->GetGlyphRangesJapanese());
-        builder.AddRanges(io.Fonts->GetGlyphRangesChineseFull());
         builder.AddRanges(io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
-        builder.AddRanges(io.Fonts->GetGlyphRangesCyrillic());
-        builder.AddRanges(io.Fonts->GetGlyphRangesThai());
-        builder.AddRanges(io.Fonts->GetGlyphRangesVietnamese());
         builder.BuildRanges(&ranges);
         
         io.Fonts->Clear();
@@ -281,18 +287,18 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
     }];
 }
 
-// 全局静态变量，减少系统调用次数
-static double g_Time = 0.0;
-static struct timespec current_timespec;
+- (void)displayLinkCallback:(CADisplayLink *)displayLink {
+    BBZGUI::GetIO().DeltaTime = (float)displayLink.duration;
+    [_MetalView draw];
+}
+
+- (void)dealloc {
+    [self.displayLink invalidate];
+    self.displayLink = nil;
+}
 
 inline void UpdateImGuiIO(MTKView *view, BBZGUIIO &io) {
-    clock_gettime(CLOCK_MONOTONIC, &current_timespec);
-    double current_time = (double)(current_timespec.tv_sec) + (current_timespec.tv_nsec / 1e9);
-    io.DeltaTime = g_Time > 0.0 ? (float)(current_time - g_Time) : (1.0f / view.preferredFramesPerSecond);
-    g_Time = current_time;
-
-    // 对标 wasd：DisplaySize 用 points（bounds），FramebufferScale 用 contentScaleFactor
-    // 之前用 drawableSize（像素）会导致字体/坐标在 Retina 上整体偏小、位置错位
+    // DeltaTime 已由 displayLinkCallback 写入；此处只补 DisplaySize
     CGSize bounds = view.bounds.size;
     float w = (float)bounds.width;
     float h = (float)bounds.height;
@@ -308,30 +314,15 @@ inline void UpdateImGuiIO(MTKView *view, BBZGUIIO &io) {
 }
 
 - (void)drawInMTKView:(MTKView *)view {
-    static int callCount = 0;
-    callCount++;
-    // 每 ~1s 打一次，证明 HUD Metal 帧在跑（之前 600 帧太稀，日志里几乎看不到）
-    if (callCount % 120 == 1) {
-        char buf[128];
-        snprintf(buf, sizeof(buf), "HUD: drawInMTKView #%d size=%.0fx%.0f",
-                 callCount, view.drawableSize.width, view.drawableSize.height);
-        KernelLogLine(buf);
-    }
     @autoreleasepool {
         BBZGUIIO& io = BBZGUI::GetIO();
-
         UpdateImGuiIO(view, io);
 
-        if (view.currentDrawable == nil) {
-            if (callCount % 60 == 1) KernelLogLine("HUD: currentDrawable=nil — Metal 无法出图");
-            return;
-        }
+        if (view.currentDrawable == nil) return;
 
         id<MTLCommandBuffer> commandBuffer = [_mtlCommandQueue commandBuffer];
         MTLRenderPassDescriptor* renderPassDescriptor = view.currentRenderPassDescriptor;
-
         if (!renderPassDescriptor) {
-            if (callCount % 60 == 1) KernelLogLine("HUD: renderPassDescriptor=nil");
             [commandBuffer commit];
             return;
         }
