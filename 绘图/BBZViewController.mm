@@ -35,7 +35,7 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
     // CDController *_cdViewController; // 主菜单视图控制器
     SBSAccessibilityWindowHostingController *BBZMenuHostingController; // 另一个无障碍窗口托管控制器
     过直播窗口 *_过直播容器; // 过直播容器视图
-    UILabel *_hudAliveLabel; // UIKit 兜底字：即使 ImGui/Metal 坏了也能看见
+    // UILabel *_hudAliveLabel; // 调试字条已关闭
 }
 
 - (instancetype)init { // 构造函数
@@ -91,34 +91,23 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
         //_MetalView.delegate = self;
         //[self.BBZwindow addSubview:_MetalView]; // 将 MTKView 添加到主窗口
         
-        // 过直播功能：读取配置决定是否启用
+        // 过直播：与面板开关 key=overlay 对齐（启动时读一次）
         NSDictionary *配置 = [NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.map.settings.plist"];
-        BOOL 过直播开关 = [[配置 objectForKey:@"过直播密钥"] boolValue];
+        BOOL 过直播开关 = [[配置 objectForKey:@"overlay"] boolValue];
         
         if (过直播开关) {
-            // 启用过直播：将 MetalView 放入过直播容器
             KernelLogLine("HUD: 过直播模式已启用 (UITextField Secure Mode)");
             _过直播容器 = [[过直播窗口 alloc] initWithFrame:rootVC.view.bounds];
             _过直播容器.backgroundColor = [UIColor clearColor];
             _过直播容器.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
             [rootVC.view addSubview:_过直播容器];
             [_过直播容器 addSubview:_MetalView];
-            KernelLogLine("HUD: 过直播模式已启用");
         } else {
-            // 不启用过直播：直接添加 MetalView
             [rootVC.view addSubview:_MetalView];
         }
 
-        // UIKit 兜底条：不依赖 ImGui，用来确认 HUD 窗口真的盖在游戏上
-        _hudAliveLabel = [[UILabel alloc] initWithFrame:CGRectMake(8, 48, rootVC.view.bounds.size.width - 16, 28)];
-        _hudAliveLabel.text = @"AB HUD ALIVE (UIKit)";
-        _hudAliveLabel.textColor = [UIColor greenColor];
-        _hudAliveLabel.font = [UIFont boldSystemFontOfSize:16];
-        _hudAliveLabel.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.45];
-        _hudAliveLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-        _hudAliveLabel.userInteractionEnabled = NO;
-        [rootVC.view addSubview:_hudAliveLabel];
-        KernelLogLine("HUD: UIKit overlay label added");
+        // 调试用 UIKit 字条已关闭（按需求不再绘制 AB HUD ALIVE）
+        // _hudAliveLabel = ...
         
         // 悬浮菜单 - 暂时注释掉
         // _cdViewController = [[CDController alloc] init];
@@ -302,30 +291,31 @@ inline void UpdateImGuiIO(MTKView *view, BBZGUIIO &io) {
     io.DeltaTime = g_Time > 0.0 ? (float)(current_time - g_Time) : (1.0f / view.preferredFramesPerSecond);
     g_Time = current_time;
 
-    // iPad Pro 12.9 适配：优先使用 drawableSize，并确保不为 0
-    float w = view.drawableSize.width;
-    float h = view.drawableSize.height;
+    // 对标 wasd：DisplaySize 用 points（bounds），FramebufferScale 用 contentScaleFactor
+    // 之前用 drawableSize（像素）会导致字体/坐标在 Retina 上整体偏小、位置错位
+    CGSize bounds = view.bounds.size;
+    float w = (float)bounds.width;
+    float h = (float)bounds.height;
     if (w <= 0 || h <= 0) {
-        CGSize sz = [UIScreen mainScreen].nativeBounds.size;
-        w = sz.width;
-        h = sz.height;
+        CGSize sz = [UIScreen mainScreen].bounds.size;
+        w = (float)sz.width;
+        h = (float)sz.height;
     }
     io.DisplaySize = ImVec2(w, h);
+    float scale = (float)view.contentScaleFactor;
+    if (scale <= 0.0f) scale = (float)[UIScreen mainScreen].scale;
+    io.DisplayFramebufferScale = ImVec2(scale, scale);
 }
 
 - (void)drawInMTKView:(MTKView *)view {
     static int callCount = 0;
     callCount++;
     // 每 ~1s 打一次，证明 HUD Metal 帧在跑（之前 600 帧太稀，日志里几乎看不到）
-    if (callCount % 60 == 1) {
+    if (callCount % 120 == 1) {
         char buf[128];
-        snprintf(buf, sizeof(buf), "HUD: drawInMTKView #%d drawable=%p size=%.0fx%.0f",
-                 callCount, view.currentDrawable,
-                 view.drawableSize.width, view.drawableSize.height);
+        snprintf(buf, sizeof(buf), "HUD: drawInMTKView #%d size=%.0fx%.0f",
+                 callCount, view.drawableSize.width, view.drawableSize.height);
         KernelLogLine(buf);
-        if (_hudAliveLabel) {
-            _hudAliveLabel.text = [NSString stringWithFormat:@"AB HUD ALIVE Metal#%d", callCount];
-        }
     }
     @autoreleasepool {
         BBZGUIIO& io = BBZGUI::GetIO();

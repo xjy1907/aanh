@@ -125,7 +125,8 @@ inline void DrawText(string text, ImVec2 pos, bool isCentered, int color, bool o
     }
     if (outline)
     {
-        ImU32 outlineColor = 0xFF000000;
+        // 对标 wasd：70% 不透明黑色描边
+        ImU32 outlineColor = IM_COL32(0, 0, 0, 178);
         dl->AddTextX(ImVec2(vec2.x + 1, vec2.y + 1), outlineColor, fontSize, str);
         dl->AddTextX(ImVec2(vec2.x - 1, vec2.y - 1), outlineColor, fontSize, str);
         dl->AddTextX(ImVec2(vec2.x + 1, vec2.y - 1), outlineColor, fontSize, str);

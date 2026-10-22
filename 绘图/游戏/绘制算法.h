@@ -138,6 +138,31 @@ static Vector3 GetBoneWithRotation(long staticMesh, int ID, FTransform publicObj
     return Vector3(NewMatrix._41, NewMatrix._42, NewMatrix._43);
 }
 
+// 对标 wasd Ue4Tool.hpp 骨骼连接表
+static const int SkeletonList_61[14][2] = {{6, 5}, {5, 1}, {5, 8}, {8, 9}, {9, 10}, {5, 29}, {29, 30}, {30, 31}, {1, 49}, {49, 50}, {50, 51}, {1, 53}, {53, 54}, {54, 55}};
+static const int SkeletonList_63[14][2] = {{6, 5}, {5, 1}, {5, 9}, {9, 10}, {10, 11}, {5, 31}, {31, 32}, {32, 33}, {1, 51}, {51, 52}, {52, 53}, {1, 55}, {55, 56}, {56, 57}};
+static const int SkeletonList_64[14][2] = {{6, 5}, {5, 1}, {5, 8}, {8, 9}, {9, 10}, {5, 30}, {30, 31}, {31, 32}, {1, 51}, {51, 52}, {52, 53}, {1, 57}, {57, 58}, {58, 59}};
+static const int SkeletonList_65[14][2] = {{6, 5}, {5, 1}, {5, 12}, {12, 13}, {13, 14}, {5, 33}, {33, 34}, {34, 35}, {1, 53}, {53, 54}, {54, 55}, {1, 57}, {57, 58}, {58, 59}};
+static const int SkeletonList_70[14][2] = {{28, 5}, {5, 1}, {28, 7}, {7, 8}, {8, 9}, {28, 35}, {35, 36}, {36, 37}, {1, 56}, {56, 57}, {57, 58}, {1, 60}, {60, 61}, {61, 62}};
+static const int SkeletonList_72[14][2] = {{6, 5}, {5, 1}, {5, 14}, {14, 15}, {15, 16}, {5, 36}, {36, 37}, {37, 38}, {1, 58}, {58, 59}, {59, 60}, {1, 62}, {62, 63}, {63, 64}};
+static const int SkeletonList_95[14][2] = {{6, 5}, {5, 1}, {5, 29}, {29, 30}, {30, 31}, {5, 50}, {50, 51}, {51, 52}, {1, 63}, {63, 64}, {64, 65}, {1, 67}, {67, 68}, {68, 69}};
+static const int SkeletonList_73[14][2] = {{6, 5}, {5, 1}, {5, 14}, {14, 15}, {15, 16}, {5, 36}, {36, 37}, {37, 38}, {1, 62}, {62, 63}, {63, 64}, {1, 58}, {58, 59}, {59, 60}};
+static const int SkeletonList_Default[14][2] = {{6, 5}, {5, 1}, {5, 12}, {12, 13}, {13, 14}, {5, 34}, {34, 35}, {35, 36}, {1, 56}, {56, 57}, {57, 58}, {1, 60}, {60, 61}, {61, 62}};
+
+static inline const int (*GetSkeletonList(int boneCount))[2] {
+    switch (boneCount) {
+        case 61: return SkeletonList_61;
+        case 63: return SkeletonList_63;
+        case 64: return SkeletonList_64;
+        case 65: case 66: return SkeletonList_65;
+        case 70: case 71: return SkeletonList_70;
+        case 72: return SkeletonList_72;
+        case 73: return SkeletonList_73;
+        case 95: return SkeletonList_95;
+        default: return SkeletonList_Default;
+    }
+}
+
 static string GetPlayerName(long player) {
     string n = "";
     if (!IsValidAddr(player)) return n;

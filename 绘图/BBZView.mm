@@ -959,6 +959,14 @@ static BOOL JVR_读取开关(NSString* key) {
     readBtn.label.textColor = JVR_副色;
     readBtn.borderGrad.colors = @[(id)JVR_副色.CGColor, (id)JVR_主色.CGColor];
     [content addSubview:readBtn];
+
+    // ---- 关闭 HUD 按钮 ----
+    JVRKernelButton *closeHudBtn = [[JVRKernelButton alloc] init];
+    closeHudBtn.translatesAutoresizingMaskIntoConstraints = NO;
+    closeHudBtn.label.text = @"关闭HUD";
+    closeHudBtn.label.textColor = JVR_警告色;
+    closeHudBtn.borderGrad.colors = @[(id)JVR_警告色.CGColor, (id)[UIColor colorWithRed:0.8f green:0.2f blue:0.2f alpha:1.0f].CGColor];
+    [content addSubview:closeHudBtn];
     
     // ---- 终端 ----
     _terminal = [[JVRTerminal alloc] init];
@@ -995,8 +1003,12 @@ static BOOL JVR_读取开关(NSString* key) {
         [readBtn.topAnchor constraintEqualToAnchor:resetBtn.bottomAnchor constant:8],
         [readBtn.leadingAnchor constraintEqualToAnchor:content.leadingAnchor constant:16],
         [readBtn.trailingAnchor constraintEqualToAnchor:content.trailingAnchor constant:-16],
+
+        [closeHudBtn.topAnchor constraintEqualToAnchor:readBtn.bottomAnchor constant:8],
+        [closeHudBtn.leadingAnchor constraintEqualToAnchor:content.leadingAnchor constant:16],
+        [closeHudBtn.trailingAnchor constraintEqualToAnchor:content.trailingAnchor constant:-16],
         
-        [_terminal.topAnchor constraintEqualToAnchor:readBtn.bottomAnchor constant:12],
+        [_terminal.topAnchor constraintEqualToAnchor:closeHudBtn.bottomAnchor constant:12],
         [_terminal.leadingAnchor constraintEqualToAnchor:content.leadingAnchor constant:16],
         [_terminal.trailingAnchor constraintEqualToAnchor:content.trailingAnchor constant:-16],
         [_terminal.heightAnchor constraintEqualToConstant:150],
@@ -1018,7 +1030,12 @@ static BOOL JVR_读取开关(NSString* key) {
         if (!strongSelf) return;
         strongSelf->_isRemoteHUDActive = active;
         [strongSelf setHUDEnabled:active];
-        [strongSelf->_terminal appendLog:active ? @"HUD 已启用" : @"HUD 已关闭"];
+        if (!active) {
+            // 主开关关掉时一并停读取，避免 HUD 关了 reading 还在跑
+            SetReadingEnabled(false);
+            readBtn.label.text = @"开始读取";
+        }
+        [strongSelf->_terminal appendLog:active ? @"HUD 已启用" : @"HUD 已关闭（读取已停）"];
         kfd_log("[UI] HUD %s\n", active ? "enabled" : "disabled");
     };
     
@@ -1080,6 +1097,8 @@ static BOOL JVR_读取开关(NSString* key) {
         if (![strongSelf isHUDEnabled]) {
             [strongSelf setHUDEnabled:YES];
             strongSelf->_isRemoteHUDActive = YES;
+            mainCard.isActive = YES;
+            [mainCard updateState:YES];
             [strongSelf->_terminal appendLog:@"已自动开启 HUD（之前未开，所以屏幕上什么都看不到）"];
             kfd_log("[UI] auto SetHUDEnabled(YES)\n");
         }
@@ -1098,6 +1117,21 @@ static BOOL JVR_读取开关(NSString* key) {
         [strongSelf->_terminal appendLog:lineOn ? @"射线显示=开" : @"射线显示=关"];
         [strongSelf->_terminal appendLog:@"判据：新日志必须出现 HUD: / [绘制]；仅有[7s]说明还在主进程"];
         kfd_log("[UI] 开关 count=%d line=%d reading=1 hudOn=1\n", (int)countOn, (int)lineOn);
+    };
+
+    closeHudBtn.onTap = ^{
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        if (!strongSelf) return;
+
+        // 停读取 + 关 HUD 进程，同步主开关卡片
+        SetReadingEnabled(false);
+        readBtn.label.text = @"开始读取";
+        strongSelf->_isRemoteHUDActive = NO;
+        [strongSelf setHUDEnabled:NO];
+        mainCard.isActive = NO;
+        [mainCard updateState:YES];
+        [strongSelf->_terminal appendLog:@"HUD 已关闭（读取已停）"];
+        kfd_log("[UI] 关闭HUD：reading=0 SetHUDEnabled(NO)\n");
     };
     
     [self reloadMainButtonState];
