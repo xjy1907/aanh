@@ -48,15 +48,13 @@
 		06D67DB32E0CD63D002E20EF /* IOSurface.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D67DB22E0CD63D002E20EF /* IOSurface.framework */; };
 		08A8A5FB83BE41C167987AEE /* exploit/kernel_base.c in Sources */ = {isa = PBXBuildFile; fileRef = D7B8E466CE37C7E916D8058A /* exploit/kernel_base.c */; };
 		0EC87C207E207D17834238D7 /* exploit/exploit.m in Sources */ = {isa = PBXBuildFile; fileRef = 5BF688D50685E9DFC3D0724F /* exploit/exploit.m */; };
+		0F177A7F2F586AAC005AB832 /* 过直播窗口.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0F177A7E2F586AAC005AB832 /* 过直播窗口.mm */; };
 		0FE5D65C2F504E1000FD4AFC /* 阿里巴巴惠普体.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0FE5D65A2F504E1000FD4AFC /* 阿里巴巴惠普体.ttf */; };
-		0FE5D67C2F507BD900FD4AFC /* openssl.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0FE5D67A2F507BD900FD4AFC /* openssl.framework */; };
-		0FE5D67D2F507BD900FD4AFC /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0FE5D6792F507BD900FD4AFC /* libssl.a */; };
-		0FE5D67E2F507BD900FD4AFC /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0FE5D6772F507BD900FD4AFC /* libcrypto.a */; };
-		0FE5D67F2F507BD900FD4AFC /* libcurl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0FE5D6782F507BD900FD4AFC /* libcurl.a */; };
-		0FE5D6802F507BD900FD4AFC /* fuck.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0FE5D6722F507BD900FD4AFC /* fuck.mm */; };
-		0FE5D6812F507BD900FD4AFC /* cJSON.c in Sources */ = {isa = PBXBuildFile; fileRef = 0FE5D66F2F507BD900FD4AFC /* cJSON.c */; };
-		0FE5D6822F507BD900FD4AFC /* gdyz.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0FE5D6742F507BD900FD4AFC /* gdyz.mm */; };
-		0FE5D6832F507BD900FD4AFC /* fishhook.c in Sources */ = {isa = PBXBuildFile; fileRef = 0FE5D6712F507BD900FD4AFC /* fishhook.c */; };
+		0FE5D6A32F50890D00FD4AFC /* IOSurface.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0FE5D6A22F50890D00FD4AFC /* IOSurface.framework */; };
+		0FE5D6A52F50892300FD4AFC /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0FE5D6A42F50892300FD4AFC /* Foundation.framework */; };
+		0FE5D6A92F508CAC00FD4AFC /* SwiftCompatStubs.s in Sources */ = {isa = PBXBuildFile; fileRef = 0FE5D6A82F508CAC00FD4AFC /* SwiftCompatStubs.s */; };
+		0FE5D6AA2F508CAC00FD4AFC /* SwiftCompatStubs.s in Sources */ = {isa = PBXBuildFile; fileRef = 0FE5D6A82F508CAC00FD4AFC /* SwiftCompatStubs.s */; };
+		0FE5D6AC2F508F1500FD4AFC /* CoreHaptics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0FE5D6AB2F508F1500FD4AFC /* CoreHaptics.framework */; };
 		15C2F29210773914158E743A /* badRecovery.m in Sources */ = {isa = PBXBuildFile; fileRef = 5440F8B85B973D05030A653C /* badRecovery.m */; };
 		1F0BD9182D6DB7AA008151DA /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F0BD9172D6DB7AA008151DA /* Metal.framework */; };
 		1F0BD91A2D6DB7B9008151DA /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1F0BD9192D6DB7B9008151DA /* MetalKit.framework */; };
@@ -272,6 +270,8 @@
 		06D4DA8D2E190918008B33B6 /* dmaFail.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = dmaFail.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		06D4DBEA2E190B9B008B33B6 /* multicast_bytecopy.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = multicast_bytecopy.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		06D67DB22E0CD63D002E20EF /* IOSurface.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOSurface.framework; path = System/Library/Frameworks/IOSurface.framework; sourceTree = SDKROOT; };
+		0F177A7D2F586AAC005AB832 /* 过直播窗口.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "过直播窗口.h"; sourceTree = "<group>"; };
+		0F177A7E2F586AAC005AB832 /* 过直播窗口.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = "过直播窗口.mm"; sourceTree = "<group>"; };
 		0F43B7702B60D397003A435D /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = ../Resources/es.lproj/Localizable.strings; sourceTree = "<group>"; };
 		0F43B7712B60D397003A435D /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = ../Resources/es.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		0FE5D65A2F504E1000FD4AFC /* 阿里巴巴惠普体.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "阿里巴巴惠普体.ttf"; sourceTree = "<group>"; };
@@ -280,28 +280,10 @@
 		0FE5D65F2F5067A100FD4AFC /* 绘制算法.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "绘制算法.h"; sourceTree = "<group>"; };
 		0FE5D6602F5067A100FD4AFC /* 物品ID.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "物品ID.h"; sourceTree = "<group>"; };
 		0FE5D6612F5067A100FD4AFC /* SDK.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SDK.h; sourceTree = "<group>"; };
-		0FE5D6632F507BD900FD4AFC /* curl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = curl.h; sourceTree = "<group>"; };
-		0FE5D6642F507BD900FD4AFC /* curlver.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = curlver.h; sourceTree = "<group>"; };
-		0FE5D6652F507BD900FD4AFC /* easy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = easy.h; sourceTree = "<group>"; };
-		0FE5D6662F507BD900FD4AFC /* mprintf.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = mprintf.h; sourceTree = "<group>"; };
-		0FE5D6672F507BD900FD4AFC /* multi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = multi.h; sourceTree = "<group>"; };
-		0FE5D6682F507BD900FD4AFC /* options.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = options.h; sourceTree = "<group>"; };
-		0FE5D6692F507BD900FD4AFC /* stdcheaders.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = stdcheaders.h; sourceTree = "<group>"; };
-		0FE5D66A2F507BD900FD4AFC /* system.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = system.h; sourceTree = "<group>"; };
-		0FE5D66B2F507BD900FD4AFC /* typecheck-gcc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "typecheck-gcc.h"; sourceTree = "<group>"; };
-		0FE5D66C2F507BD900FD4AFC /* urlapi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = urlapi.h; sourceTree = "<group>"; };
-		0FE5D66E2F507BD900FD4AFC /* cJSON.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cJSON.h; sourceTree = "<group>"; };
-		0FE5D66F2F507BD900FD4AFC /* cJSON.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = cJSON.c; sourceTree = "<group>"; };
-		0FE5D6702F507BD900FD4AFC /* fishhook.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = fishhook.h; sourceTree = "<group>"; };
-		0FE5D6712F507BD900FD4AFC /* fishhook.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = fishhook.c; sourceTree = "<group>"; };
-		0FE5D6722F507BD900FD4AFC /* fuck.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = fuck.mm; sourceTree = "<group>"; };
-		0FE5D6732F507BD900FD4AFC /* gdyz.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gdyz.h; sourceTree = "<group>"; };
-		0FE5D6742F507BD900FD4AFC /* gdyz.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = gdyz.mm; sourceTree = "<group>"; };
-		0FE5D6752F507BD900FD4AFC /* pp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pp.h; sourceTree = "<group>"; };
-		0FE5D6772F507BD900FD4AFC /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libcrypto.a; sourceTree = "<group>"; };
-		0FE5D6782F507BD900FD4AFC /* libcurl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libcurl.a; sourceTree = "<group>"; };
-		0FE5D6792F507BD900FD4AFC /* libssl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libssl.a; sourceTree = "<group>"; };
-		0FE5D67A2F507BD900FD4AFC /* openssl.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = openssl.framework; sourceTree = "<group>"; };
+		0FE5D6A22F50890D00FD4AFC /* IOSurface.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOSurface.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk/System/Library/Frameworks/IOSurface.framework; sourceTree = DEVELOPER_DIR; };
+		0FE5D6A42F50892300FD4AFC /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		0FE5D6A82F508CAC00FD4AFC /* SwiftCompatStubs.s */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.asm; path = SwiftCompatStubs.s; sourceTree = "<group>"; };
+		0FE5D6AB2F508F1500FD4AFC /* CoreHaptics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreHaptics.framework; path = System/Library/Frameworks/CoreHaptics.framework; sourceTree = SDKROOT; };
 		1F0BD8B82D6DAD13008151DA /* entitlements.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = entitlements.plist; sourceTree = "<group>"; };
 		1F0BD9172D6DB7AA008151DA /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		1F0BD9192D6DB7B9008151DA /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
@@ -539,6 +521,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0FE5D6A52F50892300FD4AFC /* Foundation.framework in Frameworks */,
 				06D4D9332E19071F008B33B6 /* libjailbreak.dylib in Frameworks */,
 				06D4DC2C2E190C81008B33B6 /* IOKit.framework in Frameworks */,
 			);
@@ -548,6 +531,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0FE5D6A32F50890D00FD4AFC /* IOSurface.framework in Frameworks */,
 				06D4D98A2E19087A008B33B6 /* libjailbreak.dylib in Frameworks */,
 				06D4DC272E190C61008B33B6 /* IOKit.framework in Frameworks */,
 				06D4DC282E190C62008B33B6 /* (null) in Frameworks */,
@@ -587,6 +571,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0FE5D6AC2F508F1500FD4AFC /* CoreHaptics.framework in Frameworks */,
 				06D4D8A42E18DDE5008B33B6 /* libMobileGestalt.tbd in Frameworks */,
 				06D4D8A22E18DDCF008B33B6 /* libcompression.tbd in Frameworks */,
 				06D4D8A02E18DDCA008B33B6 /* libz.tbd in Frameworks */,
@@ -604,10 +589,6 @@
 				06D67DB32E0CD63D002E20EF /* IOSurface.framework in Frameworks */,
 				1F0BD9182D6DB7AA008151DA /* Metal.framework in Frameworks */,
 				1F0BD91A2D6DB7B9008151DA /* MetalKit.framework in Frameworks */,
-				0FE5D67C2F507BD900FD4AFC /* openssl.framework in Frameworks */,
-				0FE5D67D2F507BD900FD4AFC /* libssl.a in Frameworks */,
-				0FE5D67E2F507BD900FD4AFC /* libcrypto.a in Frameworks */,
-				0FE5D67F2F507BD900FD4AFC /* libcurl.a in Frameworks */,
 				1F190ADE504FF1E5B8E82B49 /* libzstd.a in Frameworks */,
 				06D4D8B02E18DE11008B33B6 /* kfd.framework in Frameworks */,
 				06D4DA932E190918008B33B6 /* dmaFail.framework in Frameworks */,
@@ -708,51 +689,6 @@
 			path = "游戏";
 			sourceTree = "<group>";
 		};
-		0FE5D66D2F507BD900FD4AFC /* include */ = {
-			isa = PBXGroup;
-			children = (
-				0FE5D6632F507BD900FD4AFC /* curl.h */,
-				0FE5D6642F507BD900FD4AFC /* curlver.h */,
-				0FE5D6652F507BD900FD4AFC /* easy.h */,
-				0FE5D6662F507BD900FD4AFC /* mprintf.h */,
-				0FE5D6672F507BD900FD4AFC /* multi.h */,
-				0FE5D6682F507BD900FD4AFC /* options.h */,
-				0FE5D6692F507BD900FD4AFC /* stdcheaders.h */,
-				0FE5D66A2F507BD900FD4AFC /* system.h */,
-				0FE5D66B2F507BD900FD4AFC /* typecheck-gcc.h */,
-				0FE5D66C2F507BD900FD4AFC /* urlapi.h */,
-			);
-			path = include;
-			sourceTree = "<group>";
-		};
-		0FE5D6762F507BD900FD4AFC /* root */ = {
-			isa = PBXGroup;
-			children = (
-				0FE5D66D2F507BD900FD4AFC /* include */,
-				0FE5D66E2F507BD900FD4AFC /* cJSON.h */,
-				0FE5D66F2F507BD900FD4AFC /* cJSON.c */,
-				0FE5D6702F507BD900FD4AFC /* fishhook.h */,
-				0FE5D6712F507BD900FD4AFC /* fishhook.c */,
-				0FE5D6722F507BD900FD4AFC /* fuck.mm */,
-				0FE5D6732F507BD900FD4AFC /* gdyz.h */,
-				0FE5D6742F507BD900FD4AFC /* gdyz.mm */,
-				0FE5D6752F507BD900FD4AFC /* pp.h */,
-			);
-			path = root;
-			sourceTree = "<group>";
-		};
-		0FE5D67B2F507BD900FD4AFC /* fuck */ = {
-			isa = PBXGroup;
-			children = (
-				0FE5D6762F507BD900FD4AFC /* root */,
-				0FE5D6772F507BD900FD4AFC /* libcrypto.a */,
-				0FE5D6782F507BD900FD4AFC /* libcurl.a */,
-				0FE5D6792F507BD900FD4AFC /* libssl.a */,
-				0FE5D67A2F507BD900FD4AFC /* openssl.framework */,
-			);
-			path = fuck;
-			sourceTree = "<group>";
-		};
 		1F0BD8B72D6DACDC008151DA /* 绘图 */ = {
 			isa = PBXGroup;
 			children = (
@@ -760,6 +696,8 @@
 				26DCC8922E92F02E0099C644 /* rt */,
 				CC711D402B5BF5C6007235A6 /* BBZViewController.h */,
 				CC711D272B5BF5C6007235A6 /* BBZViewController.mm */,
+				0F177A7D2F586AAC005AB832 /* 过直播窗口.h */,
+				0F177A7E2F586AAC005AB832 /* 过直播窗口.mm */,
 				CC711D412B5BF5C6007235A6 /* HonyWindow.h */,
 				CC711D202B5BF5C6007235A6 /* HonyWindow.mm */,
 				CC711D3E2B5BF5C6007235A6 /* BBZView.h */,
@@ -923,7 +861,6 @@
 		CC711CF82B5BF550007235A6 = {
 			isa = PBXGroup;
 			children = (
-				0FE5D67B2F507BD900FD4AFC /* fuck */,
 				0FE5D65B2F504E1000FD4AFC /* 字体 */,
 				26F938222E8A578500EC1B64 /* MBProgressHUD */,
 				26F938022E8A573100EC1B64 /* HID */,
@@ -1001,6 +938,7 @@
 				CC711D2E2B5BF5C6007235A6 /* MainButton.mm */,
 				CC711D232B5BF5C6007235A6 /* TSEventFetcher.h */,
 				CC711D472B5BF5C6007235A6 /* TSEventFetcher.mm */,
+				0FE5D6A82F508CAC00FD4AFC /* SwiftCompatStubs.s */,
 				CC9130A62B62A33A006E3280 /* TSSettingsIndex.swift */,
 				CC711D462B5BF5C6007235A6 /* TSSettingsController.swift */,
 			);
@@ -1105,6 +1043,9 @@
 		CC8DDA972B66318E001C7C9E /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				0FE5D6AB2F508F1500FD4AFC /* CoreHaptics.framework */,
+				0FE5D6A42F50892300FD4AFC /* Foundation.framework */,
+				0FE5D6A22F50890D00FD4AFC /* IOSurface.framework */,
 				36DE04702E83D1C000453C35 /* Foundation.framework */,
 				361131B52E49340A00E2AA06 /* AdSupport.framework */,
 				06D4D8A32E18DDE5008B33B6 /* libMobileGestalt.tbd */,
@@ -1303,6 +1244,7 @@
 				CC711CFF2B5BF550007235A6 /* Resources */,
 				06D67D9B2E0CD59F002E20EF /* Embed Frameworks */,
 				06D67DB12E0CD600002E20EF /* Embed Libraries */,
+				A1B2C3D42E9F00010001IPA1 /* Pack IPA */,
 			);
 			buildRules = (
 			);
@@ -1435,6 +1377,29 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		A1B2C3D42E9F00010001IPA1 /* Pack IPA */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(CODESIGNING_FOLDER_PATH)",
+				"$(SRCROOT)/supports/entitlements.plist",
+			);
+			name = "Pack IPA";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(HOME)/Desktop/ipa/abnh.ipa",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "#!/bin/bash\n# Inline Pack IPA (same as wasd) - no external CRLF file dependency\nexport PATH=\"/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH\"\necho \"[Pack IPA] begin PLATFORM=${PLATFORM_NAME} CONFIG=${CONFIGURATION}\"\nif [ \"${PLATFORM_NAME}\" != \"iphoneos\" ]; then\n  echo \"[Pack IPA] skip non-device build\"\n  exit 0\nfi\nAPP_PATH=\"${CODESIGNING_FOLDER_PATH}\"\nPROJECT_DIR=\"${SRCROOT}\"\nENTITLEMENTS_PATH=\"${PROJECT_DIR}/supports/entitlements.plist\"\nOUTPUT_DIR=\"${HOME}/Desktop/ipa\"\nIPA_NAME=\"abnh.ipa\"\necho \"[Pack IPA] APP_PATH=${APP_PATH}\"\necho \"[Pack IPA] ENTITLEMENTS=${ENTITLEMENTS_PATH}\"\necho \"[Pack IPA] OUTPUT=${OUTPUT_DIR}/${IPA_NAME}\"\nif [ -z \"${APP_PATH}\" ] || [ ! -d \"${APP_PATH}\" ]; then\n  echo \"[Pack IPA] ERROR: app not found. Use Any iOS Device + Scheme Books\"\n  exit 1\nfi\nif [ ! -f \"${ENTITLEMENTS_PATH}\" ]; then\n  echo \"[Pack IPA] ERROR: missing entitlements: ${ENTITLEMENTS_PATH}\"\n  exit 1\nfi\nif ! command -v ldid >/dev/null 2>&1; then\n  echo \"[Pack IPA] ERROR: ldid not found. Run: brew install ldid\"\n  exit 1\nfi\nTEMP_DIR=$(mktemp -d)\ntrap \"rm -rf ${TEMP_DIR}\" EXIT\nmkdir -p \"${OUTPUT_DIR}\"\nrm -f \"${OUTPUT_DIR}/${IPA_NAME}\"\nmkdir -p \"${TEMP_DIR}/Payload\"\ncp -R \"${APP_PATH}\" \"${TEMP_DIR}/Payload/\"\nAPP_NAME=$(basename \"${APP_PATH}\")\nCOPIED_APP=\"${TEMP_DIR}/Payload/${APP_NAME}\"\nchmod -R 755 \"${COPIED_APP}\"\nEXECUTABLE_NAME=$(/usr/libexec/PlistBuddy -c \"Print :CFBundleExecutable\" \"${COPIED_APP}/Info.plist\" 2>/dev/null || true)\nif [ -z \"${EXECUTABLE_NAME}\" ]; then\n  echo \"[Pack IPA] ERROR: CFBundleExecutable missing\"\n  exit 1\nfi\nEXECUTABLE_PATH=\"${COPIED_APP}/${EXECUTABLE_NAME}\"\nif [ ! -f \"${EXECUTABLE_PATH}\" ]; then\n  echo \"[Pack IPA] ERROR: binary missing: ${EXECUTABLE_PATH}\"\n  exit 1\nfi\necho \"[Pack IPA] signing with ldid...\"\nif ! ldid -S\"${ENTITLEMENTS_PATH}\" \"${EXECUTABLE_PATH}\"; then\n  echo \"[Pack IPA] ERROR: ldid sign failed\"\n  exit 1\nfi\n# also try sign whole app (ignore failure)\nldid -S\"${ENTITLEMENTS_PATH}\" \"${COPIED_APP}\" 2>/dev/null || true\necho \"[Pack IPA] zipping...\"\ncd \"${TEMP_DIR}\"\n/usr/bin/zip -qr \"${IPA_NAME}\" Payload\nmv \"${TEMP_DIR}/${IPA_NAME}\" \"${OUTPUT_DIR}/${IPA_NAME}\"\nFILE_SIZE=$(du -h \"${OUTPUT_DIR}/${IPA_NAME}\" | cut -f1)\necho \"[Pack IPA] OK ${OUTPUT_DIR}/${IPA_NAME} (${FILE_SIZE})\"\nexit 0\n";
+			showEnvVarsInLog = 0;
+		};
 		06D4D8BB2E18DE74008B33B6 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
@@ -1591,6 +1556,7 @@
 				CC91309F2B616541006E3280 /* HUDBackdropLabel.mm in Sources */,
 				CC2BAFBB2B5CA9DD00A429D1 /* SPLarkDismissingAnimationController.swift in Sources */,
 				CC2BAFBC2B5CA9DD00A429D1 /* MainButton.mm in Sources */,
+				0FE5D6A92F508CAC00FD4AFC /* SwiftCompatStubs.s in Sources */,
 				CC2BAFBD2B5CA9DD00A429D1 /* HiddenContainerRecognizer.swift in Sources */,
 				CC2BAFC02B5CA9DD00A429D1 /* SPLarkSettingsCloseButton.swift in Sources */,
 				CC2BAFC12B5CA9DD00A429D1 /* SPLarkPresentationController.swift in Sources */,
@@ -1648,16 +1614,14 @@
 				26F938252E8A578500EC1B64 /* WJSuccessView.m in Sources */,
 				26F938262E8A578500EC1B64 /* MBProgressHUD.m in Sources */,
 				26F938272E8A578500EC1B64 /* SVProgressHUD.m in Sources */,
+				0F177A7F2F586AAC005AB832 /* 过直播窗口.mm in Sources */,
 				26F938282E8A578500EC1B64 /* SVRadialGradientLayer.m in Sources */,
-				0FE5D6802F507BD900FD4AFC /* fuck.mm in Sources */,
-				0FE5D6812F507BD900FD4AFC /* cJSON.c in Sources */,
-				0FE5D6822F507BD900FD4AFC /* gdyz.mm in Sources */,
-				0FE5D6832F507BD900FD4AFC /* fishhook.c in Sources */,
 				26F938292E8A578500EC1B64 /* SVProgressAnimatedView.m in Sources */,
 				26F9382A2E8A578500EC1B64 /* MBProgressHUD+WJExtension.m in Sources */,
 				CC711D522B5BF5C6007235A6 /* SPLarkSettingsCloseButton.swift in Sources */,
 				CC91309E2B616541006E3280 /* HUDBackdropLabel.mm in Sources */,
 				CC711D582B5BF5C6007235A6 /* SPLarkPresentationController.swift in Sources */,
+				0FE5D6AA2F508CAC00FD4AFC /* SwiftCompatStubs.s in Sources */,
 				CC711D622B5BF5C6007235A6 /* TSSettingsController.swift in Sources */,
 				CC711D612B5BF5C6007235A6 /* HUDMainApplication.mm in Sources */,
 				CC711D5F2B5BF5C6007235A6 /* MainApplication.mm in Sources */,
@@ -1740,8 +1704,10 @@
 		06D4D8B42E18DE11008B33B6 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = NO;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				COMPILER_INDEX_STORE_ENABLE = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = "";
@@ -1785,8 +1751,10 @@
 		06D4D8B52E18DE11008B33B6 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = NO;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				COMPILER_INDEX_STORE_ENABLE = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = "";
@@ -1863,6 +1831,7 @@
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				OTHER_CFLAGS = "-fno-modules";
 				PRODUCT_BUNDLE_IDENTIFIER = cnm.sb.badRecovery;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -1908,6 +1877,7 @@
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				OTHER_CFLAGS = "-fno-modules";
 				PRODUCT_BUNDLE_IDENTIFIER = cnm.sb.badRecovery;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -1920,8 +1890,10 @@
 		06D4D9862E190828008B33B6 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = NO;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				COMPILER_INDEX_STORE_ENABLE = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = "";
@@ -1962,8 +1934,10 @@
 		06D4D9872E190828008B33B6 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = NO;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				COMPILER_INDEX_STORE_ENABLE = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = "";
@@ -2004,8 +1978,10 @@
 		06D4DA972E190918008B33B6 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = NO;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				COMPILER_INDEX_STORE_ENABLE = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = "";
@@ -2046,8 +2022,10 @@
 		06D4DA982E190918008B33B6 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = NO;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				COMPILER_INDEX_STORE_ENABLE = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = "";
@@ -2088,8 +2066,10 @@
 		06D4DBF22E190B9B008B33B6 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = NO;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				COMPILER_INDEX_STORE_ENABLE = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = "";
@@ -2130,8 +2110,10 @@
 		06D4DBF32E190B9B008B33B6 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = NO;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				COMPILER_INDEX_STORE_ENABLE = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = "";
@@ -2294,7 +2276,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -2360,7 +2342,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -2387,10 +2369,12 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = NO;
 				CODE_SIGNING_ALLOWED = NO;
 				CODE_SIGN_ENTITLEMENTS = supports/entitlements.plist;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				COMPILER_INDEX_STORE_ENABLE = NO;
 				DEVELOPMENT_TEAM = 8LC5BZG4J2;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2398,6 +2382,7 @@
 					"$(PROJECT_DIR)/dependencies/build/fallback",
 					"$(PROJECT_DIR)/_external/basebin/fallback",
 					"$(PROJECT_DIR)/fuck",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos,
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "supports/hudapp-prefix.pch";
@@ -2405,6 +2390,7 @@
 					"$(inherited)",
 					"THEOS_PACKAGE_INSTALL_PREFIX=\\\"\\\"",
 				);
+				GCC_WARN_CHECK_SWITCH_STATEMENTS = NO;
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/dependencies/include",
 					"$(PROJECT_DIR)/zstd/lib",
@@ -2426,8 +2412,15 @@
 					"$(PROJECT_DIR)/dependencies/build",
 					"$(PROJECT_DIR)/_external/lib",
 					"$(PROJECT_DIR)/fuck",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos,
 				);
 				MARKETING_VERSION = 1.12.1;
+				OTHER_CFLAGS = "-fno-modules";
+				OTHER_LDFLAGS = (
+					"-Wl,-U,___swift_FORCE_LOAD_$_swiftCompatibility51",
+					"-Wl,-U,___swift_FORCE_LOAD_$_swiftCompatibility56",
+					"-Wl,-U,___swift_FORCE_LOAD_$_swiftCompatibilityConcurrency",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.DH.sss;
 				PRODUCT_MODULE_NAME = Books;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2447,10 +2440,12 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = NO;
 				CODE_SIGNING_ALLOWED = NO;
 				CODE_SIGN_ENTITLEMENTS = supports/entitlements.plist;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				COMPILER_INDEX_STORE_ENABLE = NO;
 				DEVELOPMENT_TEAM = 8LC5BZG4J2;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2458,6 +2453,7 @@
 					"$(PROJECT_DIR)/dependencies/build/fallback",
 					"$(PROJECT_DIR)/_external/basebin/fallback",
 					"$(PROJECT_DIR)/fuck",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos,
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "supports/hudapp-prefix.pch";
@@ -2465,6 +2461,7 @@
 					"$(inherited)",
 					"THEOS_PACKAGE_INSTALL_PREFIX=\\\"\\\"",
 				);
+				GCC_WARN_CHECK_SWITCH_STATEMENTS = NO;
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/dependencies/include",
 					"$(PROJECT_DIR)/zstd/lib",
@@ -2486,8 +2483,15 @@
 					"$(PROJECT_DIR)/dependencies/build",
 					"$(PROJECT_DIR)/_external/lib",
 					"$(PROJECT_DIR)/fuck",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos,
 				);
 				MARKETING_VERSION = 1.12.1;
+				OTHER_CFLAGS = "-fno-modules";
+				OTHER_LDFLAGS = (
+					"-Wl,-U,___swift_FORCE_LOAD_$_swiftCompatibility51",
+					"-Wl,-U,___swift_FORCE_LOAD_$_swiftCompatibility56",
+					"-Wl,-U,___swift_FORCE_LOAD_$_swiftCompatibilityConcurrency",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.DH.iBooksss;
 				PRODUCT_MODULE_NAME = Books;
 				PRODUCT_NAME = "$(TARGET_NAME)";

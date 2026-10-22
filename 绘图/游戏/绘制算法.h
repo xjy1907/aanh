@@ -1,132 +1,159 @@
 //
-//  绘制算法.h - UE4 算法（三角洲绘制算法）
+//  绘制算法.h - 无畏契约坐标转换算法
 //
 
 #ifndef 绘制算法_h
 #define 绘制算法_h
 
-#include "SDK.h"
 #include "绘制类型.h"
-#include "BBZGui.h"
+#include "SDK.h"
 
-// 需要外部提供的读取函数声明
-extern bool readMemory(uint64_t address, void *buffer, size_t size);
-extern bool vm_read_list(uint64_t address, void* buffer, size_t size);
-template<typename T> inline T vm_read(uint64_t address) {
-    T data{}; readMemory(address, &data, sizeof(T)); return data;
+// 指针解密 (和平精英不需要解密)
+static uintptr_t Decrypt_PTR(uintptr_t addr) {
+    return addr;
 }
 
-// 屏幕尺寸（由 DrawView.mm 设置）
-static DFType::FVector2D CanvasSize;
-
-DFType::FMinimalViewInfo 取POV(uint64_t POV) {
-    return {
-        vm_read<DFType::FVector>(POV + SDK::FMinimalViewInfo::Location),
-        vm_read<DFType::FRotator>(POV + SDK::FMinimalViewInfo::Rotation),
-        vm_read<float>(POV + SDK::FMinimalViewInfo::FOV),
-    };
+static float Dot(Vector3 lhs, Vector3 rhs) {
+    return lhs.X * rhs.X + lhs.Y * rhs.Y + lhs.Z * rhs.Z;
 }
 
-DFType::FMatrix 取矩阵(DFType::FRotator Rotation) {
-    DFType::FVector2D Pitch = { sinf(Rotation.Pitch * M_PI / 180.0f), cosf(Rotation.Pitch * M_PI / 180.0f) };
-    DFType::FVector2D Yaw = { sinf(Rotation.Yaw * M_PI / 180.0f), cosf(Rotation.Yaw * M_PI / 180.0f) };
-    DFType::FVector2D Roll = { sinf(Rotation.Roll * M_PI / 180.0f), cosf(Rotation.Roll * M_PI / 180.0f) };
-    return {
-        Pitch.Y * Yaw.Y, Pitch.Y * Yaw.X, Pitch.X, 0.0f,
-        Pitch.X * Yaw.Y * Roll.X - Yaw.X * Roll.Y, Pitch.X * Yaw.X * Roll.X + Yaw.Y * Roll.Y, Pitch.Y * -Roll.X, 0.0f,
-        -(Pitch.X * Yaw.Y * Roll.Y + Yaw.X * Roll.X), Yaw.Y * Roll.X - Pitch.X * Yaw.X * Roll.Y, Pitch.Y * Roll.Y, 0.0f,
-        0.0f, 0.0f, 0.0f, 1.0f,
-    };
+static float GetDistance(Vector3 a, Vector3 b) {
+    Vector3 v = a - b;
+    return sqrt(v.X * v.X + v.Y * v.Y + v.Z * v.Z);
 }
 
-DFType::FVector 取坐标差(DFType::FVector 坐标, DFType::FVector Location, float 比例) {
-    return { (坐标.X - Location.X) / 比例, (坐标.Y - Location.Y) / 比例, (坐标.Z - Location.Z) / 比例 };
+static FMatrix RotatorToMatrix(FRotator rotation) {
+    float radPitch = rotation.Pitch * (M_PI / 180.0f);
+    float radYaw = rotation.Yaw * (M_PI / 180.0f);
+    float radRoll = rotation.Roll * (M_PI / 180.0f);
+    float SP = sinf(radPitch), CP = cosf(radPitch);
+    float SY = sinf(radYaw), CY = cosf(radYaw);
+    float SR = sinf(radRoll), CR = cosf(radRoll);
+    FMatrix matrix;
+    matrix[0][0] = CP * CY; matrix[0][1] = CP * SY; matrix[0][2] = SP; matrix[0][3] = 0;
+    matrix[1][0] = SR*SP*CY - CR*SY; matrix[1][1] = SR*SP*SY + CR*CY; matrix[1][2] = -SR*CP; matrix[1][3] = 0;
+    matrix[2][0] = -(CR*SP*CY + SR*SY); matrix[2][1] = CY*SR - CR*SP*SY; matrix[2][2] = CR*CP; matrix[2][3] = 0;
+    matrix[3][0] = 0; matrix[3][1] = 0; matrix[3][2] = 0; matrix[3][3] = 1;
+    return matrix;
 }
 
-float 取距离(DFType::FVector RelativeLocation, DFType::FVector Location) {
-    DFType::FVector d = 取坐标差(RelativeLocation, Location, 100.0f);
-    return sqrtf(powf(d.X, 2.0f) + powf(d.Y, 2.0f) + powf(d.Z, 2.0f));
+static Vector2 WorldToScreen(Vector3 worldLocation, CoViewInfo camViewInfo, int width, int height) {
+    float fovRadian = camViewInfo.FOV * (M_PI / 360.0f);
+    float tanFov = tanf(fovRadian);
+    if (tanFov == 0) tanFov = 0.001f;
+    float screenCenterX = width / 2.0f;
+    float screenCenterY = height / 2.0f;
+    FMatrix tempMatrix = RotatorToMatrix(camViewInfo.Rotation);
+    Vector3 vAxisX(tempMatrix[0][0], tempMatrix[0][1], tempMatrix[0][2]);
+    Vector3 vAxisY(tempMatrix[1][0], tempMatrix[1][1], tempMatrix[1][2]);
+    Vector3 vAxisZ(tempMatrix[2][0], tempMatrix[2][1], tempMatrix[2][2]);
+    Vector3 vDelta = worldLocation - camViewInfo.Location;
+    float transformedX = Dot(vDelta, vAxisY);
+    float transformedY = Dot(vDelta, vAxisZ);
+    float transformedZ = Dot(vDelta, vAxisX);
+    if (transformedZ < 1.0f) transformedZ = 1.0f;
+    return Vector2(screenCenterX + transformedX * (screenCenterX / tanFov) / transformedZ,
+                   screenCenterY - transformedY * (screenCenterX / tanFov) / transformedZ);
 }
 
-ImVec2 取屏幕坐标(DFType::FVector 世界坐标, DFType::FMinimalViewInfo POV, DFType::FMatrix 矩阵) {
-    DFType::FVector d = 取坐标差(世界坐标, POV.Location, 1.0f);
-    DFType::FVector t = {
-        d.X * 矩阵.YPlane.X + d.Y * 矩阵.YPlane.Y + d.Z * 矩阵.YPlane.Z,
-        d.X * 矩阵.ZPlane.X + d.Y * 矩阵.ZPlane.Y + d.Z * 矩阵.ZPlane.Z,
-        d.X * 矩阵.XPlane.X + d.Y * 矩阵.XPlane.Y + d.Z * 矩阵.XPlane.Z,
-    };
-    if (t.Z < 1.0f) t.Z = 1.0f;
-    return {
-        (CanvasSize.X * 0.5f) + t.X * ((CanvasSize.X * 0.5f) / tanf(POV.FOV * M_PI / 360.0f)) / t.Z,
-        (CanvasSize.Y * 0.5f) - t.Y * ((CanvasSize.X * 0.5f) / tanf(POV.FOV * M_PI / 360.0f)) / t.Z,
-    };
+static void BoxConversion(Vector3 worldLocation, VectorRect *rect, CoViewInfo camViewInfo, Vector2 canvasSize) {
+    Vector3 worldLocationHead = worldLocation;
+    worldLocationHead.Z += 85.f;
+    Vector3 worldLocationFoot = worldLocation;
+    worldLocationFoot.Z -= 85.f;
+    Vector2 calculateHead = WorldToScreen(worldLocationHead, camViewInfo, canvasSize.X, canvasSize.Y);
+    Vector2 calculateFoot = WorldToScreen(worldLocationFoot, camViewInfo, canvasSize.X, canvasSize.Y);
+    rect->h = calculateFoot.Y - calculateHead.Y;
+    rect->w = rect->h / 2.0f;
+    rect->x = calculateHead.X - rect->w / 2.0f;
+    rect->y = calculateHead.Y;
 }
 
-DFType::FVector 取RelativeLocation(uint64_t RootComponent) {
-    if (!IsValidAddr(RootComponent)) return {0, 0, 0};
-    DFType::FVector loc = vm_read<DFType::FVector>(RootComponent + 0x148);
-    if (loc.X == 0 && loc.Y == 0 && loc.Z == 0) {
-        loc = vm_read<DFType::FVector>(RootComponent + 0x168);
-        if (loc.X == 0 && loc.Y == 0 && loc.Z == 0) loc = vm_read<DFType::FVector>(RootComponent + 0x220);
-    }
-    return loc;
+static bool isScreenVisible(Vector2 LocationScreen, Vector2 CanvasSize) {
+    return LocationScreen.X > 0 && LocationScreen.X < CanvasSize.X &&
+           LocationScreen.Y > 0 && LocationScreen.Y < CanvasSize.Y;
 }
 
-DFType::FMatrix 取Transform矩阵(DFType::FTransform T) {
-    return {
-        1.0f - (T.Rotation.Y*T.Rotation.Y*2.0f + T.Rotation.Z*T.Rotation.Z*2.0f)*T.Scale3D.X,
-        (T.Rotation.X*T.Rotation.Y*2.0f + T.Rotation.W*T.Rotation.Z*2.0f)*T.Scale3D.X,
-        (T.Rotation.X*T.Rotation.Z*2.0f - T.Rotation.W*T.Rotation.Y*2.0f)*T.Scale3D.X,
-        0.0f,
-
-        (T.Rotation.X*T.Rotation.Y*2.0f - T.Rotation.W*T.Rotation.Z*2.0f)*T.Scale3D.Y,
-        1.0f - (T.Rotation.X*T.Rotation.X*2.0f + T.Rotation.Z*T.Rotation.Z*2.0f)*T.Scale3D.Y,
-        (T.Rotation.Y*T.Rotation.Z*2.0f + T.Rotation.W*T.Rotation.X*2.0f)*T.Scale3D.Y,
-        0.0f,
-
-        (T.Rotation.Y*T.Rotation.Z*2.0f - T.Rotation.W*T.Rotation.X*2.0f)*T.Scale3D.Z,
-        1.0f - (T.Rotation.X*T.Rotation.X*2.0f + T.Rotation.Y*T.Rotation.Y*2.0f)*T.Scale3D.Z,
-        0.0f,
-        0.0f,
-
-        T.Translation.X, T.Translation.Y, T.Translation.Z, 1.0f,
-    };
+static D3DXMATRIX ToMatrixWithScale(Vector4 rotation, Vector3 translation, Vector3 scale3D) {
+    D3DXMATRIX ret{};
+    ret._41 = translation.X;
+    ret._42 = translation.Y;
+    ret._43 = translation.Z;
+    float x2 = rotation.x * 2, y2 = rotation.y * 2, z2 = rotation.z * 2;
+    float xx2 = rotation.x * x2, yy2 = rotation.y * y2, zz2 = rotation.z * z2;
+    ret._11 = (1 - (yy2 + zz2)) * scale3D.X;
+    ret._22 = (1 - (xx2 + zz2)) * scale3D.Y;
+    ret._33 = (1 - (xx2 + yy2)) * scale3D.Z;
+    float yz2 = rotation.y * z2, wx2 = rotation.w * x2;
+    ret._32 = (yz2 - wx2) * scale3D.Z;
+    ret._23 = (yz2 + wx2) * scale3D.Y;
+    float xy2 = rotation.x * y2, wz2 = rotation.w * z2;
+    ret._21 = (xy2 - wz2) * scale3D.Y;
+    ret._12 = (xy2 + wz2) * scale3D.X;
+    float xz2 = rotation.x * z2, wy2 = rotation.w * y2;
+    ret._31 = (xz2 + wy2) * scale3D.Z;
+    ret._13 = (xz2 - wy2) * scale3D.X;
+    ret._44 = 1.f;
+    return ret;
 }
 
-DFType::FVector 取骨骼世界坐标(uint64_t ComponentToWorld, uint64_t StaticMesh, int 骨骼点) {
-    DFType::FTransform T = {
-        vm_read<DFType::FQuat>(ComponentToWorld + SDK::FTransform::Rotation),
-        vm_read<DFType::FVector>(ComponentToWorld + SDK::FTransform::translation),
-        vm_read<DFType::FVector>(ComponentToWorld + SDK::FTransform::Scale3D),
-    };
-    DFType::FMatrix M = 取Transform矩阵(T);
-    DFType::FVector Translation = vm_read<DFType::FVector>(StaticMesh + SDK::FTransform::translation + 骨骼点 * 0x30);
-    return {
-        Translation.X * M.XPlane.X + Translation.Y * M.YPlane.X + Translation.Z * M.ZPlane.X + M.WPlane.X,
-        Translation.X * M.XPlane.Y + Translation.Y * M.YPlane.Y + Translation.Z * M.ZPlane.X + M.WPlane.Y,
-        Translation.X * M.XPlane.Z + Translation.Y * M.YPlane.Z + Translation.Z * M.ZPlane.Y + M.WPlane.Z,
-    };
+static D3DXMATRIX MatrixMultiplication(D3DXMATRIX M1, D3DXMATRIX M2) {
+    D3DXMATRIX ret;
+    ret._11 = M1._11 * M2._11 + M1._12 * M2._21 + M1._13 * M2._31 + M1._14 * M2._41;
+    ret._12 = M1._11 * M2._12 + M1._12 * M2._22 + M1._13 * M2._32 + M1._14 * M2._42;
+    ret._13 = M1._11 * M2._13 + M1._12 * M2._23 + M1._13 * M2._33 + M1._14 * M2._43;
+    ret._14 = M1._11 * M2._14 + M1._12 * M2._24 + M1._13 * M2._34 + M1._14 * M2._44;
+    ret._21 = M1._21 * M2._11 + M1._22 * M2._21 + M1._23 * M2._31 + M1._24 * M2._41;
+    ret._22 = M1._21 * M2._12 + M1._22 * M2._22 + M1._23 * M2._32 + M1._24 * M2._42;
+    ret._23 = M1._21 * M2._13 + M1._22 * M2._23 + M1._23 * M2._33 + M1._24 * M2._43;
+    ret._24 = M1._21 * M2._14 + M1._22 * M2._24 + M1._23 * M2._34 + M1._24 * M2._44;
+    ret._31 = M1._31 * M2._11 + M1._32 * M2._21 + M1._33 * M2._31 + M1._34 * M2._41;
+    ret._32 = M1._31 * M2._12 + M1._32 * M2._22 + M1._33 * M2._32 + M1._34 * M2._42;
+    ret._33 = M1._31 * M2._13 + M1._32 * M2._23 + M1._33 * M2._33 + M1._34 * M2._43;
+    ret._34 = M1._31 * M2._14 + M1._32 * M2._24 + M1._33 * M2._34 + M1._34 * M2._44;
+    ret._41 = M1._41 * M2._11 + M1._42 * M2._21 + M1._43 * M2._31 + M1._44 * M2._41;
+    ret._42 = M1._41 * M2._12 + M1._42 * M2._22 + M1._43 * M2._32 + M1._44 * M2._42;
+    ret._43 = M1._41 * M2._13 + M1._42 * M2._23 + M1._43 * M2._33 + M1._44 * M2._43;
+    ret._44 = M1._41 * M2._14 + M1._42 * M2._24 + M1._43 * M2._34 + M1._44 * M2._44;
+    return ret;
 }
 
-// ========================================
-// 取FString（UTF16 -> UTF8）
-// ========================================
-string 取FString(uint64_t FString) {
-    unsigned short UTF_16[28] = {0};
-    char UTF_8[448] = {0};
-    vm_read_list(FString, UTF_16, sizeof(UTF_16));
-    unsigned short* p16 = UTF_16;
-    char* p8 = UTF_8;
-    char* end8 = UTF_8 + sizeof(UTF_8);
-    while (p16 < UTF_16 + 28) {
-        unsigned short ch = *p16;
-        if (ch <= 0x007F && p8 + 1 < end8) { *p8++ = (char)ch; }
-        else if (ch >= 0x0080 && ch <= 0x07FF && p8 + 2 < end8) { *p8++ = (char)((ch >> 6) | 0xC0); *p8++ = (char)((ch & 0x3F) | 0x80); }
-        else if (ch >= 0x0800 && ch <= 0xFFFF && p8 + 3 < end8) { *p8++ = (char)((ch >> 12) | 0xE0); *p8++ = (char)(((ch >> 6) & 0x3F) | 0x80); *p8++ = (char)((ch & 0x3F) | 0x80); }
-        else break;
-        p16++;
-    }
-    return string(UTF_8);
+static Vector3 GetRelativeLocation(long actor) {
+    if (!IsValidAddr(actor)) return Vector3();
+    long root = UNSIGN_PTR(vm_read<long>(actor + SDK::RootComponent));
+    if (!IsValidAddr(root)) return Vector3();
+    return vm_read<Vector3>(root + SDK::RelativeLocation);
+}
+
+static FTransform GetMatrixConversion(long address) {
+    return vm_read<FTransform>(address);
+}
+
+// 对标 wasd GetBoneWithRotation：骨索引 5 = 头
+static Vector3 GetBoneWithRotation(long staticMesh, int ID, FTransform publicObj) {
+    FTransform BoneMatrix = GetMatrixConversion(staticMesh + ID * (int)SDK::BoneTransformSize);
+    D3DXMATRIX LocalSkeletonMatrix = ToMatrixWithScale(BoneMatrix.Rotation, BoneMatrix.Translation, BoneMatrix.Scale3D);
+    D3DXMATRIX PartTotheWorld = ToMatrixWithScale(publicObj.Rotation, publicObj.Translation, publicObj.Scale3D);
+    D3DXMATRIX NewMatrix = MatrixMultiplication(LocalSkeletonMatrix, PartTotheWorld);
+    return Vector3(NewMatrix._41, NewMatrix._42, NewMatrix._43);
+}
+
+static string GetPlayerName(long player) {
+    string n = "";
+    if (!IsValidAddr(player)) return n;
+    uint64_t namePtr = UNSIGN_PTR(vm_read<uint64_t>(player + SDK::PlayerName));
+    if (!IsValidAddr(namePtr)) return n;
+    
+    uint32_t nameLen = vm_read<uint32_t>(namePtr + 0x8);
+    if (nameLen <= 0 || nameLen > 64) return n;
+    
+    uint64_t nameData = namePtr + 0xC;
+    char16_t utf16Buf[64] = {0};
+    readMemory(nameData, utf16Buf, nameLen * 2);
+    
+    NSString *str = [[NSString alloc] initWithBytes:utf16Buf length:nameLen * 2 encoding:NSUTF16LittleEndianStringEncoding];
+    if (str) n = [str UTF8String];
+    return n;
 }
 
 #endif

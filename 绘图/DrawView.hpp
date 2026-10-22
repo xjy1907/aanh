@@ -73,58 +73,65 @@ namespace Draw {
 
 void StartBooks();
 
+// 对标 wasd：用 ForegroundDrawList，保证盖在最上层
+inline ImDrawList* DrawListFG() {
+    return BBZGUI::GetForegroundDrawList();
+}
+
 inline void DrawLine(ImVec2 startPoint, ImVec2 endPoint, int color, float thicknes = 1)
 {
-    BBZGUI::GetBackgroundDrawList()->AddLine(startPoint, endPoint, color, thicknes);
+    DrawListFG()->AddLine(startPoint, endPoint, color, thicknes);
 }
 
 
 inline void DrawCircle(ImVec2 center, float radius, int color, float thicknes = 1)
 {
-    BBZGUI::GetBackgroundDrawList()->AddCircle(center, radius, color, radius, thicknes);
+    DrawListFG()->AddCircle(center, radius, color, radius, thicknes);
 }
 
 
 inline void DrawCircleFilled(ImVec2 center, float radius, int color)
 {
-    BBZGUI::GetBackgroundDrawList()->AddCircleFilled(center, radius, color, radius);
+    DrawListFG()->AddCircleFilled(center, radius, color, radius);
 }
 
 
 inline void DrawRect(ImVec2 min, ImVec2 max, int color, float thicknes)
 {
-    BBZGUI::GetBackgroundDrawList()->AddRect(min, max, color, 5.0, 0.7f, thicknes);
+    DrawListFG()->AddRect(min, max, color, 5.0, 0.7f, thicknes);
 }
 
 
 inline void DrawRectFilled(const ImVec2& min, const ImVec2& max, ImU32 color, float rounding = 5.0f) {
-    ImDrawList* drawList = BBZGUI::GetBackgroundDrawList();
-    drawList->AddRectFilled(min, max, color, rounding);
-}// 绘制填充矩形
+    DrawListFG()->AddRectFilled(min, max, color, rounding);
+}
 
 inline void DrawConvexPolyFilled(const ImVec2* points, int num_points, ImU32 color) {
-    BBZGUI::GetBackgroundDrawList()->AddConvexPolyFilled(points, num_points, color);
+    DrawListFG()->AddConvexPolyFilled(points, num_points, color);
 }
 
 inline void DrawText(string text, ImVec2 pos, bool isCentered, int color, bool outline, float fontSize)
 {
     const char *str = text.c_str();
     ImVec2 vec2 = pos;
+    ImDrawList* dl = DrawListFG();
     
     if (isCentered) {
         ImFont* font = BBZGUI::GetFont();
-        ImVec2 textSize = font->CalcTextSizeA(fontSize, MAXFLOAT, 0.0f, str);
-        vec2.x -= textSize.x * 0.5f;
+        if (font) {
+            ImVec2 textSize = font->CalcTextSizeA(fontSize, MAXFLOAT, 0.0f, str);
+            vec2.x -= textSize.x * 0.5f;
+        }
     }
     if (outline)
     {
         ImU32 outlineColor = 0xFF000000;
-        BBZGUI::GetBackgroundDrawList()->AddTextX(ImVec2(vec2.x + 1, vec2.y + 1), outlineColor, fontSize, str);
-        BBZGUI::GetBackgroundDrawList()->AddTextX(ImVec2(vec2.x - 1, vec2.y - 1), outlineColor, fontSize, str);
-        BBZGUI::GetBackgroundDrawList()->AddTextX(ImVec2(vec2.x + 1, vec2.y - 1), outlineColor, fontSize, str);
-        BBZGUI::GetBackgroundDrawList()->AddTextX(ImVec2(vec2.x - 1, vec2.y + 1), outlineColor, fontSize, str);
+        dl->AddTextX(ImVec2(vec2.x + 1, vec2.y + 1), outlineColor, fontSize, str);
+        dl->AddTextX(ImVec2(vec2.x - 1, vec2.y - 1), outlineColor, fontSize, str);
+        dl->AddTextX(ImVec2(vec2.x + 1, vec2.y - 1), outlineColor, fontSize, str);
+        dl->AddTextX(ImVec2(vec2.x - 1, vec2.y + 1), outlineColor, fontSize, str);
     }
-    BBZGUI::GetBackgroundDrawList()->AddTextX(vec2, color, fontSize, str);
+    dl->AddTextX(vec2, color, fontSize, str);
 }
 
 }

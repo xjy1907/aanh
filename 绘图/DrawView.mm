@@ -1,639 +1,596 @@
 #include "DrawView.hpp"
 #include <mutex>
-#include <sys/sysctl.h>
-#include <sys/utsname.h>
-#include <iostream>
 #include <cstdint>
+#include <cstdarg>
+#include <cerrno>
+#include <unistd.h>
 #include <mach/mach.h>
-#include <unordered_map>
-#include <chrono>
-#include <atomic>
-#include <thread>
-#include <sstream>
-#include <iomanip>
-#include <fstream>
-
 #include "BBZGui.h"
-#import <IOKit/IOKitLib.h>
-#import <IOKit/IOKitKeys.h>
 
-// 内核符号/偏移与读写（用于 allproc 枚举）
 #import "DOJailbreaker.h"
 #include <libjailbreak/info.h>
 #include <libjailbreak/primitives_external.h>
-#include <libproc.h>
 
 extern "C" uint32_t kread32(uint64_t where);
 extern "C" uint64_t kread64(uint64_t where);
+extern "C" void kfd_log(const char *format, ...);
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 bool exploit_mach_readbuf(pid_t pid, uint64_t base, void* output, size_t size);
-bool exploit_mach_kwritebuf(pid_t pid, uint64_t base, const void* input, size_t size);
 void exploit_v2p_cache_clear(void);
+void KernelLogLine(const char *line);
+void SetReadingEnabled(bool enabled);
+bool IsReadingEnabled(void);
 #ifdef __cplusplus
 }
 #endif
 
-// ========================================
-// 引入拆分的头文件
-// ========================================
-#include "游戏/SDK.h"
-#include "游戏/绘制类型.h"
-#include "绘图.h"
-
-// ========================================
-// 全局状态
-// ========================================
 @implementation DrawWindow
 
 static pid_t gamePid = -1;
 static uint64_t 模块地址 = 0;
 static bool bOffsetFindDNE = false;
-static uint64_t g_PlayerCameraManager = 0;
-static uint64_t g_Pawn = 0;
-static pthread_mutex_t g_lock = PTHREAD_MUTEX_INITIALIZER;
+static ImVec2 CanvasSize;
+static bool gReadingEnabled = false;
 bool 总开关 = true;
 
-// 设备信息
-static string g_设备名 = "";
-static string g_序列号 = "";
-static bool g_设备信息已初始化 = false;
+// 绘制开关（对标 wasd / BBZView plist key）
+static bool 显示人数 = false;
+static bool 显示射线 = false;
+static bool 显示方框 = false;
+static bool 显示血量 = false;
+static bool 显示信息 = false;
+static bool 显示骨骼 = false;
+static float 射线粗细 = 1.0f;
+static const float 绘制距离上限 = 400.0f;
 
-static void 初始化设备信息() {
-    if (g_设备信息已初始化) return;
-    g_设备信息已初始化 = true;
-    struct utsname sname;
-    uname(&sname);
-    UIDevice *Device = [UIDevice currentDevice];
-    string systemVersion = [Device.systemVersion UTF8String];
-    string machine = [[NSString stringWithCString:sname.machine encoding:NSUTF8StringEncoding] UTF8String];
-    g_设备名 = machine + " [ " + systemVersion + " ]";
-    io_service_t IOPlatformExpertDevice = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("IOPlatformExpertDevice"));
-    if (IOPlatformExpertDevice) {
-        CFTypeRef SerialNumber = IORegistryEntryCreateCFProperty(IOPlatformExpertDevice, CFSTR(kIOPlatformSerialNumberKey), kCFAllocatorDefault, 0);
-        IOObjectRelease(IOPlatformExpertDevice);
-        if (SerialNumber) {
-            g_序列号 = [(__bridge NSString *)SerialNumber UTF8String];
-            CFRelease(SerialNumber);
-        }
+#define Colour_红色 0xFF0000FF
+#define Colour_绿色 0xFF00FF00
+#define Colour_白色 0xFFFFFFFF
+#define Colour_黄色 0xFF00FFFF
+#define Colour_射线 0xFF00F0F0  // 对标 wasd 默认黄 F0F000 (ABGR)
+#define Colour_人机 0xFFFF8000  // 青橙，区分人机
+
+static void DrawDbg(const char *fmt, ...) {
+    char buf[512];
+    va_list ap;
+    va_start(ap, fmt);
+    vsnprintf(buf, sizeof(buf), fmt, ap);
+    va_end(ap);
+    // KernelLogLine 内部已同步写 kfd_debug.log，避免重复落盘
+    KernelLogLine(buf);
+}
+
+static NSString *PrefsPath(void);
+
+// 主 App / HUD 是两个进程：内存开关必须落盘，HUD 才能读到「开始读取」
+static void PersistReadingFlag(bool enabled) {
+    NSString *path = PrefsPath();
+    NSMutableDictionary *cfg = [NSMutableDictionary dictionaryWithContentsOfFile:path];
+    if (!cfg) cfg = [NSMutableDictionary dictionary];
+    cfg[@"reading"] = @(enabled);
+    [cfg writeToFile:path atomically:YES];
+}
+
+static bool LoadReadingFlagFromDisk(void) {
+    NSDictionary *cfg = [NSDictionary dictionaryWithContentsOfFile:PrefsPath()];
+    return cfg ? [[cfg objectForKey:@"reading"] boolValue] : NO;
+}
+
+extern "C" void SetReadingEnabled(bool enabled) {
+    gReadingEnabled = enabled;
+    PersistReadingFlag(enabled);
+    if (!enabled) {
+        gamePid = -1;
+        模块地址 = 0;
+        bOffsetFindDNE = false;
+        DrawDbg("[读取] 已停止 (pid=%d) 已写入 plist reading=0", (int)getpid());
+    } else {
+        DrawDbg("[读取] 已开启 (pid=%d) 已写入 plist reading=1 —— HUD 进程会同步此开关", (int)getpid());
     }
 }
 
-int 骨骼点数组[15] = {1, 30, 31, 6, 7, 8, 34, 35, 36, 58, 59, 60, 62, 63, 64};
-
-// ========================================
-// 基地址扫描
-// ========================================
-typedef uint64_t vm_map_offset_t;
-typedef uint64_t mach_vm_address_t;
-
-static bool IsValidAddr(uint64_t address) {
-    return address > 0x100000000ULL && address < 0x3000000000ULL;
+extern "C" bool IsReadingEnabled(void) {
+    // 跨进程：以磁盘为准
+    gReadingEnabled = LoadReadingFlagFromDisk();
+    return gReadingEnabled;
 }
 
-vm_map_offset_t getBaseAddress(pid_t pid) {
-    struct { uint64_t start; uint64_t end; } ranges[] = {
-        { 0x100000000ULL, 0x140000000ULL },
-        { 0x140000000ULL, 0x200000000ULL },
-    };
-    const uint64_t step = 0x4000ULL;
-    for (unsigned i = 0; i < sizeof(ranges)/sizeof(ranges[0]); ++i) {
-        for (uint64_t addr = ranges[i].start; addr < ranges[i].end; addr += step) {
-            uint32_t magic = 0;
-            if (exploit_mach_readbuf(pid, addr, &magic, sizeof(magic))) {
-                if (magic == 0xfeedfacfU || magic == 0xcffaedfeU) return (vm_map_offset_t)addr;
-            }
-        }
+extern "C" void ResetKernelStatus() {
+    DrawDbg("[重置] ResetKernelStatus 开始 pid=%d", (int)getpid());
+    gReadingEnabled = false;
+    PersistReadingFlag(false);
+    gamePid = -1;
+    模块地址 = 0;
+    bOffsetFindDNE = false;
+    exploit_v2p_cache_clear();
+
+    DOJailbreaker *jb = [DOJailbreaker sharedInstance];
+    jb.isSuccess = NO;
+
+    [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"JB.KernelReadyBootTime"];
+    [[NSUserDefaults standardUserDefaults] synchronize];
+
+    if ([jb respondsToSelector:@selector(finalize)]) {
+        [jb finalize];
     }
-    return 0;
+    DrawDbg("[重置] ResetKernelStatus 完成 (krkw/偏移已清, reading=0)");
 }
 
-// ========================================
-// 内核进程遍历
-// ========================================
-#define BIT(b)    (1ULL << (b))
-#define PAC_MASK kconstant(pointer_mask)
-#define SIGN(p)          ((p) & BIT(55))
-#define UNSIGN_PTR(p)    (SIGN(p) ? ((p) | PAC_MASK) : ((p) & ~PAC_MASK))
-
-uint64_t kread_ptr(uint64_t va) { return UNSIGN_PTR(kread64(va)); }
-
-void proc_iterate(void (^itBlock)(uint64_t, bool*)) {
-    uint64_t proc = ksymbol(allproc);
-    while((proc = kread_ptr(proc + koffsetof(proc, list_next)))) {
-        bool stop = false; itBlock(proc, &stop); if(stop) return;
-    }
-}
-
-uint64_t proc_task(uint64_t proc) {
-    if (koffsetof(proc, task)) return kread_ptr(proc + koffsetof(proc, task));
-    else return proc + ksizeof(proc);
-}
-
-static bool KernelReadString(uint64_t kptr, char *out, size_t outsz) {
-    if (kptr == 0 || outsz == 0) return false;
-    size_t toRead = outsz - 1;
-    if (exploit_kreadbuf(kptr, out, toRead) != 0) return false;
-    out[toRead] = '\0';
-    for (size_t i = 0; i < toRead; i++) { if (out[i] == '\0') break; if (i == toRead - 1) out[i] = '\0'; }
-    return true;
-}
-
-static uint64_t FindImageBaseForTask(uint64_t task) {
-    if (task == 0) return 0;
-    uint64_t vm_map = kread_ptr(task + koffsetof(task, map));
-    if (!vm_map) return 0;
-    uint64_t hdr = vm_map + koffsetof(vm_map, hdr);
-    uint64_t header_links = hdr + koffsetof(vm_map_header, links);
-    uint64_t entry = kread_ptr(header_links + koffsetof(vm_map_links, next));
-    uint64_t bestBase = 0;
-    while (entry && entry != header_links) {
-        uint64_t start = kread64(entry + koffsetof(vm_map_links, min));
-        uint64_t entry_base = entry - koffsetof(vm_map_entry, links);
-        uint64_t flags = kread64(entry_base + koffsetof(vm_map_entry, flags));
-        uint64_t prot = (flags >> 7) & 0xFULL;
-        uint64_t maxprot = (flags >> 11) & 0xFULL;
-        if (((prot & 0x4) != 0) && ((maxprot & 0x4) != 0) && start >= 0x100000000ULL) {
-            if (bestBase == 0 || start < bestBase) bestBase = start;
-        }
-        entry = kread_ptr(entry + koffsetof(vm_map_links, next));
-    }
-    return bestBase;
-}
-
-pid_t get_Pid(const char *process_name) {
-    if (!process_name) return -1;
-    __block pid_t foundPid = -1;
-    __block uint64_t foundTask = 0;
-    proc_iterate(^(uint64_t proc, bool *stop) {
-        pid_t pid = (pid_t)kread32(proc + koffsetof(proc, pid));
-        uint64_t textvp = kread_ptr(proc + koffsetof(proc, textvp));
-        if (!textvp) return;
-        uint64_t v_name_ptr = kread64(textvp + 0xB8);
-        if (!v_name_ptr) return;
-        char namebuf[256] = {0};
-        if (!KernelReadString(v_name_ptr, namebuf, sizeof(namebuf))) return;
-        if (strcmp(namebuf, process_name) == 0) { foundPid = pid; foundTask = proc_task(proc); *stop = true; }
-    });
-    return foundPid;
-}
-
-// ========================================
-// 内存读写
-// ========================================
 bool readMemory(uint64_t address, void *buffer, size_t size) {
-    if (!IsValidAddr(address) || size == 0) return false;
-    if (gamePid <= 0) return false;
+    if (!IsValidAddr(address) || size == 0 || gamePid <= 0) return false;
     return exploit_mach_readbuf(gamePid, address, buffer, size);
 }
 
-bool vm_read_list(uint64_t address, void* buffer, size_t size) {
-    return readMemory(address, buffer, size);
+template<typename T> T vm_read(uint64_t address) {
+    T data{}; readMemory(address, &data, sizeof(T)); return data;
 }
 
-// ========================================
-// 引入算法和物品ID（依赖 vm_read / IsValidAddr）
-// ========================================
+#include "游戏/绘制类型.h"
+#include "游戏/SDK.h"
 #include "游戏/绘制算法.h"
-#include "游戏/物品ID.h"
 
-// ========================================
-// 初始化
-// ========================================
-bool getbbz() {
-    if (!bOffsetFindDNE) {
-        const char* cands[] = { "DeltaForceClient" };
-        gamePid = -1;
-        for (unsigned i = 0; i < sizeof(cands)/sizeof(cands[0]); ++i) {
-            pid_t p = get_Pid(cands[i]);
-            if (p > 1) { gamePid = p; break; }
+bool getbbz(); // 前向声明：供 7s dump 调用
+
+static NSString *PrefsPath(void) {
+    return @"/var/mobile/Library/Preferences/com.map.settings.plist";
+}
+
+static void RefreshDrawPrefs(void) {
+    NSDictionary *cfg = [NSDictionary dictionaryWithContentsOfFile:PrefsPath()];
+    // 关键：从磁盘同步「开始读取」，打通主 App ↔ HUD 双进程
+    gReadingEnabled = cfg ? [[cfg objectForKey:@"reading"] boolValue] : NO;
+    显示人数 = cfg ? [[cfg objectForKey:@"count"] boolValue] : NO;
+    显示射线 = cfg ? [[cfg objectForKey:@"line"] boolValue] : NO;
+    显示方框 = cfg ? [[cfg objectForKey:@"box"] boolValue] : NO;
+    显示血量 = cfg ? [[cfg objectForKey:@"health"] boolValue] : NO;
+    显示信息 = cfg ? [[cfg objectForKey:@"info"] boolValue] : NO;
+    显示骨骼 = cfg ? [[cfg objectForKey:@"bone"] boolValue] : NO;
+}
+
+// 不依赖绘制循环：每 7 秒把整条读取链写进 kfd_debug.log
+static void DumpReadPipelineEvery7s(void) {
+    bool readingDisk = LoadReadingFlagFromDisk();
+    bool krkw = ((DOJailbreaker *)DOJailbreaker.sharedInstance).isSuccess;
+    DrawDbg("[7s] ===== dump pid=%d argvHUD? readingMem=%d readingDisk=%d krkw=%d gamePid=%d base=0x%llx =====",
+            (int)getpid(), (int)gReadingEnabled, (int)readingDisk, (int)krkw, gamePid, 模块地址);
+
+    gReadingEnabled = readingDisk; // 与磁盘对齐，供 getbbz 使用
+    if (!readingDisk) {
+        DrawDbg("[7s] reading=OFF —— 主界面点「开始读取」后 HUD 才会进对局读取");
+        return;
+    }
+    if (!krkw) {
+        DrawDbg("[7s] krkw=NO —— HUD 进程需自行完成内核初始化");
+        return;
+    }
+
+    if (gamePid <= 0 || 模块地址 == 0) {
+        getbbz();
+        DrawDbg("[7s] after getbbz pid=%d base=0x%llx", gamePid, 模块地址);
+        if (gamePid <= 0 || 模块地址 == 0) {
+            DrawDbg("[7s] 仍无游戏进程/基址，确认 ShadowTrackerExt 已开");
+            return;
         }
-        if (gamePid != -1) {
+    }
+
+    uint64_t GWorld = UNSIGN_PTR(vm_read<uint64_t>(模块地址 + SDK::GWorld));
+    uint64_t NetDriver = IsValidAddr(GWorld) ? UNSIGN_PTR(vm_read<uint64_t>(GWorld + SDK::NetDriver)) : 0;
+    uint64_t GS = IsValidAddr(GWorld) ? UNSIGN_PTR(vm_read<uint64_t>(GWorld + SDK::GameState)) : 0;
+    int allN = 0, humN = 0, teamN = 0;
+    if (IsValidAddr(GS)) {
+        allN = vm_read<int>(GS + SDK::TotalPlayerNum);
+        humN = vm_read<int>(GS + SDK::PlayerNum);
+        teamN = vm_read<int>(GS + SDK::AliveTeamNum);
+    }
+
+    uint64_t Level = IsValidAddr(GWorld) ? UNSIGN_PTR(vm_read<uint64_t>(GWorld + SDK::PersistentLevel)) : 0;
+    uint64_t actors = IsValidAddr(Level) ? UNSIGN_PTR(vm_read<uint64_t>(Level + SDK::ActorArray)) : 0;
+    int actorCount = IsValidAddr(Level) ? vm_read<int>(Level + SDK::ActorCount) : -1;
+
+    int realCnt = 0, aiCnt = 0, speedHit = 0;
+    if (IsValidAddr(actors) && actorCount > 0 && actorCount < 10000) {
+        for (int i = 0; i < actorCount; ++i) {
+            uint64_t actor = UNSIGN_PTR(vm_read<uint64_t>(actors + i * 8));
+            if (!IsValidAddr(actor)) continue;
+            if (vm_read<float>(actor + SDK::DefaultSpeedValue) != 479.5f) continue;
+            speedHit++;
+            if (vm_read<bool>(actor + SDK::bIsAI)) aiCnt++;
+            else realCnt++;
+        }
+    }
+
+    DrawDbg("[7s] GWorld=0x%llx NetDriver=0x%llx GS=0x%llx", GWorld, NetDriver, GS);
+    DrawDbg("[7s] GameState ALL=%d HUM=%d TEAM=%d | actors=%d speed479=%d REAL=%d AI=%d",
+            allN, humN, teamN, actorCount, speedHit, realCnt, aiCnt);
+    if (!IsValidAddr(NetDriver)) {
+        DrawDbg("[7s] NetDriver=0 —— 多半还在大厅，进对局后再看人数");
+    }
+}
+
+static uint64_t getBaseAddress(pid_t pid) {
+    DrawDbg("[基址] 开始扫描 PID=%d 的 Mach-O magic", pid);
+    struct { uint64_t start; uint64_t end; } ranges[] = {
+        { 0x10000000ULL, 0x100000000ULL },
+        { 0x100000000ULL, 0x200000000ULL },
+        { 0x200000000ULL, 0x300000000ULL }
+    };
+    for (unsigned i = 0; i < 3; ++i) {
+        for (uint64_t addr = ranges[i].start; addr < ranges[i].end; addr += 0x4000ULL) {
+            uint32_t magic = 0;
+            if (exploit_mach_readbuf(pid, addr, &magic, sizeof(magic))) {
+                if (magic == 0xfeedfacfU || magic == 0xcffaedfeU) {
+                    DrawDbg("[基址] 命中 magic=0x%x @ 0x%llx (range[%u])", magic, addr, i);
+                    return addr;
+                }
+            }
+        }
+    }
+    DrawDbg("[基址] 扫描失败，未找到 feedfacf");
+    return 0;
+}
+
+#define BIT(b) (1ULL << (b))
+
+uint64_t kread_ptr(uint64_t va) { return UNSIGN_PTR(kread64(va)); }
+
+#include <sys/sysctl.h>
+#include <vector>
+
+pid_t get_Pid(const char *targetName) {
+    if (!targetName || !*targetName) return -1;
+
+    size_t length = 0;
+    int mib[] = {CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0};
+    if (sysctl(mib, 3, nullptr, &length, nullptr, 0) != 0) {
+        DrawDbg("[PID] sysctl size 失败 errno=%d", errno);
+        return -1;
+    }
+
+    std::vector<struct kinfo_proc> procBuffer(length / sizeof(struct kinfo_proc));
+    if (sysctl(mib, 3, procBuffer.data(), &length, nullptr, 0) != 0) {
+        DrawDbg("[PID] sysctl data 失败 errno=%d", errno);
+        return -1;
+    }
+
+    int count = (int)(length / sizeof(struct kinfo_proc));
+    for (int i = 0; i < count; ++i) {
+        const char *comm = procBuffer[i].kp_proc.p_comm;
+        if (strncmp(comm, "ShadowTrackerExt", 16) == 0 ||
+            strncmp(comm, "ShadowTracker", 16) == 0) {
+            DrawDbg("[PID] 找到游戏进程 %s pid=%d", comm, procBuffer[i].kp_proc.p_pid);
+            return procBuffer[i].kp_proc.p_pid;
+        }
+    }
+    DrawDbg("[PID] 未找到 ShadowTrackerExt（共扫描 %d 个进程）", count);
+    return -1;
+}
+
+bool getbbz() {
+    if (!gReadingEnabled) return false;
+    if (!((DOJailbreaker *)DOJailbreaker.sharedInstance).isSuccess) {
+        static int missKernel = 0;
+        if ((missKernel++ % 30) == 0) {
+            DrawDbg("[读取] krkw 未就绪 (isSuccess=NO)，跳过");
+        }
+        return false;
+    }
+
+    if (gamePid > 0) {
+        if (kill(gamePid, 0) != 0) {
+            DrawDbg("[读取] 游戏进程 pid=%d 已退出，重置偏移", gamePid);
+            gamePid = -1;
+            模块地址 = 0;
+            bOffsetFindDNE = false;
+        }
+    }
+
+    if (!bOffsetFindDNE) {
+        gamePid = get_Pid("ShadowTrackerExt");
+        if (gamePid > 1) {
             模块地址 = getBaseAddress(gamePid);
-            if (模块地址 != 0) bOffsetFindDNE = true;
+            if (模块地址 != 0) {
+                bOffsetFindDNE = true;
+                DrawDbg("[读取] 就绪 PID=%d Base=0x%llx", gamePid, 模块地址);
+            } else {
+                DrawDbg("[读取] 已有 PID=%d 但基址未找到，下轮重试", gamePid);
+            }
         }
     }
     return (gamePid > 0 && 模块地址 != 0);
 }
 
-// ========================================
-// FName 解密
-// ========================================
-string 异或字符串(uint64_t StrPtr, int StrLength) {
-    string FName(StrLength, '\0');
-    vm_read_list(StrPtr, FName.data(), StrLength);
-    uint16_t Key = 0;
-    switch (StrLength % 9) {
-        case 0: Key = ((((StrLength >> 6) && 0x1F) + StrLength) | 0x7F) + 0x80; break;
-        case 1: Key = (((StrLength ^ 0xDF) + StrLength) | 0x7F) + 0x80; break;
-        case 2: Key = (((StrLength | 0xCF) + StrLength) | 0x7F) + 0x80; break;
-        case 3: Key = ((0x21 * StrLength) | 0x7F) + 0x80; break;
-        case 4: Key = ((StrLength + (StrLength >> 8)) | 0x7F) + 0x80; break;
-        case 5: Key = ((3 * StrLength + 5) | 0x7F) + 0x80; break;
-        case 6: Key = ((((4 * StrLength) | 5) + StrLength) | 0x7F) + 0x80; break;
-        case 7: Key = ((((StrLength >> 10) | 7) + StrLength) | 0x7F) + 0x80; break;
-        case 8: Key = (((StrLength ^ 0xC) + StrLength) | 0x7F) + 0x80; break;
-    }
-    for (int i = 0; i < StrLength; i++) FName[i] ^= Key;
-    return FName;
-}
-
-string 解密FName(int ID) {
-    auto NameStride = 0x2;
-    auto NameEntryToLenBit = 6;
-    auto NameEntryToString = 0x2;
-    auto NamesToFNamePool = 0xC8;
-    auto Block = (ID >> 15) & 0x1FFF8;
-    auto Offset = (NameStride * ID) & 0x7FFFE;
-    auto NamePoolChunk = vm_read<uint64_t>(模块地址 + SDK::FName + (Block + NamesToFNamePool));
-    auto NameEntry = NamePoolChunk + Offset;
-    auto NameEntryHeader = vm_read<uint16_t>(NameEntry);
-    auto StrPtr = NameEntry + NameEntryToString;
-    auto StrLength = NameEntryHeader >> NameEntryToLenBit;
-    return 异或字符串(StrPtr, StrLength);
-}
-
-// ========================================
-// 辅助函数
-// ========================================
-string 取物资价值(int MallRecyclePrice) {
-    if (MallRecyclePrice > 1000) {
-        if (MallRecyclePrice < 1000000) {
-            ostringstream OstringStream;
-            OstringStream << fixed << setprecision(1) << (MallRecyclePrice / 1000.0f);
-            return OstringStream.str() + "K";
-        } else {
-            ostringstream OstringStream;
-            OstringStream << fixed << setprecision(1) << (MallRecyclePrice / 1000000.0f);
-            return OstringStream.str() + "M";
-        }
-    }
-    return to_string(MallRecyclePrice);
-}
-
-string 取中段String(string String) {
-    size_t 开始位置 = String.find('"');
-    if (开始位置 == string::npos) return "";
-    size_t 结束位置 = String.find('"', 开始位置 + 1);
-    if (结束位置 == string::npos) return "";
-    return String.substr(开始位置 + 1, 结束位置 - 开始位置 - 1);
-}
-
-// ========================================
-// 子线程（后台数据收集）
-// ========================================
-void* 子线程(void*) {
-    while (true) {
-        sleep(5);
-        getbbz();
-        if (!IsValidAddr(模块地址)) continue;
-
-        uint64_t Engine = vm_read<uint64_t>(模块地址 + SDK::Engine);
-        if (!IsValidAddr(Engine)) continue;
-        uint64_t GameViewport = vm_read<uint64_t>(Engine + SDK::GameViewport);
-        if (!IsValidAddr(GameViewport)) continue;
-        uint64_t World = vm_read<uint64_t>(GameViewport + SDK::World);
-        if (!IsValidAddr(World)) continue;
-        uint64_t LevelCollections = vm_read<uint64_t>(World + SDK::LevelCollections);
-        if (!IsValidAddr(LevelCollections)) continue;
-
-        uint64_t NetDriver = vm_read<uint64_t>(LevelCollections + SDK::NetDriver);
-        if (!IsValidAddr(NetDriver)) continue;
-        uint64_t ServerConnection = vm_read<uint64_t>(NetDriver + SDK::ServerConnection);
-        if (!IsValidAddr(ServerConnection)) continue;
-        uint64_t PlayerController = vm_read<uint64_t>(ServerConnection + SDK::PlayerController);
-        if (!IsValidAddr(PlayerController)) continue;
-
-        uint64_t cam = vm_read<uint64_t>(PlayerController + SDK::PlayerCameraManager);
-        if (IsValidAddr(cam)) { pthread_mutex_lock(&g_lock); g_PlayerCameraManager = cam; pthread_mutex_unlock(&g_lock); }
-
-        uint64_t Pawn = vm_read<uint64_t>(PlayerController + SDK::Pawn);
-        pthread_mutex_lock(&g_lock); g_Pawn = Pawn; pthread_mutex_unlock(&g_lock);
-
-        uint64_t CHARACTER = vm_read<uint64_t>(PlayerController + SDK::CHARACTER);
-        if (!IsValidAddr(CHARACTER)) continue;
-        uint64_t TeamComp = vm_read<uint64_t>(CHARACTER + SDK::TeamComp);
-        if (!IsValidAddr(TeamComp)) continue;
-        DFType::UGPTeamComponent MyTeam = vm_read<DFType::UGPTeamComponent>(TeamComp + SDK::TeamID);
-
-        uint64_t PersistentLevel = vm_read<uint64_t>(LevelCollections + SDK::PersistentLevel);
-        if (!IsValidAddr(PersistentLevel)) continue;
-        DFType::TArray Actors = vm_read<DFType::TArray>(PersistentLevel + SDK::Actors);
-        if (!IsValidAddr(Actors.AllocatorInstance) || Actors.ArrayNum > Actors.ArrayMax || Actors.ArrayNum > 10000 || Actors.ArrayNum <= 0) continue;
-
-        vector<物品数据> 物品数据数组;
-        vector<盒子数据> 盒子数据数组;
-        vector<玩家数据> 玩家数据数组;
-
-        for (int i = 0; i < Actors.ArrayNum; i++) {
-            uint64_t Actor = vm_read<uint64_t>(Actors.AllocatorInstance + i * 8);
-            if (!IsValidAddr(Actor)) continue;
-            uint64_t RootComponent = vm_read<uint64_t>(Actor + SDK::RootComponent);
-            if (!IsValidAddr(RootComponent)) continue;
-            string FName = 解密FName(vm_read<int>(Actor + 0x1C));
-            if (FName == "WeaponPhysicsBulletReal_BP_C") continue;
-
-            switch (取对象类型(FName)) {
-                case 0: {
-                    uint64_t Row = vm_read<uint64_t>(Actor + SDK::CurRow);
-                    if (!IsValidAddr(Row)) continue;
-                    物品数据 d;
-                    d.RootComponent = RootComponent;
-                    d.ItemID = vm_read<int>(Row + SDK::FDFMCommonItemRow::ItemID);
-                    d.Quality = vm_read<int>(Row + SDK::FDFMCommonItemRow::Quality);
-                    d.MallRecyclePrice = vm_read<int>(Row + SDK::FDFMCommonItemRow::MallRecyclePrice);
-                    物品数据数组.push_back(d);
-                    break;
-                }
-                case 1: {
-                    盒子数据 d;
-                    d.RootComponent = RootComponent;
-                    d.PlayerName_Buffer = vm_read<uint64_t>(Actor + SDK::PlayerName_Buffer);
-                    d.bLooted = vm_read<bool>(Actor + SDK::bLooted);
-                    盒子数据数组.push_back(d);
-                    break;
-                }
-                case 2: {
-                    if (Actor == Pawn) continue;
-                    uint64_t TC = vm_read<uint64_t>(Actor + SDK::TeamComp);
-                    if (!IsValidAddr(TC)) continue;
-                    DFType::UGPTeamComponent team = vm_read<DFType::UGPTeamComponent>(TC + SDK::TeamID);
-                    if (team.TeamID == MyTeam.TeamID) continue;
-                    uint64_t HC = vm_read<uint64_t>(Actor + SDK::HealthComp);
-                    if (!IsValidAddr(HC)) continue;
-                    uint64_t PS = vm_read<uint64_t>(Actor + SDK::PlayerState);
-                    if (IsValidAddr(PS) && vm_read<uint8_t>(PS + SDK::ExitState) == 3) continue;
-                    uint64_t Mesh = vm_read<uint64_t>(Actor + SDK::Mesh);
-                    if (!IsValidAddr(Mesh)) continue;
-
-                    玩家数据 d;
-                    d.Actor = Actor;
-                    d.FName = FName;
-                    d.RootComponent = RootComponent;
-                    d.Mesh = Mesh;
-                    d.HealthSet = vm_read<uint64_t>(HC + SDK::HealthSet);
-                    d.bIsAI = !IsValidAddr(PS);
-                    d.CacheCurWeapon = vm_read<uint64_t>(Actor + SDK::CacheCurWeapon);
-                    if (IsValidAddr(PS)) {
-                        d.TeamID = team.TeamID;
-                        d.PlayerNamePrivate = vm_read<uint64_t>(PS + SDK::PlayerNamePrivate);
-                        d.HeroId = vm_read<uint64_t>(PS + SDK::HeroId);
-                        uint64_t EqComp = vm_read<uint64_t>(Actor + SDK::CharacterEquipComponent);
-                        if (IsValidAddr(EqComp)) d.EquipmentInfoArray = vm_read<DFType::TArray>(EqComp + SDK::EquipmentInfoArray);
-                    }
-                    玩家数据数组.push_back(d);
-                    break;
-                }
-                default: break;
-            }
-        }
-        绘制类型.更新数据(物品数据数组, 盒子数据数组, 玩家数据数组);
-    }
-    return nullptr;
-}
-
-// ========================================
-// +load 入口
-// ========================================
 + (void)load {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        初始化设备信息();
-        pthread_t tid;
-        pthread_create(&tid, NULL, 子线程, NULL);
-        pthread_detach(tid);
+        DrawDbg("[Boot] DrawWindow.load pid=%d 后台轮询+7s诊断启动", (int)getpid());
+        int tick = 0;
+        while (true) {
+            // 每圈从磁盘同步 reading，让 HUD 进程跟上主界面按钮
+            gReadingEnabled = LoadReadingFlagFromDisk();
+            if (gReadingEnabled && ((DOJailbreaker *)DOJailbreaker.sharedInstance).isSuccess) {
+                getbbz();
+            }
+            // 每 7 秒完整 dump 一次（不依赖 Metal 绘制是否在跑）
+            if ((tick % 7) == 0) {
+                DumpReadPipelineEvery7s();
+            }
+            tick++;
+            sleep(1);
+        }
     });
 }
 
-// ========================================
-// 主渲染循环
-// ========================================
+// 主渲染 —— 射线逻辑对标 wasd ImGuiDraw.mm
 void Draw::StartBooks() {
-    ImDrawList* dl = BBZGUI::GetBackgroundDrawList();
-    if (!dl) return;
+    static int frameCount = 0;
+    frameCount++;
 
-    CanvasSize.X = BBZGUI::GetIO().DisplaySize.x;
-    CanvasSize.Y = BBZGUI::GetIO().DisplaySize.y;
-    if (CanvasSize.X <= 0 || CanvasSize.Y <= 0) return;
-
-    pthread_mutex_lock(&g_lock);
-    uint64_t cam = g_PlayerCameraManager;
-    uint64_t pawn = g_Pawn;
-    pthread_mutex_unlock(&g_lock);
-
-    // 返回大厅检测：相机无效时清空缓冲区
-    if (!IsValidAddr(cam)) {
-        for (int i = 0; i < 3; i++) {
-            绘制类型.缓冲区[i].玩家.clear();
-            绘制类型.缓冲区[i].物品.clear();
-            绘制类型.缓冲区[i].盒子.clear();
-        }
-
+    ImDrawList* dl = BBZGUI::GetForegroundDrawList();
+    if (!dl) {
+        if (frameCount % 60 == 0) DrawDbg("[绘制] GetForegroundDrawList=NULL");
         return;
     }
 
-    DFType::FMinimalViewInfo POV = 取POV(cam + SDK::ViewTarget + SDK::POV);
-    if (POV.FOV <= 0.0f || POV.FOV > 180.0f) {
-        for (int i = 0; i < 3; i++) {
-            绘制类型.缓冲区[i].玩家.clear();
-            绘制类型.缓冲区[i].物品.clear();
-            绘制类型.缓冲区[i].盒子.clear();
-        }
+    CanvasSize.x = BBZGUI::GetIO().DisplaySize.x;
+    CanvasSize.y = BBZGUI::GetIO().DisplaySize.y;
 
+    // 每帧刷新开关（含 reading），打通主 App ↔ HUD
+    RefreshDrawPrefs();
+
+    // 心跳：证明 HUD 绘制帧在跑（绿色小块，不依赖中文字体）
+    dl->AddRectFilled(ImVec2(4, 4), ImVec2(24, 24), 0xFF00FF00);
+
+    if (frameCount % 120 == 0) {
+        DrawDbg("[绘制] frame=%d canvas=%.0fx%.0f reading=%d krkw=%d gamePid=%d base=0x%llx count=%d line=%d selfPid=%d",
+                frameCount, CanvasSize.x, CanvasSize.y,
+                (int)gReadingEnabled,
+                (int)((DOJailbreaker *)DOJailbreaker.sharedInstance).isSuccess,
+                gamePid, 模块地址, (int)显示人数, (int)显示射线, (int)getpid());
+    }
+
+    if (CanvasSize.x <= 0 || CanvasSize.y <= 0) {
+        if (frameCount % 120 == 0) DrawDbg("[绘制] CanvasSize 无效");
         return;
     }
-    DFType::FMatrix 矩阵 = 取矩阵(POV.Rotation);
 
-    if (!总开关) return;
+    // ASCII 状态条（中文字体失败时仍可见）
+    char hudBar[256];
+    snprintf(hudBar, sizeof(hudBar), "AB HUD pid=%d read=%d krkw=%d gPid=%d base=%llx",
+             (int)getpid(), (int)gReadingEnabled,
+             (int)((DOJailbreaker *)DOJailbreaker.sharedInstance).isSuccess,
+             gamePid, 模块地址);
+    Draw::DrawText(hudBar, ImVec2(30, 8), false, Colour_黄色, true, 14);
 
-    // 跨进程读取开关设置
-    NSDictionary *配置 = [NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.map.settings.plist"];
-    BOOL 人机显示开关 = [[配置 objectForKey:@"人机密钥"] boolValue];
-    BOOL 骨骼显示开关 = [[配置 objectForKey:@"骨骼密钥"] boolValue];
-    BOOL 血条显示开关 = [[配置 objectForKey:@"血条密钥"] boolValue];
-    BOOL 信息显示开关 = [[配置 objectForKey:@"信息密钥"] boolValue];
-    BOOL 头甲显示开关 = [[配置 objectForKey:@"头甲密钥"] boolValue];
-    BOOL 装备显示开关 = [[配置 objectForKey:@"装备密钥"] boolValue];
-    BOOL 距离显示开关 = [[配置 objectForKey:@"距离密钥"] boolValue];
-    BOOL 物资显示开关 = [[配置 objectForKey:@"物资密钥"] boolValue];
-    BOOL 盒子显示开关 = [[配置 objectForKey:@"盒子密钥"] boolValue];
+    if (!gReadingEnabled) {
+        Draw::DrawText("WAIT StartReading (plist reading=0)", ImVec2(CanvasSize.x / 2, 80), true, Colour_黄色, true, 20);
+        return;
+    }
 
-    绘制帧& 帧 = 绘制类型.获取最新帧();
-    int 玩家数量 = 0, 人机数量 = 0, 盒子数量 = (int)帧.盒子.size();
+    if (!((DOJailbreaker *)DOJailbreaker.sharedInstance).isSuccess) {
+        Draw::DrawText("KRKW not ready in HUD process", ImVec2(CanvasSize.x / 2, 80), true, Colour_红色, true, 20);
+        return;
+    }
 
-    // ========== 物品绘制 ==========
-    if (物资显示开关)
-    for (auto& 物品 : 帧.物品) {
-        DFType::FVector RelativeLocation = 取RelativeLocation(物品.RootComponent);
-        if (RelativeLocation.X == 0.0f && RelativeLocation.Y == 0.0f && RelativeLocation.Z == 0.0f) continue;
-        float 距离 = 取距离(RelativeLocation, POV.Location);
-        if (距离 < 0.0f || 距离 > 80.0f) continue;
-        ImVec2 屏幕坐标 = 取屏幕坐标(RelativeLocation, POV, 矩阵);
-        if (屏幕坐标.x <= 0.0f || 屏幕坐标.y <= 0.0f || 屏幕坐标.x >= CanvasSize.X || 屏幕坐标.y >= CanvasSize.Y) continue;
-        if (物品.Quality == 0 && 物品.MallRecyclePrice == 0) {
-            绘制文字(dl, "未知物品 [ " + to_string((int)距离) + " m ]", 20.0f, 屏幕坐标, IM_COL32_WHITE, 0, true, true);
-        } else if (物品.Quality >= 4 && 物品.Quality < 7) {
-            uint64_t ItemID = [[NSString stringWithFormat:@"%s", 解密FName(物品.ItemID).c_str()] longLongValue];
-            绘制文字(dl, 取物品名(ItemID) + " (价格: " + 取物资价值(物品.MallRecyclePrice) + ") [ " + to_string((int)距离) + " m ]", 20.0f, 屏幕坐标, 取等级颜色(物品.Quality), 0, true, true);
+    Draw::DrawText("AB Kernel ON", ImVec2(CanvasSize.x / 2, 40), true, Colour_红色, true, 26);
+
+    char statusBuf[192];
+    snprintf(statusBuf, sizeof(statusBuf), "gPid:%d Base:%llx Ray:%d Count:%d", gamePid, 模块地址, (int)显示射线, (int)显示人数);
+    Draw::DrawText(statusBuf, ImVec2(20, 70), false, Colour_白色, true, 16);
+
+    if (模块地址 == 0 || !总开关) {
+        Draw::DrawText("Searching ShadowTrackerExt...", ImVec2(20, 100), false, Colour_黄色, true, 18);
+        return;
+    }
+
+    uint64_t GWorld = UNSIGN_PTR(vm_read<uint64_t>(模块地址 + SDK::GWorld));
+    if (!IsValidAddr(GWorld)) {
+        if (frameCount % 90 == 0) DrawDbg("[绘制] GWorld 无效 raw@base+0x%llx", SDK::GWorld);
+        Draw::DrawText("GWorld invalid", ImVec2(20, 100), false, Colour_黄色, true, 16);
+        return;
+    }
+
+    uint64_t NetDriver = UNSIGN_PTR(vm_read<uint64_t>(GWorld + SDK::NetDriver));
+    if (!IsValidAddr(NetDriver)) {
+        if (frameCount % 90 == 0) DrawDbg("[绘制] NetDriver 无效 (未进对局?) GWorld=0x%llx", GWorld);
+        Draw::DrawText("Waiting match (NetDriver)...", ImVec2(20, 100), false, Colour_黄色, true, 16);
+        return;
+    }
+
+    uint64_t ServerConnection = UNSIGN_PTR(vm_read<uint64_t>(NetDriver + SDK::ServerConnection));
+    if (!IsValidAddr(ServerConnection)) {
+        if (frameCount % 90 == 0) DrawDbg("[绘制] ServerConnection 无效");
+        return;
+    }
+
+    uint64_t PlayerController = UNSIGN_PTR(vm_read<uint64_t>(ServerConnection + SDK::PlayerController));
+    if (!IsValidAddr(PlayerController)) {
+        if (frameCount % 90 == 0) DrawDbg("[绘制] PlayerController 无效");
+        return;
+    }
+
+    uint64_t PlayerCameraManager = UNSIGN_PTR(vm_read<uint64_t>(PlayerController + SDK::PlayerCameraManager));
+    if (!IsValidAddr(PlayerCameraManager)) {
+        if (frameCount % 90 == 0) DrawDbg("[绘制] PlayerCameraManager 无效");
+        return;
+    }
+
+    uint64_t MyCharacter = UNSIGN_PTR(vm_read<uint64_t>(PlayerController + SDK::Character));
+
+    int myTeamID = vm_read<int>(PlayerController + SDK::MyTeamID);
+    if (myTeamID <= 0 && IsValidAddr(MyCharacter)) {
+        myTeamID = vm_read<int>(MyCharacter + SDK::TeamID);
+    }
+
+    // 对标 wasd：直接从 ViewTarget(0x14B0) 读 CoView 结构
+    CoViewInfo POV = vm_read<CoViewInfo>(PlayerCameraManager + SDK::ViewTarget);
+    // FOV 兜底：结构体对齐不对时尝试 0x2C 处的 float（旧 ViewTag[0x8] 布局）
+    bool povOk = (POV.FOV > 1.0f && POV.FOV <= 170.0f);
+    if (!povOk) {
+        float fovAlt = vm_read<float>(PlayerCameraManager + SDK::ViewTarget + 0x2C);
+        if (fovAlt > 1.0f && fovAlt <= 170.0f) {
+            POV.FOV = fovAlt;
+            povOk = true;
+            if (frameCount % 120 == 0) DrawDbg("[POV] 使用备用 FOV@+0x2C = %.2f", fovAlt);
+        }
+    }
+    if (frameCount % 120 == 0) {
+        DrawDbg("[POV] Loc=(%.1f,%.1f,%.1f) Rot=(%.1f,%.1f,%.1f) FOV=%.2f ok=%d cam=0x%llx",
+                POV.Location.X, POV.Location.Y, POV.Location.Z,
+                POV.Rotation.Pitch, POV.Rotation.Yaw, POV.Rotation.Roll,
+                POV.FOV, (int)povOk, PlayerCameraManager);
+    }
+
+    // ===== GameState 人数条（对标 wasd，进对局即显示，不依赖开关）=====
+    uint64_t gameStateBase = UNSIGN_PTR(vm_read<uint64_t>(GWorld + SDK::GameState));
+    int 全图人数 = 0, 真实玩家GS = 0, 队伍数量 = 0;
+    if (IsValidAddr(gameStateBase)) {
+        全图人数 = vm_read<int>(gameStateBase + SDK::TotalPlayerNum);
+        真实玩家GS = vm_read<int>(gameStateBase + SDK::PlayerNum);
+        队伍数量 = vm_read<int>(gameStateBase + SDK::AliveTeamNum);
+    }
+    // ASCII + 中文双份，避免字体缺字时完全看不见
+    char gameInfo[160];
+    snprintf(gameInfo, sizeof(gameInfo), "ALL:%02d HUM:%02d TEAM:%02d | 全图:%02d 真人:%02d 队伍:%02d",
+             全图人数, 真实玩家GS, 队伍数量, 全图人数, 真实玩家GS, 队伍数量);
+    Draw::DrawText(gameInfo, ImVec2(CanvasSize.x * 0.10f, 28), false, Colour_白色, true, 16);
+
+    uint64_t PersistentLevel = UNSIGN_PTR(vm_read<uint64_t>(GWorld + SDK::PersistentLevel));
+    if (!IsValidAddr(PersistentLevel)) {
+        if (frameCount % 90 == 0) DrawDbg("[绘制] PersistentLevel 无效");
+        return;
+    }
+
+    uint64_t ActorArrayPtr = UNSIGN_PTR(vm_read<uint64_t>(PersistentLevel + SDK::ActorArray));
+    int ActorCount = vm_read<int>(PersistentLevel + SDK::ActorCount);
+
+    if (!IsValidAddr(ActorArrayPtr) || ActorCount <= 0 || ActorCount > 10000) {
+        if (frameCount % 90 == 0) {
+            DrawDbg("[绘制] ActorArray 无效 ptr=0x%llx count=%d", ActorArrayPtr, ActorCount);
+        }
+        return;
+    }
+
+    if (frameCount % 120 == 0) {
+        DrawDbg("[绘制] GWorld=0x%llx GS=0x%llx actors=%d team=%d 全图=%d 真人GS=%d 队伍=%d",
+                GWorld, gameStateBase, ActorCount, myTeamID, 全图人数, 真实玩家GS, 队伍数量);
+    }
+
+    // 对标 wasd：遍历 Actor 统计真人/人机
+    int totalEnemies = 0; // 真人
+    int aiCounts = 0;     // 人机
+    int rayDrawn = 0;
+    int filteredSpeed = 0, filteredAction = 0, filteredTeam = 0, filteredHp = 0;
+
+    Vector2 canvasVec(CanvasSize.x, CanvasSize.y);
+
+    for (int i = 0; i < ActorCount; ++i) {
+        uint64_t actor = UNSIGN_PTR(vm_read<uint64_t>(ActorArrayPtr + i * 8));
+        if (!IsValidAddr(actor) || actor == MyCharacter) continue;
+
+        float defaultSpeed = vm_read<float>(actor + SDK::DefaultSpeedValue);
+        if (defaultSpeed != 479.5f) { filteredSpeed++; continue; }
+
+        uint64_t pawnStatePtr = UNSIGN_PTR(vm_read<uint64_t>(actor + SDK::PawnStateRepSyncData));
+        int action = IsValidAddr(pawnStatePtr) ? vm_read<int>(pawnStatePtr) : 0;
+        if (action == 1048592 || action == 1048576) { filteredAction++; continue; }
+
+        int teamID = vm_read<int>(actor + SDK::TeamID);
+        if (teamID == myTeamID || teamID == -1) { filteredTeam++; continue; }
+
+        float health = vm_read<float>(actor + SDK::Health);
+        float healthMax = vm_read<float>(actor + SDK::HealthMax);
+        float hpPercent = 0.0f;
+        if (healthMax > 0) {
+            hpPercent = (health / healthMax) * 100.0f;
+            if (hpPercent <= 0 || hpPercent > 100.0f) { filteredHp++; continue; }
+        }
+
+        // 人数统计不依赖屏幕/FOV（对标 wasd 在绘制循环里先计数）
+        bool bIsAI = vm_read<bool>(actor + SDK::bIsAI);
+        if (!bIsAI) {
+            totalEnemies++;
+        } else {
+            aiCounts++;
+        }
+
+        // 以下绘制依赖合法 POV
+        if (!povOk) continue;
+
+        Vector3 loc = GetRelativeLocation(actor);
+        if (loc.X == 0 && loc.Y == 0 && loc.Z == 0) continue;
+
+        float distance = GetDistance(loc, POV.Location) / 100.0f;
+        Vector2 footScreen = WorldToScreen(loc, POV, (int)CanvasSize.x, (int)CanvasSize.y);
+        bool onScreen = isScreenVisible(footScreen, canvasVec);
+
+        Vector2 HeadScreen = footScreen;
+        bool gotHead = false;
+        uint64_t mesh = UNSIGN_PTR(vm_read<uint64_t>(actor + SDK::Mesh));
+        if (IsValidAddr(mesh)) {
+            uint64_t staticMesh = UNSIGN_PTR(vm_read<uint64_t>(mesh + SDK::StaticMesh));
+            if (IsValidAddr(staticMesh)) {
+                FTransform c2w = GetMatrixConversion(mesh + SDK::ComponentToWorld);
+                Vector3 headWorld = GetBoneWithRotation((long)staticMesh, 5, c2w);
+                headWorld.Z += 20.0f;
+                HeadScreen = WorldToScreen(headWorld, POV, (int)CanvasSize.x, (int)CanvasSize.y);
+                gotHead = true;
+            }
+        }
+        if (!gotHead) {
+            Vector3 approxHead = loc;
+            approxHead.Z += 85.0f;
+            HeadScreen = WorldToScreen(approxHead, POV, (int)CanvasSize.x, (int)CanvasSize.y);
+        }
+
+        // ===== 射线：对标 wasd =====
+        if (显示射线 && distance <= 绘制距离上限 && onScreen) {
+            Draw::DrawLine(ImVec2(CanvasSize.x / 2.0f, 10.0f),
+                           ImVec2(HeadScreen.X, HeadScreen.Y - 70.0f),
+                           Colour_射线, 射线粗细);
+            rayDrawn++;
+        }
+
+        if (显示方框 && distance <= 绘制距离上限 && onScreen) {
+            VectorRect rect;
+            BoxConversion(loc, &rect, POV, canvasVec);
+            Draw::DrawRect(ImVec2(rect.x, rect.y), ImVec2(rect.x + rect.w, rect.y + rect.h), Colour_绿色, 1.0f);
+        }
+
+        if (显示血量 && distance <= 绘制距离上限 && onScreen && hpPercent > 0) {
+            char hpBuf[32];
+            snprintf(hpBuf, sizeof(hpBuf), "%.0f", hpPercent);
+            Draw::DrawText(hpBuf, ImVec2(HeadScreen.X, HeadScreen.Y - 10), true, Colour_绿色, true, 12);
+        }
+
+        if (显示信息 && distance <= 绘制距离上限 && onScreen) {
+            char infoBuf[64];
+            snprintf(infoBuf, sizeof(infoBuf), "T%d %.0fm", teamID, distance);
+            Draw::DrawText(infoBuf, ImVec2(HeadScreen.X, HeadScreen.Y - 38), true, Colour_白色, true, 12);
         }
     }
 
-    // ========== 盒子绘制 ==========
-    if (盒子显示开关)
-    for (auto& 盒子 : 帧.盒子) {
-        DFType::FVector RelativeLocation = 取RelativeLocation(盒子.RootComponent);
-        if (RelativeLocation.X == 0.0f && RelativeLocation.Y == 0.0f && RelativeLocation.Z == 0.0f) continue;
-        float 距离 = 取距离(RelativeLocation, POV.Location);
-        if (距离 < 0.0f || 距离 > 80.0f) continue;
-        ImVec2 屏幕坐标 = 取屏幕坐标(RelativeLocation, POV, 矩阵);
-        if (屏幕坐标.x <= 0.0f || 屏幕坐标.y <= 0.0f || 屏幕坐标.x >= CanvasSize.X || 屏幕坐标.y >= CanvasSize.Y) continue;
-        绘制文字(dl, 盒子.bLooted ? "[已开启] " : "[未开启] ", 20.0f, ImVec2(屏幕坐标.x - 5.0f, 屏幕坐标.y), 盒子.bLooted ? IM_COL32(102,255,102,255) : IM_COL32(255,102,102,255), 2, true);
-        string boxName = strstr(取FString(盒子.PlayerName_Buffer).c_str(), "INVTEXT") ? 取中段String(取FString(盒子.PlayerName_Buffer)) : "AI";
-        绘制文字(dl, boxName + "的盒子 [ " + to_string((int)距离) + " m ]", 20.0f, ImVec2(屏幕坐标.x - 30.0f, 屏幕坐标.y), strstr(取FString(盒子.PlayerName_Buffer).c_str(), "INVTEXT") ? IM_COL32(255,255,102,255) : IM_COL32_WHITE, 1, true);
+    // ===== 显示人数：对标 wasd；同时画 ASCII 兜底 =====
+    if (显示人数) {
+        char buf1[40], buf2[40], bufA[48];
+        snprintf(buf1, sizeof(buf1), "真人:%02d", totalEnemies);
+        snprintf(buf2, sizeof(buf2), "人机:%02d", aiCounts);
+        snprintf(bufA, sizeof(bufA), "R:%02d  AI:%02d", totalEnemies, aiCounts);
+        Draw::DrawText(buf1, ImVec2(CanvasSize.x / 2.0f - 50.0f, 50.0f), true, Colour_绿色, true, 22);
+        Draw::DrawText(buf2, ImVec2(CanvasSize.x / 2.0f + 50.0f, 50.0f), true, Colour_人机, true, 22);
+        Draw::DrawText(bufA, ImVec2(CanvasSize.x / 2.0f, 78.0f), true, Colour_白色, true, 20);
     }
 
-    // ========== 玩家绘制 ==========
-    for (auto& 玩家 : 帧.玩家) {
-        if (!IsValidAddr(玩家.Actor) || !IsValidAddr(玩家.Mesh)) continue;
-        if (!IsValidAddr(玩家.RootComponent)) continue;
-        if (!IsValidAddr(玩家.HealthSet)) continue;
-
-        bool bIsDead = vm_read<bool>(玩家.Actor + SDK::bIsDead);
-        if (bIsDead) continue;
-
-        DFType::FVector RelativeLocation = 取RelativeLocation(玩家.RootComponent);
-        if (RelativeLocation.X == 0.0f && RelativeLocation.Y == 0.0f && RelativeLocation.Z == 0.0f) continue;
-        float 距离 = 取距离(RelativeLocation, POV.Location);
-        if (fabsf(距离) > 200.0f) continue;
-
-        DFType::TArray StaticMesh = vm_read<DFType::TArray>(玩家.Mesh + SDK::StaticMesh);
-        if (!IsValidAddr(StaticMesh.AllocatorInstance) || StaticMesh.ArrayNum > StaticMesh.ArrayMax || StaticMesh.ArrayNum <= 0) {
-            StaticMesh = vm_read<DFType::TArray>(玩家.Mesh + SDK::StaticMesh + 0x10);
-            if (!IsValidAddr(StaticMesh.AllocatorInstance) || StaticMesh.ArrayNum > StaticMesh.ArrayMax || StaticMesh.ArrayNum <= 0) continue;
-        }
-
-        DFType::FVector 头世界坐标 = 取骨骼世界坐标(玩家.Mesh + SDK::ComponentToWorld, StaticMesh.AllocatorInstance, 骨骼点数组[2]);
-        ImVec2 头屏幕坐标 = 取屏幕坐标(头世界坐标, POV, 矩阵);
-
-        if (玩家.bIsAI) 人机数量++; else 玩家数量++;
-        if (玩家.bIsAI && !人机显示开关) continue;
-
-        float MaxHealth = vm_read<float>(玩家.HealthSet + SDK::MaxHealth);
-        float MaxImpendingDeathHealth = vm_read<float>(玩家.HealthSet + SDK::MaxImpendingDeathHealth);
-        float Health = MaxHealth > 0.0f ? 100.0f * vm_read<float>(玩家.HealthSet + SDK::Health) / MaxHealth : 0.0f;
-        float ImpendingDeathHealth = MaxImpendingDeathHealth > 0.0f ? 100.0f * vm_read<float>(玩家.HealthSet + SDK::ImpendingDeathHealth) / MaxImpendingDeathHealth : 0.0f;
-
-        if (头屏幕坐标.x <= 0.0f || 头屏幕坐标.y <= 0.0f || 头屏幕坐标.x >= CanvasSize.X || 头屏幕坐标.y >= CanvasSize.Y) continue;
-
-        // 骨骼屏幕坐标
-        ImVec2 骨骼屏幕坐标[15];
-        for (int i = 0; i < 15; i++) {
-            if (i == 2) continue;
-            DFType::FVector 骨骼世界坐标 = 取骨骼世界坐标(玩家.Mesh + SDK::ComponentToWorld, StaticMesh.AllocatorInstance, 骨骼点数组[i]);
-            骨骼屏幕坐标[i] = 取屏幕坐标(骨骼世界坐标, POV, 矩阵);
-        }
-
-        ImU32 骨骼颜色 = 玩家.bIsAI && Health > 0 ? IM_COL32(102,255,102,255) : !玩家.bIsAI && Health > 0 ? IM_COL32(255,102,102,255) : IM_COL32(255,255,102,255);
-
-        // ---- 未倒地绘制 ----
-        if (Health > 0.0f) {
-            // 头甲显示
-            if (!玩家.bIsAI && 头甲显示开关 && IsValidAddr(玩家.EquipmentInfoArray.AllocatorInstance)) {
-                装备数据 头盔 = {
-                    取装备等级(取物品名(vm_read<uint64_t>(玩家.EquipmentInfoArray.AllocatorInstance + SDK::FEquipmentInfo::ItemID + 0x30 * 1))),
-                    vm_read<float>(玩家.EquipmentInfoArray.AllocatorInstance + SDK::FEquipmentInfo::Durability + 0x30 * 1),
-                    vm_read<float>(玩家.EquipmentInfoArray.AllocatorInstance + SDK::FEquipmentInfo::MaxDurability + 0x30 * 1),
-                };
-                装备数据 防弹衣 = {
-                    取装备等级(取物品名(vm_read<uint64_t>(玩家.EquipmentInfoArray.AllocatorInstance + SDK::FEquipmentInfo::ItemID + 0x30 * 5))),
-                    vm_read<float>(玩家.EquipmentInfoArray.AllocatorInstance + SDK::FEquipmentInfo::Durability + 0x30 * 5),
-                    vm_read<float>(玩家.EquipmentInfoArray.AllocatorInstance + SDK::FEquipmentInfo::MaxDurability + 0x30 * 5),
-                };
-                if (!(头盔.等级 == 0 && 防弹衣.等级 == 0)) {
-                    int 最高等级 = 头盔.等级 > 防弹衣.等级 ? 头盔.等级 : 防弹衣.等级;
-                    ImU32 颜色 = 最高等级 == 0 ? IM_COL32_WHITE : (ImU32)取等级颜色(最高等级);
-                    绘制文字(dl, (头盔.等级 == 0 ? "无头 / " : (to_string(头盔.等级) + "头 [ " + to_string((int)头盔.耐久) + "/" + to_string((int)头盔.最大耐久) + " ] ")) + (防弹衣.等级 == 0 ? "无甲" : (to_string(防弹衣.等级) + "甲 [ " + to_string((int)防弹衣.耐久) + "/" + to_string((int)防弹衣.最大耐久) + " ] ")), 20.0f, ImVec2(头屏幕坐标.x, 头屏幕坐标.y - 70.0f), 颜色, 0, true);
-                }
-            }
-            // 胸挂/背包/安全箱
-            if (!玩家.bIsAI && 装备显示开关 && IsValidAddr(玩家.EquipmentInfoArray.AllocatorInstance)) {
-                int 胸挂 = 取装备等级(取物品名(vm_read<uint64_t>(玩家.EquipmentInfoArray.AllocatorInstance + SDK::FEquipmentInfo::ItemID + 0x30 * 7)));
-                int 背包 = 取装备等级(取物品名(vm_read<uint64_t>(玩家.EquipmentInfoArray.AllocatorInstance + SDK::FEquipmentInfo::ItemID + 0x30 * 8)));
-                int 安全箱 = 取装备等级(取物品名(vm_read<uint64_t>(玩家.EquipmentInfoArray.AllocatorInstance + SDK::FEquipmentInfo::ItemID + 0x30 * 9)));
-                if (!(胸挂 == 0 && 背包 == 0 && 安全箱 == 0)) {
-                    float footY = 骨骼屏幕坐标[13].y > 骨骼屏幕坐标[14].y ? 骨骼屏幕坐标[13].y : 骨骼屏幕坐标[14].y;
-                    绘制文字(dl, (胸挂 == 0 ? "" : to_string(胸挂) + "级胸挂 / ") + (背包 == 0 ? "" : 背包 > 0 && 安全箱 == 0 ? to_string(背包) + "级背包" : to_string(背包) + "级背包 / ") + (安全箱 == 0 ? "" : to_string(安全箱) + "级安全箱"), 20.0f, ImVec2(头屏幕坐标.x, footY + 20.0f), IM_COL32_WHITE, 0, true);
-                }
-            }
-            // 距离
-            if (距离显示开关) {
-                float footY = 骨骼屏幕坐标[13].y > 骨骼屏幕坐标[14].y ? 骨骼屏幕坐标[13].y : 骨骼屏幕坐标[14].y;
-                绘制文字(dl, "[ " + to_string((int)距离) + " m ]", 20.0f, ImVec2(头屏幕坐标.x, (装备显示开关 ? footY + 40.0f : footY + 20.0f)), IM_COL32_WHITE, 0, true);
-            }
-            // 武器
-            if (信息显示开关) {
-                uint64_t WeaponID = vm_read<uint64_t>(玩家.CacheCurWeapon + SDK::WeaponID);
-                if (WeaponID > 0) {
-                    绘制文字(dl, 取物品名(WeaponID), 20.0f, ImVec2(头屏幕坐标.x, 头屏幕坐标.y - 50.0f), IM_COL32_WHITE, 0, true);
-                }
-            }
-        }
-
-        // ---- 全局绘制 ----
-        // 名字
-        if (信息显示开关)
-        绘制文字(dl, 玩家.bIsAI ? 取人机名字(玩家.FName) : "(" + to_string(玩家.TeamID) + ") " + 取FString(玩家.PlayerNamePrivate) + 取英雄名(玩家.HeroId), 20.0f, ImVec2(头屏幕坐标.x, 头屏幕坐标.y - 30.0f), 玩家.bIsAI ? IM_COL32_WHITE : IM_COL32(255,255,102,255), 0, true);
-        // 血条
-        if (血条显示开关)
-        绘制血条(dl, 头屏幕坐标, Health, ImpendingDeathHealth, 玩家.bIsAI);
-        // 骨骼
-        if (骨骼显示开关) {
-        dl->AddLine(头屏幕坐标, 骨骼屏幕坐标[1], 骨骼颜色);
-        dl->AddLine(骨骼屏幕坐标[1], 骨骼屏幕坐标[0], 骨骼颜色);
-        dl->AddLine(骨骼屏幕坐标[1], 骨骼屏幕坐标[3], 骨骼颜色);
-        dl->AddLine(骨骼屏幕坐标[3], 骨骼屏幕坐标[4], 骨骼颜色);
-        dl->AddLine(骨骼屏幕坐标[4], 骨骼屏幕坐标[5], 骨骼颜色);
-        dl->AddLine(骨骼屏幕坐标[1], 骨骼屏幕坐标[6], 骨骼颜色);
-        dl->AddLine(骨骼屏幕坐标[6], 骨骼屏幕坐标[7], 骨骼颜色);
-        dl->AddLine(骨骼屏幕坐标[7], 骨骼屏幕坐标[8], 骨骼颜色);
-        dl->AddLine(骨骼屏幕坐标[0], 骨骼屏幕坐标[9], 骨骼颜色);
-        dl->AddLine(骨骼屏幕坐标[9], 骨骼屏幕坐标[10], 骨骼颜色);
-        dl->AddLine(骨骼屏幕坐标[10], 骨骼屏幕坐标[11], 骨骼颜色);
-        dl->AddLine(骨骼屏幕坐标[0], 骨骼屏幕坐标[12], 骨骼颜色);
-        dl->AddLine(骨骼屏幕坐标[12], 骨骼屏幕坐标[13], 骨骼颜色);
-        dl->AddLine(骨骼屏幕坐标[13], 骨骼屏幕坐标[14], 骨骼颜色);
-        }
+    if (frameCount % 90 == 0) {
+        DrawDbg("[人数] 真人=%d 人机=%d rays=%d actors=%d filter(speed=%d act=%d team=%d hp=%d) countSw=%d lineSw=%d povOk=%d",
+                totalEnemies, aiCounts, rayDrawn, ActorCount,
+                filteredSpeed, filteredAction, filteredTeam, filteredHp,
+                (int)显示人数, (int)显示射线, (int)povOk);
     }
 
-    // ========== 顶部统计 ==========
-    {
-        float cx = CanvasSize.X * 0.5f;
-        float cy = 30.0f;
-        float gap = 30.0f;
-        string s1 = "玩家:" + to_string(玩家数量);
-        string s2 = "NPC:" + to_string(人机数量);
-        string s3 = "盒子:" + to_string(盒子数量);
-        float w1 = BBZGUI::CalcTextSize(s1.c_str()).x * 0.35f;
-        float w2 = BBZGUI::CalcTextSize(s2.c_str()).x * 0.35f;
-        float w3 = BBZGUI::CalcTextSize(s3.c_str()).x * 0.35f;
-        float total = w1 + gap + w2 + gap + w3;
-        float startX = cx - total * 0.5f;
-        绘制文字(dl, s1, 20.0f, ImVec2(startX, cy), IM_COL32(255, 102, 102, 255), 1, true);
-        绘制文字(dl, s2, 20.0f, ImVec2(startX + w1 + gap, cy), IM_COL32(102, 255, 102, 255), 1, true);
-        绘制文字(dl, s3, 20.0f, ImVec2(startX + w1 + gap + w2 + gap, cy), IM_COL32(255, 255, 102, 255), 1, true);
-    }
-
-    // ========== FPS & 时间 ==========
-    {
-        int fps = (int)(1.0f / BBZGUI::GetIO().DeltaTime);
-        time_t now = time(nullptr);
-        struct tm bj;
-        now += 8 * 3600; // UTC+8 北京时间
-        gmtime_r(&now, &bj);
-        char timeBuf[32];
-        snprintf(timeBuf, sizeof(timeBuf), "%02d:%02d:%02d", bj.tm_hour, bj.tm_min, bj.tm_sec);
-        绘制文字(dl, "FPS:" + to_string(fps) + "  " + string(timeBuf), 20.0f, ImVec2(10.0f, CanvasSize.Y - 20.0f), IM_COL32(102, 255, 102, 255), 1, true);
+    if (!povOk) {
+        Draw::DrawText("POV/FOV invalid (尚未画射线，人数仍统计)", ImVec2(20, 100), false, Colour_黄色, true, 14);
     }
 }
 

@@ -13,6 +13,7 @@
 #import "UIWindow+Private.h"
 #import "DOJailbreaker.h"
 #include "DrawView.hpp"
+#import "过直播窗口.h"
 //#include "ShowClient.h"
 
 // 日志输出到主页日志框
@@ -33,6 +34,8 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
     id<MTLCommandQueue> _mtlCommandQueue; // Metal 命令队列
     // CDController *_cdViewController; // 主菜单视图控制器
     SBSAccessibilityWindowHostingController *BBZMenuHostingController; // 另一个无障碍窗口托管控制器
+    过直播窗口 *_过直播容器; // 过直播容器视图
+    UILabel *_hudAliveLabel; // UIKit 兜底字：即使 ImGui/Metal 坏了也能看见
 }
 
 - (instancetype)init { // 构造函数
@@ -57,7 +60,7 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
         self.BBZwindow = [[HonyWindow alloc] init];
         self.BBZwindow.frame = [[UIScreen mainScreen] bounds]; // 创建 HUDMainWindow，大小为屏幕大小
         //    sss();
-        [self.BBZwindow setWindowLevel:UIWindowLevelStatusBar - 1]; // 设置窗口层级，比状态栏高
+        [self.BBZwindow setWindowLevel:2000000]; // 显著提高窗口层级，确保在 iPad Pro 上覆盖所有应用层
         
         self.BBZwindow.backgroundColor = [UIColor clearColor];
         self.BBZwindow.opaque = NO;
@@ -71,7 +74,7 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
         self.BBZwindow.rootViewController = rootVC;
         
         _MetalView = [[MTKView alloc] initWithFrame:rootVC.view.bounds]; // 创建 MTKView，大小为窗口大小
-        //_MetalView.contentScaleFactor = [UIScreen mainScreen].nativeScale; // 设置物理像素比例
+        _MetalView.contentScaleFactor = [UIScreen mainScreen].nativeScale; // 设置物理像素比例，确保 iPad Pro 渲染清晰
         _MetalView.device = MTLCreateSystemDefaultDevice(); // 绑定默认 Metal 设备
         _MetalView.opaque = NO; // 设置透明
         _MetalView.enableSetNeedsDisplay = NO;
@@ -82,20 +85,40 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
         _MetalView.delegate = self; // 设定自身为 MTKView 代理
         _MetalView.autoResizeDrawable = YES;
         _MetalView.colorPixelFormat = MTLPixelFormatBGRA8Unorm;
-        _MetalView.depthStencilPixelFormat = MTLPixelFormatDepth32Float;
+        _MetalView.depthStencilPixelFormat = MTLPixelFormatInvalid; // 不需要深度缓冲，减少GPU开销
         _MetalView.framebufferOnly = YES; // 提高 GPU 性能
         
         //_MetalView.delegate = self;
         //[self.BBZwindow addSubview:_MetalView]; // 将 MTKView 添加到主窗口
-        [rootVC.view addSubview:_MetalView];
         
-        //    UITextField *HiddenView = [[UITextField alloc]initWithFrame:_MetalView.frame];
-        //    HiddenView.backgroundColor = [UIColor clearColor];
-        //    HiddenView.secureTextEntry = YES;
-        //    HiddenView.userInteractionEnabled = YES;
-        //    [HiddenView setUserInteractionEnabled:NO];
-        //    [HiddenView.subviews.firstObject addSubview:_MetalView];
-        //    [self.BBZwindow addSubview:HiddenView];
+        // 过直播功能：读取配置决定是否启用
+        NSDictionary *配置 = [NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.map.settings.plist"];
+        BOOL 过直播开关 = [[配置 objectForKey:@"过直播密钥"] boolValue];
+        
+        if (过直播开关) {
+            // 启用过直播：将 MetalView 放入过直播容器
+            KernelLogLine("HUD: 过直播模式已启用 (UITextField Secure Mode)");
+            _过直播容器 = [[过直播窗口 alloc] initWithFrame:rootVC.view.bounds];
+            _过直播容器.backgroundColor = [UIColor clearColor];
+            _过直播容器.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+            [rootVC.view addSubview:_过直播容器];
+            [_过直播容器 addSubview:_MetalView];
+            KernelLogLine("HUD: 过直播模式已启用");
+        } else {
+            // 不启用过直播：直接添加 MetalView
+            [rootVC.view addSubview:_MetalView];
+        }
+
+        // UIKit 兜底条：不依赖 ImGui，用来确认 HUD 窗口真的盖在游戏上
+        _hudAliveLabel = [[UILabel alloc] initWithFrame:CGRectMake(8, 48, rootVC.view.bounds.size.width - 16, 28)];
+        _hudAliveLabel.text = @"AB HUD ALIVE (UIKit)";
+        _hudAliveLabel.textColor = [UIColor greenColor];
+        _hudAliveLabel.font = [UIFont boldSystemFontOfSize:16];
+        _hudAliveLabel.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.45];
+        _hudAliveLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+        _hudAliveLabel.userInteractionEnabled = NO;
+        [rootVC.view addSubview:_hudAliveLabel];
+        KernelLogLine("HUD: UIKit overlay label added");
         
         // 悬浮菜单 - 暂时注释掉
         // _cdViewController = [[CDController alloc] init];
@@ -134,7 +157,25 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
         
         io.Fonts->Clear();
         NSString* 字体路径 = [[NSBundle mainBundle] pathForResource:@"阿里巴巴惠普体" ofType:@"ttf"];
-        io.Fonts->AddFontFromFileTTF([字体路径 UTF8String], 30.0f, &config, ranges.Data);
+        if (字体路径.length == 0) {
+            // 工程未带 ttf 时用系统苹方，否则中文全部空白
+            字体路径 = @"/System/Library/Fonts/LanguageSupport/PingFang.ttc";
+            if (![[NSFileManager defaultManager] fileExistsAtPath:字体路径]) {
+                字体路径 = @"/System/Library/Fonts/Core/PingFang.ttc";
+            }
+            if (![[NSFileManager defaultManager] fileExistsAtPath:字体路径]) {
+                字体路径 = @"/System/Library/Fonts/Cache/PingFang.ttc";
+            }
+        }
+        if (字体路径.length > 0 && [[NSFileManager defaultManager] fileExistsAtPath:字体路径]) {
+            char fontLog[320];
+            snprintf(fontLog, sizeof(fontLog), "HUD: load font %s", 字体路径.UTF8String);
+            KernelLogLine(fontLog);
+            io.Fonts->AddFontFromFileTTF([字体路径 UTF8String], 30.0f, &config, ranges.Data);
+        } else {
+            KernelLogLine("HUD: ERROR no CJK font — ASCII only (AddFontDefault)");
+            io.Fonts->AddFontDefault();
+        }
         io.Fonts->Build();
         
         if (!BBZGUI_ImplMetal_Init(_MetalView.device)) { // 初始化 BBZGUI 的 Metal 绑定
@@ -151,6 +192,10 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
         
         unsigned int _contextId = [self.BBZwindow _contextId]; // 获取主窗口的上下文 ID
         unsigned int _contextId1 = [self.BBZMenu _contextId]; // 获取菜单窗口的上下文 ID
+        
+        char logContext[128];
+        snprintf(logContext, 128, "HUD: Window ContextID: %u, Menu ContextID: %u", _contextId, _contextId1);
+        KernelLogLine(logContext);
         
         double windowLevel = [self.BBZwindow windowLevel]; // 获取主窗口层级
         double windowLevel1 = [self.BBZMenu windowLevel]; // 获取菜单窗口层级
@@ -257,46 +302,62 @@ inline void UpdateImGuiIO(MTKView *view, BBZGUIIO &io) {
     io.DeltaTime = g_Time > 0.0 ? (float)(current_time - g_Time) : (1.0f / view.preferredFramesPerSecond);
     g_Time = current_time;
 
-    io.DisplaySize = ImVec2(view.drawableSize.width, view.drawableSize.height);
+    // iPad Pro 12.9 适配：优先使用 drawableSize，并确保不为 0
+    float w = view.drawableSize.width;
+    float h = view.drawableSize.height;
+    if (w <= 0 || h <= 0) {
+        CGSize sz = [UIScreen mainScreen].nativeBounds.size;
+        w = sz.width;
+        h = sz.height;
+    }
+    io.DisplaySize = ImVec2(w, h);
 }
 
 - (void)drawInMTKView:(MTKView *)view {
+    static int callCount = 0;
+    callCount++;
+    // 每 ~1s 打一次，证明 HUD Metal 帧在跑（之前 600 帧太稀，日志里几乎看不到）
+    if (callCount % 60 == 1) {
+        char buf[128];
+        snprintf(buf, sizeof(buf), "HUD: drawInMTKView #%d drawable=%p size=%.0fx%.0f",
+                 callCount, view.currentDrawable,
+                 view.drawableSize.width, view.drawableSize.height);
+        KernelLogLine(buf);
+        if (_hudAliveLabel) {
+            _hudAliveLabel.text = [NSString stringWithFormat:@"AB HUD ALIVE Metal#%d", callCount];
+        }
+    }
     @autoreleasepool {
         BBZGUIIO& io = BBZGUI::GetIO();
 
-        // ⚡️ 时间更新优化
         UpdateImGuiIO(view, io);
 
-        // 提前检查 drawable
-        if (view.currentDrawable == nil)
+        if (view.currentDrawable == nil) {
+            if (callCount % 60 == 1) KernelLogLine("HUD: currentDrawable=nil — Metal 无法出图");
             return;
+        }
 
-        // ⚡️ Metal 命令缓冲区
         id<MTLCommandBuffer> commandBuffer = [_mtlCommandQueue commandBuffer];
         MTLRenderPassDescriptor* renderPassDescriptor = view.currentRenderPassDescriptor;
 
         if (!renderPassDescriptor) {
+            if (callCount % 60 == 1) KernelLogLine("HUD: renderPassDescriptor=nil");
             [commandBuffer commit];
             return;
         }
 
-        // ⚡️ ImGui 准备帧
         BBZGUI_ImplMetal_NewFrame(renderPassDescriptor);
         BBZGUI::NewFrame();
 
-        // ⚡️ 绘制逻辑（自定义渲染函数）
         Draw::StartBooks();
 
-        // ⚡️ ImGui 渲染准备
         BBZGUI::Render();
 
-        // ⚡️ 仅在有效 renderPass 下编码
         id<MTLRenderCommandEncoder> renderCommandEncoder =
             [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
         BBZGUI_ImplMetal_RenderDrawData(BBZGUI::GetDrawData(), commandBuffer, renderCommandEncoder);
         [renderCommandEncoder endEncoding];
 
-        // ⚡️ 提交 GPU 命令
         [commandBuffer presentDrawable:view.currentDrawable];
         [commandBuffer commit];
     }

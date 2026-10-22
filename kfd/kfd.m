@@ -459,6 +459,9 @@ int exploit_deinit(void)
 
     if (!gKfd) return -1;
     kclose(gKfd);
+    
+    // 清理全局变量，移除检测特征
+    gKfd = 0;
 
     return 0;
 }
