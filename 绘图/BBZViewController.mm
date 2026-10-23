@@ -35,8 +35,9 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
     id<MTLCommandQueue> _mtlCommandQueue; // Metal 命令队列
     // CDController *_cdViewController; // 主菜单视图控制器
     SBSAccessibilityWindowHostingController *BBZMenuHostingController; // 另一个无障碍窗口托管控制器
-    过直播窗口 *_过直播容器; // 过直播容器视图
-    // UILabel *_hudAliveLabel; // 调试字条已关闭
+    过直播窗口 *_过直播容器; // 对标 wasd CoverView+CoverView1
+    BOOL _liveHiddenApplied; // 当前 secure 状态
+    NSInteger _overlayPollTick;
 }
 
 - (instancetype)init { // 构造函数
@@ -89,29 +90,21 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
         _MetalView.depthStencilPixelFormat = MTLPixelFormatInvalid; // 不需要深度缓冲，减少GPU开销
         _MetalView.framebufferOnly = YES; // 提高 GPU 性能
         
-        //_MetalView.delegate = self;
-        //[self.BBZwindow addSubview:_MetalView]; // 将 MTKView 添加到主窗口
-        
-        // 过直播：与面板开关 key=overlay 对齐（启动时读一次）
-        NSString *cfgPath = @"/var/mobile/Library/Preferences/com.nh.cfg.plist";
-        NSString *legacyCfg = @"/var/mobile/Library/Preferences/com.map.settings.plist";
-        if (![[NSFileManager defaultManager] fileExistsAtPath:cfgPath] &&
-            [[NSFileManager defaultManager] fileExistsAtPath:legacyCfg]) {
-            [[NSFileManager defaultManager] moveItemAtPath:legacyCfg toPath:cfgPath error:nil];
-        }
-        NSDictionary *配置 = [NSDictionary dictionaryWithContentsOfFile:cfgPath];
-        BOOL 过直播开关 = [[配置 objectForKey:@"overlay"] boolValue];
-        
-        if (过直播开关) {
-            KernelLogLine("HUD: 过直播模式已启用 (UITextField Secure Mode)");
-            _过直播容器 = [[过直播窗口 alloc] initWithFrame:rootVC.view.bounds];
-            _过直播容器.backgroundColor = [UIColor clearColor];
-            _过直播容器.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-            [rootVC.view addSubview:_过直播容器];
-            [_过直播容器 addSubview:_MetalView];
-        } else {
-            [rootVC.view addSubview:_MetalView];
-        }
+        // —— 对标 wasd DrawRootViewController：始终双层 UITextField，再用 secureTextEntry 开关过直播 ——
+        // wasd: CoverView / CoverView1 常驻；DrawView 挂在 CoverView1.subviews.firstObject；
+        //       CoverView.secureTextEntry = CoverView1.secureTextEntry = live;
+        rootVC.view.userInteractionEnabled = NO;
+        _过直播容器 = [[过直播窗口 alloc] initWithFrame:rootVC.view.bounds];
+        _过直播容器.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+        [rootVC.view addSubview:_过直播容器];
+        [_过直播容器 attachDrawView:_MetalView];
+
+        BOOL 过直播开关 = [self loadOverlayFlagFromDisk];
+        _liveHiddenApplied = !过直播开关; // 强制第一次 apply
+        [self applyLiveHide:过直播开关];
+        KernelLogLine(过直播开关
+                      ? "HUD: 过直播已启用 (wasd 双层 UITextField secure)"
+                      : "HUD: 过直播关闭 (结构已就绪，开开关即生效)");
 
         // 对标 wasd：CADisplayLink 驱动绘制；限 60fps，ProMotion 机型也别空烧 CPU
         self.displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(displayLinkCallback:)];
@@ -256,38 +249,77 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
     }];
 }
 
+- (NSString *)prefsCfgPath {
+    static NSString *path;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        path = @"/var/mobile/Library/Preferences/com.nh.cfg.plist";
+        NSString *legacy = @"/var/mobile/Library/Preferences/com.map.settings.plist";
+        NSFileManager *fm = [NSFileManager defaultManager];
+        if (![fm fileExistsAtPath:path] && [fm fileExistsAtPath:legacy]) {
+            [fm moveItemAtPath:legacy toPath:path error:nil];
+        }
+    });
+    return path;
+}
+
+- (BOOL)loadOverlayFlagFromDisk {
+    NSDictionary *cfg = [NSDictionary dictionaryWithContentsOfFile:[self prefsCfgPath]];
+    return [[cfg objectForKey:@"overlay"] boolValue];
+}
+
+/// 对标 wasd：CoverView + CoverView1 两层 secureTextEntry 同步
+- (void)applyLiveHide:(BOOL)on {
+    if (!_过直播容器 || !_MetalView) return;
+    if (_liveHiddenApplied == on) {
+        [_过直播容器 attachDrawView:_MetalView];
+        return;
+    }
+    _liveHiddenApplied = on;
+    [_过直播容器 setLiveHidden:on];
+    KernelLogLine(on ? "HUD: secureTextEntry=YES (过直播/wasd双层+DrawHost)" : "HUD: secureTextEntry=NO");
+}
+
 - (void)handleInterfaceOrientationChange:(UIInterfaceOrientation)orientation duration:(NSTimeInterval)duration {
+    // 恢复 abnh 原逻辑：只转 MetalView；过直播容器跟屏幕 bounds，不套 wasd 的 Cover 旋转
     BOOL isLandscape = UIInterfaceOrientationIsLandscape(orientation);
-    CGSize screenSize = [UIScreen mainScreen].bounds.size; // 直接使用点尺寸
-    
-    // 计算横竖屏下的逻辑尺寸（点单位）
+    CGSize screenSize = [UIScreen mainScreen].bounds.size;
+
     BBZWidth = isLandscape ? MAX(screenSize.width, screenSize.height) : MIN(screenSize.width, screenSize.height);
     BBZHeight = isLandscape ? MIN(screenSize.width, screenSize.height) : MAX(screenSize.width, screenSize.height);
-    
+
+    UIView *rootView = self.BBZwindow.rootViewController.view;
+    CGRect screenBounds = rootView.bounds;
+
     [UIView animateWithDuration:duration animations:^{
+        // Cover 层保持与窗口一致、不旋转（避免绘制坐标系变成竖屏）
+        if (self->_过直播容器) {
+            self->_过直播容器.frame = screenBounds;
+            self->_过直播容器.coverView.transform = CGAffineTransformIdentity;
+            self->_过直播容器.coverView1.transform = CGAffineTransformIdentity;
+            self->_过直播容器.coverView.frame = self->_过直播容器.bounds;
+            self->_过直播容器.coverView1.frame = self->_过直播容器.coverView.bounds;
+        }
+
         switch (orientation) {
             case UIInterfaceOrientationLandscapeLeft:
                 self->_MetalView.transform = CGAffineTransformMakeRotation(-M_PI_2);
                 self->_MetalView.bounds = CGRectMake(0, 0, BBZWidth, BBZHeight);
                 break;
-                
             case UIInterfaceOrientationLandscapeRight:
                 self->_MetalView.transform = CGAffineTransformMakeRotation(M_PI_2);
                 self->_MetalView.bounds = CGRectMake(0, 0, BBZWidth, BBZHeight);
                 break;
-                
             case UIInterfaceOrientationPortraitUpsideDown:
                 self->_MetalView.transform = CGAffineTransformMakeRotation(M_PI);
                 self->_MetalView.bounds = CGRectMake(0, 0, BBZWidth, BBZHeight);
                 break;
-                
-            default: // Portrait
+            default:
                 self->_MetalView.transform = CGAffineTransformIdentity;
                 self->_MetalView.bounds = CGRectMake(0, 0, BBZWidth, BBZHeight);
                 break;
         }
-        
-        // 确保 Metal 视图更新尺寸
+
         [self->_MetalView setNeedsDisplay];
         [self->_MetalView draw];
     }];
@@ -295,6 +327,13 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
 
 - (void)displayLinkCallback:(CADisplayLink *)displayLink {
     BBZGUI::GetIO().DeltaTime = (float)displayLink.duration;
+    // 主界面改 overlay 后 HUD 热更新（约 1s）
+    if ((++_overlayPollTick % 60) == 0) {
+        BOOL on = [self loadOverlayFlagFromDisk];
+        if (on != _liveHiddenApplied) {
+            [self applyLiveHide:on];
+        }
+    }
     [_MetalView draw];
 }
 
