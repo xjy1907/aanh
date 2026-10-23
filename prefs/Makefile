@@ -4,13 +4,13 @@ INSTALL_TARGET_PROCESSES := Preferences
 
 include $(THEOS)/makefiles/common.mk
 
-BUNDLE_NAME += TrollSpeedPrefs
+BUNDLE_NAME += BooksHUDPrefs
 
-TrollSpeedPrefs_FILES += TSPrefsRootListController.m
-TrollSpeedPrefs_FRAMEWORKS += UIKit
-TrollSpeedPrefs_PRIVATE_FRAMEWORKS += Preferences
-TrollSpeedPrefs_INSTALL_PATH += /Library/PreferenceBundles
-TrollSpeedPrefs_CFLAGS += -fobjc-arc
-TrollSpeedPrefs_CFLAGS += -I../supports/
+BooksHUDPrefs_FILES += TSPrefsRootListController.m
+BooksHUDPrefs_FRAMEWORKS += UIKit
+BooksHUDPrefs_PRIVATE_FRAMEWORKS += Preferences
+BooksHUDPrefs_INSTALL_PATH += /Library/PreferenceBundles
+BooksHUDPrefs_CFLAGS += -fobjc-arc
+BooksHUDPrefs_CFLAGS += -I../supports/
 
 include $(THEOS_MAKE_PATH)/bundle.mk

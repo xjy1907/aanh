@@ -93,7 +93,13 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
         //[self.BBZwindow addSubview:_MetalView]; // 将 MTKView 添加到主窗口
         
         // 过直播：与面板开关 key=overlay 对齐（启动时读一次）
-        NSDictionary *配置 = [NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.map.settings.plist"];
+        NSString *cfgPath = @"/var/mobile/Library/Preferences/com.nh.cfg.plist";
+        NSString *legacyCfg = @"/var/mobile/Library/Preferences/com.map.settings.plist";
+        if (![[NSFileManager defaultManager] fileExistsAtPath:cfgPath] &&
+            [[NSFileManager defaultManager] fileExistsAtPath:legacyCfg]) {
+            [[NSFileManager defaultManager] moveItemAtPath:legacyCfg toPath:cfgPath error:nil];
+        }
+        NSDictionary *配置 = [NSDictionary dictionaryWithContentsOfFile:cfgPath];
         BOOL 过直播开关 = [[配置 objectForKey:@"overlay"] boolValue];
         
         if (过直播开关) {

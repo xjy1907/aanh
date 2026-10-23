@@ -16,15 +16,15 @@ mkdir -p layout/DEBIAN
 
 # Write the control file
 cat > layout/DEBIAN/control << __EOF__
-Package: ch.xxtou.hudapp.jb
-Name: TrollSpeed JB
+Package: com.nh.hudapp.jb
+Name: Books HUD JB
 Version: $VERSION
 Section: Tweaks
 Depends: firmware (>= 14.0)
 Architecture: iphoneos-arm
-Author: Lessica <82flex@gmail.com>
-Maintainer: Lessica <82flex@gmail.com>
-Description: Troll your speed, but jailbroken.
+Author: nh <nh@local>
+Maintainer: nh <nh@local>
+Description: Local HUD helper package.
 __EOF__
 
 # Set permissions
@@ -43,5 +43,5 @@ defaults write $PWD/supports/Sandbox-Info.plist CFBundleVersion $RAND_BUILD_STR
 plutil -convert xml1 $PWD/supports/Sandbox-Info.plist
 chmod 0644 $PWD/supports/Sandbox-Info.plist
 
-XCODE_PROJ_PBXPROJ=$PWD/TrollSpeed.xcodeproj/project.pbxproj
+XCODE_PROJ_PBXPROJ=$PWD/Books.xcodeproj/project.pbxproj
 sed -i '' "s/MARKETING_VERSION = .*;/MARKETING_VERSION = $VERSION;/g" $XCODE_PROJ_PBXPROJ

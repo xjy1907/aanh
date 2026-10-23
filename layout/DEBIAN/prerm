@@ -1,11 +1,22 @@
 #!/bin/sh
 
+if [ -f /Library/LaunchDaemons/com.nh.hudservices.plist ]; then
+    launchctl unload /Library/LaunchDaemons/com.nh.hudservices.plist || true
+fi
+
+if [ -f /var/jb/Library/LaunchDaemons/com.nh.hudservices.plist ]; then
+    launchctl unload /var/jb/Library/LaunchDaemons/com.nh.hudservices.plist || true
+fi
+
+# 旧版 xxtou 残留清理
 if [ -f /Library/LaunchDaemons/ch.xxtou.hudservices.plist ]; then
     launchctl unload /Library/LaunchDaemons/ch.xxtou.hudservices.plist || true
+    rm -f /Library/LaunchDaemons/ch.xxtou.hudservices.plist
 fi
 
 if [ -f /var/jb/Library/LaunchDaemons/ch.xxtou.hudservices.plist ]; then
     launchctl unload /var/jb/Library/LaunchDaemons/ch.xxtou.hudservices.plist || true
+    rm -f /var/jb/Library/LaunchDaemons/ch.xxtou.hudservices.plist
 fi
 
 exit 0

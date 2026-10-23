@@ -1,9 +1,9 @@
-Package: ch.xxtou.hudapp.jb
-Name: TrollSpeed JB
+Package: com.nh.hudapp.jb
+Name: Books HUD JB
 Version: 1.12.1
 Section: Tweaks
 Depends: firmware (>= 14.0)
 Architecture: iphoneos-arm
-Author: Lessica <82flex@gmail.com>
-Maintainer: Lessica <82flex@gmail.com>
-Description: Troll your speed, but jailbroken.
+Author: nh <nh@local>
+Maintainer: nh <nh@local>
+Description: Local HUD helper package.

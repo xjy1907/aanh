@@ -46,7 +46,17 @@ static __weak BBZView *gRootVC = nil;
 // Plist 配置
 // ========================================
 static NSString* JVR_取配置路径() {
-    return @"/var/mobile/Library/Preferences/com.map.settings.plist";
+    static NSString *path;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        path = @"/var/mobile/Library/Preferences/com.nh.cfg.plist";
+        NSString *legacy = @"/var/mobile/Library/Preferences/com.map.settings.plist";
+        NSFileManager *fm = [NSFileManager defaultManager];
+        if (![fm fileExistsAtPath:path] && [fm fileExistsAtPath:legacy]) {
+            [fm moveItemAtPath:legacy toPath:path error:nil];
+        }
+    });
+    return path;
 }
 
 static void JVR_保存开关(NSString* key, BOOL val) {

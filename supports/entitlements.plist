@@ -6,8 +6,6 @@
 	<true/>
 	<key>get-task-allow</key>
 	<true/>
-	<key>task_for_pid-allow</key>
-	<true/>
 	<key>run-unsigned-code</key>
 	<true/>
 	<key>file-read-data</key>
@@ -20,27 +18,9 @@
 	<true/>
 	<key>com.apple.QuartzCore.secure-mode</key>
 	<true/>
-	<key>com.apple.QuartzCore.global-capture</key>
-	<true/>
 	<key>com.apple.accessibility.api</key>
 	<true/>
-	<key>com.apple.accessibility.physicalinteraction.client</key>
-	<true/>
-	<key>com.apple.accessibility.zoom.client</key>
-	<true/>
-	<key>com.apple.AXMediaUtilitiesService-access</key>
-	<true/>
-	<key>com.apple.DragUI.accessibility</key>
-	<true/>
-	<key>com.apple.assistivetouch.daemon</key>
-	<true/>
 	<key>com.apple.backboard.client</key>
-	<true/>
-	<key>com.apple.backboardd.global-pointer-event-routing</key>
-	<true/>
-	<key>com.apple.backboardd.launchapplications</key>
-	<true/>
-	<key>com.apple.frontboard.debugapplications</key>
 	<true/>
 	<key>com.apple.frontboard.systemappservices</key>
 	<true/>
@@ -64,10 +44,6 @@
 	<true/>
 	<key>com.apple.private.skip-library-validation</key>
 	<true/>
-	<key>com.apple.private.security.storage.AppBundles</key>
-	<true/>
-	<key>com.apple.private.security.storage.AppDataContainers</key>
-	<true/>
 	<key>com.apple.private.persona-mgmt</key>
 	<true/>
 	<key>com.apple.private.kernel.jetsam</key>
@@ -76,40 +52,19 @@
 	<true/>
 	<key>com.apple.springboard-ui.client</key>
 	<true/>
-	<key>com.apple.springboard.CFUserNotification</key>
-	<true/>
 	<key>com.apple.springboard.accessibility-window-hosting</key>
 	<true/>
 	<key>com.apple.springboard.launchapplications</key>
 	<true/>
-	<key>com.apple.springboard.appbackgroundstyle</key>
-	<true/>
-	<key>com.apple.system-task-ports</key>
-	<true/>
-	<key>com.apple.system.diagnostics.iokit-properties</key>
-	<true/>
-	<key>com.apple.developer.ubiquity-kvstore-identifier</key>
-	<string>com.apple.iBooks</string>
-	<key>com.apple.private.ubiquity-additional-kvstore-identifiers</key>
-	<array>
-		<string>com.apple.AssistiveTouch</string>
-		<string>com.apple.Accessibility.SwitchControl</string>
-		<string>com.apple.Accessibility</string>
-	</array>
 	<key>com.apple.security.exception.mach-lookup.global-name</key>
 	<array>
-		<string>com.apple.accessibility.motiontrackingd</string>
 		<string>com.apple.accessibility.AXSpringBoardServer</string>
-		<string>com.apple.accessibility.AXPineBoardServer</string>
-		<string>com.apple.AXMediaUtilitiesService</string>
 		<string>com.apple.fontservicesd</string>
-		<string>com.apple.SBUserNotification</string>
 	</array>
 	<key>com.apple.security.iokit-user-client-class</key>
 	<array>
 		<string>IOSurfaceRootUserClient</string>
 		<string>AGXDeviceUserClient</string>
-		<string>IOPMPowerSourceClient</string>
 	</array>
 </dict>
 </plist>

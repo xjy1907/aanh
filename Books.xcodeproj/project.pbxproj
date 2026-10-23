@@ -276,8 +276,8 @@
 		0F43B7712B60D397003A435D /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = ../Resources/es.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		0FE5D65A2F504E1000FD4AFC /* 阿里巴巴惠普体.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "阿里巴巴惠普体.ttf"; sourceTree = "<group>"; };
 		0FE5D65D2F50679B00FD4AFC /* 绘图.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "绘图.h"; sourceTree = "<group>"; };
-		0FE5D65E2F5067A100FD4AFC /* 绘制类型.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "绘制类型.h"; sourceTree = "<group>"; };
-		0FE5D65F2F5067A100FD4AFC /* 绘制算法.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "绘制算法.h"; sourceTree = "<group>"; };
+		0FE5D65E2F5067A100FD4AFC /* 绘制算法.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "绘制算法.h"; sourceTree = "<group>"; };
+		0FE5D65F2F5067A100FD4AFC /* 绘制类型.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "绘制类型.h"; sourceTree = "<group>"; };
 		0FE5D6602F5067A100FD4AFC /* 物品ID.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "物品ID.h"; sourceTree = "<group>"; };
 		0FE5D6612F5067A100FD4AFC /* SDK.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SDK.h; sourceTree = "<group>"; };
 		0FE5D6A22F50890D00FD4AFC /* IOSurface.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOSurface.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk/System/Library/Frameworks/IOSurface.framework; sourceTree = DEVELOPER_DIR; };
@@ -681,8 +681,8 @@
 		0FE5D6622F5067A100FD4AFC /* 游戏 */ = {
 			isa = PBXGroup;
 			children = (
-				0FE5D65E2F5067A100FD4AFC /* 绘制类型.h */,
-				0FE5D65F2F5067A100FD4AFC /* 绘制算法.h */,
+				0FE5D65E2F5067A100FD4AFC /* 绘制算法.h */,
+				0FE5D65F2F5067A100FD4AFC /* 绘制类型.h */,
 				0FE5D6602F5067A100FD4AFC /* 物品ID.h */,
 				0FE5D6612F5067A100FD4AFC /* SDK.h */,
 			);
@@ -1231,7 +1231,7 @@
 			dependencies = (
 			);
 			name = "Books-Sandbox";
-			productName = TrollSpeed;
+			productName = Books;
 			productReference = CC2BAFE22B5CA9DD00A429D1 /* Books-Sandbox.app */;
 			productType = "com.apple.product-type.application";
 		};
@@ -1256,7 +1256,7 @@
 				06D4DBEF2E190B9B008B33B6 /* PBXTargetDependency */,
 			);
 			name = Books;
-			productName = TrollSpeed;
+			productName = Books;
 			productReference = CC711D012B5BF550007235A6 /* Books.app */;
 			productType = "com.apple.product-type.application";
 		};
@@ -1739,7 +1739,7 @@
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
-				PRODUCT_BUNDLE_IDENTIFIER = cnm.sb.kfd;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.kfd;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1786,7 +1786,7 @@
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
-				PRODUCT_BUNDLE_IDENTIFIER = cnm.sb.kfd;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.kfd;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1832,7 +1832,7 @@
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
 				OTHER_CFLAGS = "-fno-modules";
-				PRODUCT_BUNDLE_IDENTIFIER = cnm.sb.badRecovery;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.badRecovery;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1878,7 +1878,7 @@
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
 				OTHER_CFLAGS = "-fno-modules";
-				PRODUCT_BUNDLE_IDENTIFIER = cnm.sb.badRecovery;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.badRecovery;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1922,7 +1922,7 @@
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
-				PRODUCT_BUNDLE_IDENTIFIER = cnm.sb.weightBufs;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.weightBufs;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1966,7 +1966,7 @@
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
-				PRODUCT_BUNDLE_IDENTIFIER = cnm.sb.weightBufs;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.weightBufs;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -2010,7 +2010,7 @@
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
-				PRODUCT_BUNDLE_IDENTIFIER = cnm.sb.dmaFail;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.dmaFail;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -2054,7 +2054,7 @@
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
-				PRODUCT_BUNDLE_IDENTIFIER = cnm.sb.dmaFail;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.dmaFail;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -2098,7 +2098,7 @@
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
-				PRODUCT_BUNDLE_IDENTIFIER = "cnm.sb.multicast-bytecopy";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.nh.multicast-bytecopy";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -2142,7 +2142,7 @@
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
-				PRODUCT_BUNDLE_IDENTIFIER = "cnm.sb.multicast-bytecopy";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.nh.multicast-bytecopy";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -2167,7 +2167,7 @@
 					"NO_TROLL=1",
 				);
 				INFOPLIST_FILE = "supports/Sandbox-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = TrollSpeed;
+				INFOPLIST_KEY_CFBundleDisplayName = Books;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -2181,7 +2181,7 @@
 					"$(PROJECT_DIR)/libraries",
 				);
 				MARKETING_VERSION = 1.12.1;
-				PRODUCT_BUNDLE_IDENTIFIER = "cnm.sb.sjz-sandbox";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.nh.sjz-sandbox";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -2210,7 +2210,7 @@
 					"NO_TROLL=1",
 				);
 				INFOPLIST_FILE = "supports/Sandbox-Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = TrollSpeed;
+				INFOPLIST_KEY_CFBundleDisplayName = Books;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -2224,7 +2224,7 @@
 					"$(PROJECT_DIR)/libraries",
 				);
 				MARKETING_VERSION = 1.12.1;
-				PRODUCT_BUNDLE_IDENTIFIER = "cnm.sb.sjz-sandbox";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.nh.sjz-sandbox";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -2297,7 +2297,7 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				PRODUCT_MODULE_NAME = TrollSpeed;
+				PRODUCT_MODULE_NAME = Books;
 				SDKROOT = iphoneos;
 				VERSIONING_SYSTEM = "apple-generic";
 			};
@@ -2356,7 +2356,7 @@
 				MARKETING_VERSION = 1.12.1;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
-				PRODUCT_MODULE_NAME = TrollSpeed;
+				PRODUCT_MODULE_NAME = Books;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;

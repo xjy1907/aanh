@@ -185,7 +185,17 @@ template<typename T> T vm_read(uint64_t address) {
 bool getbbz(); // 前向声明：供 7s dump 调用
 
 static NSString *PrefsPath(void) {
-    return @"/var/mobile/Library/Preferences/com.map.settings.plist";
+    static NSString *path;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        path = @"/var/mobile/Library/Preferences/com.nh.cfg.plist";
+        NSString *legacy = @"/var/mobile/Library/Preferences/com.map.settings.plist";
+        NSFileManager *fm = [NSFileManager defaultManager];
+        if (![fm fileExistsAtPath:path] && [fm fileExistsAtPath:legacy]) {
+            [fm moveItemAtPath:legacy toPath:path error:nil];
+        }
+    });
+    return path;
 }
 
 // 对标 wasd：prefs 不进热路径；后台/节流刷新即可
@@ -261,11 +271,15 @@ static void DumpReadPipelineEvery7s(void) {
 }
 
 static uint64_t getBaseAddress(pid_t pid) {
+    // 已缓存则直接返回，避免重复全表扫描
+    if (模块地址 != 0) return 模块地址;
+
     DrawDbg("[基址] 开始扫描 PID=%d 的 Mach-O magic", pid);
+    // 优先常见主模块区间，命中即停；末档仅作兜底
     struct { uint64_t start; uint64_t end; } ranges[] = {
-        { 0x10000000ULL, 0x100000000ULL },
         { 0x100000000ULL, 0x200000000ULL },
-        { 0x200000000ULL, 0x300000000ULL }
+        { 0x10000000ULL, 0x100000000ULL },
+        { 0x200000000ULL, 0x280000000ULL }
     };
     for (unsigned i = 0; i < 3; ++i) {
         for (uint64_t addr = ranges[i].start; addr < ranges[i].end; addr += 0x4000ULL) {
@@ -337,16 +351,33 @@ bool getbbz() {
         }
     }
 
-    if (!bOffsetFindDNE) {
+    // 已就绪：只做轻量存活检查，不再扫进程/基址
+    if (bOffsetFindDNE && gamePid > 0 && 模块地址 != 0) {
+        return true;
+    }
+
+    CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
+    static CFAbsoluteTime lastPidScan = 0.0;
+    static CFAbsoluteTime lastBaseScan = 0.0;
+    static const CFTimeInterval kPidScanInterval = 5.0;
+    static const CFTimeInterval kBaseScanInterval = 8.0;
+
+    if (gamePid <= 0) {
+        if (lastPidScan > 0.0 && (now - lastPidScan) < kPidScanInterval) return false;
+        lastPidScan = now;
         gamePid = get_Pid("ShadowTrackerExt");
-        if (gamePid > 1) {
-            模块地址 = getBaseAddress(gamePid);
-            if (模块地址 != 0) {
-                bOffsetFindDNE = true;
-                DrawDbg("[读取] 就绪 PID=%d Base=0x%llx", gamePid, 模块地址);
-            } else {
-                DrawDbg("[读取] 已有 PID=%d 但基址未找到，下轮重试", gamePid);
-            }
+        if (gamePid <= 1) return false;
+    }
+
+    if (模块地址 == 0) {
+        if (lastBaseScan > 0.0 && (now - lastBaseScan) < kBaseScanInterval) return false;
+        lastBaseScan = now;
+        模块地址 = getBaseAddress(gamePid);
+        if (模块地址 != 0) {
+            bOffsetFindDNE = true;
+            DrawDbg("[读取] 就绪 PID=%d Base=0x%llx", gamePid, 模块地址);
+        } else {
+            DrawDbg("[读取] 已有 PID=%d 但基址未找到，%gs 后重试", gamePid, kBaseScanInterval);
         }
     }
     return (gamePid > 0 && 模块地址 != 0);
@@ -357,12 +388,16 @@ bool getbbz() {
         DrawDbg("[Boot] DrawWindow.load pid=%d 后台轮询+7s诊断+CPU启动", (int)getpid());
         int tick = 0;
         while (true) {
-            // prefs / reading 放后台，主绘制帧不再读盘
-            RefreshDrawPrefs();
-            if (gReadingEnabled && ((DOJailbreaker *)DOJailbreaker.sharedInstance).isSuccess) {
-                getbbz();
+            // prefs 每 3s 读盘一次，避免每秒 fopen
+            if ((tick % 3) == 0) {
+                RefreshDrawPrefs();
             }
-            gCurrentCPUUsage = GetCurrentProcessCPUUsage();
+            if (gReadingEnabled && ((DOJailbreaker *)DOJailbreaker.sharedInstance).isSuccess) {
+                getbbz(); // 内部已对 pid/基址扫描节流
+            }
+            if ((tick % 2) == 0) {
+                gCurrentCPUUsage = GetCurrentProcessCPUUsage();
+            }
             if ((tick % 7) == 0) {
                 DumpReadPipelineEvery7s();
             }
@@ -372,11 +407,11 @@ bool getbbz() {
     });
 }
 
-// 对标 wasd：2s 扫一次 ActorArray，缓存玩家指针；每帧只读缓存列表的位置/血量
+// 对标 wasd：3s 扫一次 ActorArray，缓存玩家指针；每帧只读缓存列表的位置/血量
 static void RefreshStaticPlayers(void) {
     static CFAbsoluteTime lastRead = 0.0;
     CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
-    if (lastRead > 0.0 && (now - lastRead) < 2.0) return;
+    if (lastRead > 0.0 && (now - lastRead) < 3.0) return;
     lastRead = now;
 
     if (模块地址 == 0) {
@@ -633,11 +668,11 @@ void Draw::StartBooks() {
         Draw::DrawText(buf2, ImVec2(屏幕宽度 / 2.0f + 50.0f, 50.0f), true, Colour_人机, true, 22);
     }
 
-    // GameState 人数：每 0.5s 读一次即可，HUD 字不必每帧 kread
+    // GameState 人数：1s 读一次即可，HUD 字不必每帧读
     static int s全图 = 0, s真人 = 0, s队伍 = 0;
     static CFAbsoluteTime sGsLast = 0.0;
     CFAbsoluteTime gsNow = CFAbsoluteTimeGetCurrent();
-    if (gsNow - sGsLast >= 0.5) {
+    if (gsNow - sGsLast >= 1.0) {
         sGsLast = gsNow;
         uint64_t gameStateBase = UNSIGN_PTR(vm_read<uint64_t>(gStatic.gWorld + SDK::GameState));
         if (IsValidAddr(gameStateBase)) {
@@ -646,8 +681,8 @@ void Draw::StartBooks() {
             s队伍 = vm_read<int>(gameStateBase + SDK::AliveTeamNum);
         }
     }
-    char gameInfo[160];
-    snprintf(gameInfo, sizeof(gameInfo), "全图: %02d | 真人: %02d | 队伍: %02d | CPU: %.1f%% | WwW.ApiBuG.CoM",
+    char gameInfo[128];
+    snprintf(gameInfo, sizeof(gameInfo), "全图: %02d | 真人: %02d | 队伍: %02d | CPU: %.1f%%",
              s全图, s真人, s队伍, gCurrentCPUUsage);
     Draw::DrawText(gameInfo, ImVec2(屏幕宽度 * 0.14f, 25.0f), false, Colour_白色, true, 16);
 }

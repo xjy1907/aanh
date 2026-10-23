@@ -22,7 +22,7 @@
 #import <libjailbreak/info.h>
 #import <libjailbreak/jbclient_xpc.h>
 #import "LFVirtualDigitizer.h"
-#define PID_PATH "/var/mobile/Library/Caches/cnm.sb.sjz.pid"
+#define PID_PATH "/var/mobile/Library/Caches/com.nh.hud.pid"
 
 static __used NSString *mDeviceModel(void) {
   struct utsname systemInfo;

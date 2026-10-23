@@ -31,7 +31,7 @@
 			<string>com.apple.iBooks</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>trollspeed</string>
+				<string>nhdraw</string>
 			</array>
 		</dict>
 	</array>
@@ -51,7 +51,7 @@
 			<key>UIApplicationShortcutItemTitle</key>
 			<string>Toggle HUD</string>
 			<key>UIApplicationShortcutItemType</key>
-			<string>ch.xxtou.shortcut.toggle-hud</string>
+			<string>com.nh.shortcut.toggle-hud</string>
 		</dict>
 	</array>
 	<key>UIApplicationShowsViewsWhileLocked</key>
