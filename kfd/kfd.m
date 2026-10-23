@@ -33,7 +33,35 @@ bool is_ios_16_or_later(void) {
     return false;
 }
 
+static bool g_dbglog_cached = false;
+static CFAbsoluteTime g_dbglog_last = 0;
+
+void NHDebugLogInvalidateCache(void) {
+    g_dbglog_last = 0;
+}
+
+bool NHDebugLogEnabled(void) {
+    // 读盘缓存 1s，避免每条日志 fopen
+    CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
+    if (g_dbglog_last > 0 && (now - g_dbglog_last) < 1.0) {
+        return g_dbglog_cached;
+    }
+    g_dbglog_last = now;
+    g_dbglog_cached = false;
+    NSDictionary *cfg = [NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.nh.cfg.plist"];
+    if (!cfg) {
+        cfg = [NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.map.settings.plist"];
+    }
+    if (cfg) {
+        g_dbglog_cached = [[cfg objectForKey:@"dbglog"] boolValue];
+    }
+    return g_dbglog_cached;
+}
+
 void kfd_log(const char *format, ...) {
+    if (!NHDebugLogEnabled()) {
+        return;
+    }
     // 如果还没有打开日志文件，就打开它
     if (kfd_log_file == NULL) {
         // 使用简单的路径，避免Foundation框架调用

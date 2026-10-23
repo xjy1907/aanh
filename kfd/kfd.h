@@ -37,6 +37,11 @@ int exploit_deinit(void);
 
 void kfd_log(const char *format, ...);
 
+/// 调试日志总开关（prefs key: dbglog，默认关）。关则不写 kfd_debug.log / 不打控制台落盘日志。
+bool NHDebugLogEnabled(void);
+/// 面板改 dbglog 后立刻生效（清 1s 缓存）
+void NHDebugLogInvalidateCache(void);
+
 #ifdef __cplusplus
 }
 #endif

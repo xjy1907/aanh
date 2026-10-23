@@ -18,6 +18,7 @@
 extern "C" uint32_t kread32(uint64_t where);
 extern "C" uint64_t kread64(uint64_t where);
 extern "C" void kfd_log(const char *format, ...);
+extern "C" bool NHDebugLogEnabled(void);
 
 #ifdef __cplusplus
 extern "C" {
@@ -102,6 +103,7 @@ static float GetCurrentProcessCPUUsage(void) {
 }
 
 static void DrawDbg(const char *fmt, ...) {
+    if (!NHDebugLogEnabled()) return;
     char buf[512];
     va_list ap;
     va_start(ap, fmt);
@@ -398,7 +400,7 @@ bool getbbz() {
             if ((tick % 2) == 0) {
                 gCurrentCPUUsage = GetCurrentProcessCPUUsage();
             }
-            if ((tick % 7) == 0) {
+            if ((tick % 7) == 0 && NHDebugLogEnabled()) {
                 DumpReadPipelineEvery7s();
             }
             tick++;

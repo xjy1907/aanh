@@ -22,6 +22,7 @@ void ResetKernelStatus();
 void SetReadingEnabled(bool enabled);
 bool IsReadingEnabled(void);
 void kfd_log(const char *format, ...);
+void NHDebugLogInvalidateCache(void);
 #ifdef __cplusplus
 }
 #endif
@@ -1215,6 +1216,7 @@ static BOOL JVR_读取开关(NSString* key) {
         @{@"title": @"玩家信息", @"key": @"info"},
         @{@"title": @"骨骼显示", @"key": @"bone"},
         @{@"title": @"过直播模式", @"key": @"overlay"},
+        @{@"title": @"调试日志", @"key": @"dbglog"}, // 默认关；开才写 kfd_debug / 终端诊断
     ];
     
     for (NSDictionary *cfg in configs) {
@@ -1222,6 +1224,9 @@ static BOOL JVR_读取开关(NSString* key) {
         sw.translatesAutoresizingMaskIntoConstraints = NO;
         sw.onToggle = ^(BOOL on) {
             JVR_保存开关(cfg[@"key"], on);
+            if ([cfg[@"key"] isEqualToString:@"dbglog"]) {
+                NHDebugLogInvalidateCache();
+            }
             kfd_log("[UI] 开关 %s = %d\n", [cfg[@"key"] UTF8String], (int)on);
             KernelLogLine([[NSString stringWithFormat:@"开关 %@ = %@", cfg[@"key"], on ? @"开" : @"关"] UTF8String]);
         };

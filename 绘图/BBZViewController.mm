@@ -58,7 +58,6 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
         KernelLogLine(kernelReady ? "HUD: 内核就绪" : "HUD: 内核初始化完成（可能未成功）");
         // 无论状态如何，启动数据线程（内部会自行重试）
         //StartDataThreads();
-        NSLog(@"DH666 DOJailbreaker");
         self.BBZwindow = [[HonyWindow alloc] init];
         self.BBZwindow.frame = [[UIScreen mainScreen] bounds]; // 创建 HUDMainWindow，大小为屏幕大小
         //    sss();
@@ -215,12 +214,10 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
         // HUD 进程自检：如未就绪则在后台补跑一次内核初始化，避免跨进程能力缺失
        
         BOOL kernel = ((DOJailbreaker *)DOJailbreaker.sharedInstance).isSuccess;
-        NSLog(@"DH666 kernel %d",kernel);
         if (!kernel) {
             KernelLogLine("HUD: 检测到内核环境未就绪，开始在 HUD 进程补充初始化...");
             dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
                 [DOJailbreaker.sharedInstance run];
-                NSLog(@"DH666 DOJailbreaker2");
                 BOOL ok = ((DOJailbreaker *)DOJailbreaker.sharedInstance).isSuccess;
                 dispatch_async(dispatch_get_main_queue(), ^{
                     KernelLogLine(ok ? "HUD: 内核初始化成功" : "HUD: 内核初始化完成（可能未成功）");
