@@ -1718,6 +1718,7 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/supports",
 					"$(PROJECT_DIR)/dependencies/include",
 					"$(PROJECT_DIR)/zstd/lib",
 					"$(PROJECT_DIR)/_external/include",
@@ -1765,6 +1766,7 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/supports",
 					"$(PROJECT_DIR)/dependencies/include",
 					"$(PROJECT_DIR)/zstd/lib",
 					"$(PROJECT_DIR)/_external/include",
@@ -2392,6 +2394,7 @@
 				);
 				GCC_WARN_CHECK_SWITCH_STATEMENTS = NO;
 				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/supports",
 					"$(PROJECT_DIR)/dependencies/include",
 					"$(PROJECT_DIR)/zstd/lib",
 					"$(PROJECT_DIR)/_external/include",
@@ -2463,6 +2466,7 @@
 				);
 				GCC_WARN_CHECK_SWITCH_STATEMENTS = NO;
 				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/supports",
 					"$(PROJECT_DIR)/dependencies/include",
 					"$(PROJECT_DIR)/zstd/lib",
 					"$(PROJECT_DIR)/_external/include",

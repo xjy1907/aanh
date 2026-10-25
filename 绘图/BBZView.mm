@@ -47,30 +47,51 @@ static __weak BBZView *gRootVC = nil;
 // Plist 配置
 // ========================================
 static NSString* JVR_取配置路径() {
-    static NSString *path;
+    return NHPrefsPath();
+}
+
+static NSMutableDictionary *JVR_开关缓存(void) {
+    static NSMutableDictionary *cache = nil;
     static dispatch_once_t once;
     dispatch_once(&once, ^{
-        path = @"/var/mobile/Library/Preferences/com.nh.cfg.plist";
-        NSString *legacy = @"/var/mobile/Library/Preferences/com.map.settings.plist";
-        NSFileManager *fm = [NSFileManager defaultManager];
-        if (![fm fileExistsAtPath:path] && [fm fileExistsAtPath:legacy]) {
-            [fm moveItemAtPath:legacy toPath:path error:nil];
-        }
+        cache = [NSMutableDictionary dictionary];
+        // 默认落盘开；无有效 state 时 UI 显示为开
+        cache[@"persist"] = @YES;
     });
-    return path;
+    return cache;
 }
 
 static void JVR_保存开关(NSString* key, BOOL val) {
-    NSString *path = JVR_取配置路径();
-    NSMutableDictionary *cfg = [NSMutableDictionary dictionaryWithContentsOfFile:path];
-    if (!cfg) cfg = [NSMutableDictionary dictionary];
-    [cfg setObject:@(val) forKey:key];
-    [cfg writeToFile:path atomically:YES];
+    NSMutableDictionary *cfg = [NSMutableDictionary dictionary];
+    NSDictionary *cur = NHPrefsRead();
+    if (cur) {
+        [cfg addEntriesFromDictionary:cur];
+    } else {
+        [cfg addEntriesFromDictionary:JVR_开关缓存()];
+    }
+    cfg[key] = @(val);
+    JVR_开关缓存()[key] = @(val);
+    NHPrefsWrite(cfg);
 }
 
 static BOOL JVR_读取开关(NSString* key) {
-    NSDictionary *cfg = [NSDictionary dictionaryWithContentsOfFile:JVR_取配置路径()];
-    return cfg ? [[cfg objectForKey:key] boolValue] : NO;
+    NSDictionary *cfg = NHPrefsRead();
+    if (!cfg) {
+        NSMutableDictionary *cached = JVR_开关缓存();
+        if (cached.count > 0) {
+            NHPrefsWrite(cached);
+        }
+        if ([key isEqualToString:@"persist"]) return YES; // 默认落盘
+        return [[cached objectForKey:key] boolValue];
+    }
+    BOOL v;
+    if ([key isEqualToString:@"persist"]) {
+        v = cfg[@"persist"] != nil ? [cfg[@"persist"] boolValue] : YES;
+    } else {
+        v = [[cfg objectForKey:key] boolValue];
+    }
+    JVR_开关缓存()[key] = @(v);
+    return v;
 }
 
 
@@ -1113,8 +1134,8 @@ static BOOL JVR_读取开关(NSString* key) {
             [strongSelf->_terminal appendLog:@"已自动开启 HUD（之前未开，所以屏幕上什么都看不到）"];
             kfd_log("[UI] auto SetHUDEnabled(YES)\n");
         }
-        [strongSelf->_terminal appendLog:@"开始读取已写入 plist(reading=1)"];
-        kfd_log("[UI] 开始读取：写入 reading=1，HUD 进程将同步\n");
+        [strongSelf->_terminal appendLog:NHPersistFilesEnabled() ? @"开始读取 reading=1（已落盘）" : @"开始读取 reading=1（仅 notify，无文件）"];
+        kfd_log("[UI] 开始读取：reading=1 persist=%d\n", (int)NHPersistFilesEnabled());
         SetReadingEnabled(true);
         readBtn.label.text = @"停止读取";
         BOOL countOn = JVR_读取开关(@"count");
@@ -1217,6 +1238,7 @@ static BOOL JVR_读取开关(NSString* key) {
         @{@"title": @"骨骼显示", @"key": @"bone"},
         @{@"title": @"过直播模式", @"key": @"overlay"},
         @{@"title": @"调试日志", @"key": @"dbglog"}, // 默认关；开才写 kfd_debug / 终端诊断
+        @{@"title": @"配置落盘", @"key": @"persist"}, // 默认开；关则不生成 cfg/pid 文件，仅 notify 同步
     ];
     
     for (NSDictionary *cfg in configs) {
@@ -1226,6 +1248,9 @@ static BOOL JVR_读取开关(NSString* key) {
             JVR_保存开关(cfg[@"key"], on);
             if ([cfg[@"key"] isEqualToString:@"dbglog"]) {
                 NHDebugLogInvalidateCache();
+            }
+            if ([cfg[@"key"] isEqualToString:@"persist"]) {
+                KernelLogLine(on ? "配置落盘=开（写 Downloads cfg）" : "配置落盘=关（无文件，notify 同步；已有 cfg/pid 已删）");
             }
             kfd_log("[UI] 开关 %s = %d\n", [cfg[@"key"] UTF8String], (int)on);
             KernelLogLine([[NSString stringWithFormat:@"开关 %@ = %@", cfg[@"key"], on ? @"开" : @"关"] UTF8String]);

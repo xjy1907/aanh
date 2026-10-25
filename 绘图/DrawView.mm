@@ -115,18 +115,22 @@ static void DrawDbg(const char *fmt, ...) {
 
 static NSString *PrefsPath(void);
 
-// 主 App / HUD 是两个进程：内存开关必须落盘，HUD 才能读到「开始读取」
+// 主 App / HUD：优先 notify 同步；配置落盘开时才写文件
 static void PersistReadingFlag(bool enabled) {
-    NSString *path = PrefsPath();
-    NSMutableDictionary *cfg = [NSMutableDictionary dictionaryWithContentsOfFile:path];
-    if (!cfg) cfg = [NSMutableDictionary dictionary];
+    NSMutableDictionary *cfg = [NSMutableDictionary dictionary];
+    NSDictionary *cur = NHPrefsRead();
+    if (cur) [cfg addEntriesFromDictionary:cur];
     cfg[@"reading"] = @(enabled);
-    [cfg writeToFile:path atomically:YES];
+    NHPrefsWrite(cfg);
 }
 
 static bool LoadReadingFlagFromDisk(void) {
-    NSDictionary *cfg = [NSDictionary dictionaryWithContentsOfFile:PrefsPath()];
-    return cfg ? [[cfg objectForKey:@"reading"] boolValue] : NO;
+    NSDictionary *cfg = NHPrefsRead();
+    if (!cfg) {
+        // 无文件且 notify 未发布：保持内存态
+        return gReadingEnabled;
+    }
+    return [[cfg objectForKey:@"reading"] boolValue];
 }
 
 extern "C" void SetReadingEnabled(bool enabled) {
@@ -136,14 +140,13 @@ extern "C" void SetReadingEnabled(bool enabled) {
         gamePid = -1;
         模块地址 = 0;
         bOffsetFindDNE = false;
-        DrawDbg("[读取] 已停止 (pid=%d) 已写入 plist reading=0", (int)getpid());
+        DrawDbg("[读取] 已停止 (pid=%d) persist=%d", (int)getpid(), (int)NHPersistFilesEnabled());
     } else {
-        DrawDbg("[读取] 已开启 (pid=%d) 已写入 plist reading=1 —— HUD 进程会同步此开关", (int)getpid());
+        DrawDbg("[读取] 已开启 (pid=%d) persist=%d —— HUD 经 notify/磁盘同步", (int)getpid(), (int)NHPersistFilesEnabled());
     }
 }
 
 extern "C" bool IsReadingEnabled(void) {
-    // 跨进程：以磁盘为准
     gReadingEnabled = LoadReadingFlagFromDisk();
     return gReadingEnabled;
 }
@@ -187,33 +190,41 @@ template<typename T> T vm_read(uint64_t address) {
 bool getbbz(); // 前向声明：供 7s dump 调用
 
 static NSString *PrefsPath(void) {
-    static NSString *path;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        path = @"/var/mobile/Library/Preferences/com.nh.cfg.plist";
-        NSString *legacy = @"/var/mobile/Library/Preferences/com.map.settings.plist";
-        NSFileManager *fm = [NSFileManager defaultManager];
-        if (![fm fileExistsAtPath:path] && [fm fileExistsAtPath:legacy]) {
-            [fm moveItemAtPath:legacy toPath:path error:nil];
-        }
-    });
-    return path;
+    return NHPrefsPath();
 }
 
 // 对标 wasd：prefs 不进热路径；后台/节流刷新即可
 static void RefreshDrawPrefs(void) {
-    NSDictionary *cfg = [NSDictionary dictionaryWithContentsOfFile:PrefsPath()];
-    gReadingEnabled = cfg ? [[cfg objectForKey:@"reading"] boolValue] : NO;
-    显示人数 = cfg ? [[cfg objectForKey:@"count"] boolValue] : NO;
-    显示射线 = cfg ? [[cfg objectForKey:@"line"] boolValue] : NO;
-    显示方框 = cfg ? [[cfg objectForKey:@"box"] boolValue] : NO;
-    显示血量 = cfg ? [[cfg objectForKey:@"health"] boolValue] : NO;
-    显示信息 = cfg ? [[cfg objectForKey:@"info"] boolValue] : NO;
-    显示骨骼 = cfg ? [[cfg objectForKey:@"bone"] boolValue] : NO;
+    NSDictionary *cfg = NHPrefsRead();
+    if (!cfg) {
+        // 无源：用内存态发布；仅落盘模式才写文件
+        if (gReadingEnabled || 显示人数 || 显示射线 || 显示方框 || 显示血量 || 显示信息 || 显示骨骼) {
+            NSMutableDictionary *restore = [NSMutableDictionary dictionary];
+            restore[@"reading"] = @(gReadingEnabled);
+            restore[@"count"] = @(显示人数);
+            restore[@"line"] = @(显示射线);
+            restore[@"box"] = @(显示方框);
+            restore[@"health"] = @(显示血量);
+            restore[@"info"] = @(显示信息);
+            restore[@"bone"] = @(显示骨骼);
+            restore[@"persist"] = @(NHPersistFilesEnabled());
+            NHPrefsWrite(restore);
+        }
+        return;
+    }
+    gReadingEnabled = [[cfg objectForKey:@"reading"] boolValue];
+    显示人数 = [[cfg objectForKey:@"count"] boolValue];
+    显示射线 = [[cfg objectForKey:@"line"] boolValue];
+    显示方框 = [[cfg objectForKey:@"box"] boolValue];
+    显示血量 = [[cfg objectForKey:@"health"] boolValue];
+    显示信息 = [[cfg objectForKey:@"info"] boolValue];
+    显示骨骼 = [[cfg objectForKey:@"bone"] boolValue];
 }
 
 // 不依赖绘制循环：每 7 秒把整条读取链写进 kfd_debug.log
 static void DumpReadPipelineEvery7s(void) {
+    // 先刷新/写回：清软件删掉 plist 时把内存态落回 Downloads
+    RefreshDrawPrefs();
     bool readingDisk = LoadReadingFlagFromDisk();
     bool krkw = ((DOJailbreaker *)DOJailbreaker.sharedInstance).isSuccess;
     DrawDbg("[7s] ===== dump pid=%d argvHUD? readingMem=%d readingDisk=%d krkw=%d gamePid=%d base=0x%llx =====",

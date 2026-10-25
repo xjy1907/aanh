@@ -247,21 +247,11 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
 }
 
 - (NSString *)prefsCfgPath {
-    static NSString *path;
-    static dispatch_once_t once;
-    dispatch_once(&once, ^{
-        path = @"/var/mobile/Library/Preferences/com.nh.cfg.plist";
-        NSString *legacy = @"/var/mobile/Library/Preferences/com.map.settings.plist";
-        NSFileManager *fm = [NSFileManager defaultManager];
-        if (![fm fileExistsAtPath:path] && [fm fileExistsAtPath:legacy]) {
-            [fm moveItemAtPath:legacy toPath:path error:nil];
-        }
-    });
-    return path;
+    return NHPrefsPath();
 }
 
 - (BOOL)loadOverlayFlagFromDisk {
-    NSDictionary *cfg = [NSDictionary dictionaryWithContentsOfFile:[self prefsCfgPath]];
+    NSDictionary *cfg = NHPrefsRead();
     return [[cfg objectForKey:@"overlay"] boolValue];
 }
 

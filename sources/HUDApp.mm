@@ -22,7 +22,7 @@
 #import <libjailbreak/info.h>
 #import <libjailbreak/jbclient_xpc.h>
 #import "LFVirtualDigitizer.h"
-#define PID_PATH "/var/mobile/Library/Caches/com.nh.hud.pid"
+// PID 文件改为每机派生路径，见 NHIdentity.h → NHPidPath()
 
 static __used NSString *mDeviceModel(void) {
   struct utsname systemInfo;
@@ -132,8 +132,14 @@ int main(int argc, char *argv[]) {
       (void)pgid;
       log_debug(OS_LOG_DEFAULT, "HUD pid %d, pgid %d", pid, pgid);
       
-      NSString *pidString = [NSString stringWithFormat:@"%d", pid];
-      [pidString writeToFile:ROOT_PATH_NS(PID_PATH) atomically:YES encoding:NSUTF8StringEncoding error:nil];
+      // 始终写入 notify 态；仅「配置落盘」开启时才写 pid 文件
+      NHPublishPid(pid);
+      if (NHPersistFilesEnabled()) {
+        NSString *pidString = [NSString stringWithFormat:@"%d", pid];
+        [pidString writeToFile:NHPidPath() atomically:YES encoding:NSUTF8StringEncoding error:nil];
+      } else {
+        unlink([NHPidPath() UTF8String]);
+      }
       
       [UIScreen initialize];
       CFRunLoopGetCurrent();
@@ -170,28 +176,32 @@ int main(int argc, char *argv[]) {
       CFRunLoopRun();
       return EXIT_SUCCESS;
     } else if (strcmp(argv[1], "-exit") == 0) {
-      NSString *pidString = [NSString stringWithContentsOfFile:ROOT_PATH_NS(PID_PATH)
-                                                      encoding:NSUTF8StringEncoding
-                                                         error:nil];
-      
-      if (pidString) {
-        pid_t pid = (pid_t)[pidString intValue];
-        kill(pid, SIGKILL);
-        unlink([ROOT_PATH_NS(PID_PATH) UTF8String]);
+      pid_t pid = NHReadPid();
+      if (pid <= 0) {
+        NSString *pidString = [NSString stringWithContentsOfFile:NHPidPath()
+                                                        encoding:NSUTF8StringEncoding
+                                                           error:nil];
+        if (pidString) pid = (pid_t)[pidString intValue];
       }
-      
+      if (pid > 0) {
+        kill(pid, SIGKILL);
+      }
+      NHClearPid();
+      unlink([NHPidPath() UTF8String]);
       return EXIT_SUCCESS;
     } else if (strcmp(argv[1], "-check") == 0) {
-      NSString *pidString = [NSString stringWithContentsOfFile:ROOT_PATH_NS(PID_PATH)
-                                                      encoding:NSUTF8StringEncoding
-                                                         error:nil];
-      
-      if (pidString) {
-        pid_t pid = (pid_t)[pidString intValue];
+      pid_t pid = NHReadPid();
+      if (pid <= 0) {
+        NSString *pidString = [NSString stringWithContentsOfFile:NHPidPath()
+                                                        encoding:NSUTF8StringEncoding
+                                                           error:nil];
+        if (pidString) pid = (pid_t)[pidString intValue];
+      }
+      if (pid > 0) {
         int killed = kill(pid, 0);
         return (killed == 0 ? EXIT_FAILURE : EXIT_SUCCESS);
-      } else
-        return EXIT_SUCCESS; // No PID file, so HUD is not running
+      }
+      return EXIT_SUCCESS; // 无 pid → HUD 未运行
     }
 #else
     return UIApplicationMain(argc, argv, @"MainApplication", @"MainApplicationDelegate");

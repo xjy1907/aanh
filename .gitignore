@@ -57,8 +57,9 @@ xcuserdata/
 *.xccheckout
 
 ## compatibility with Xcode 3 and earlier (ignoring not required starting Xcode 4)
-build/
-DerivedData/
+# 仅忽略仓库根目录的 build/，避免误伤 zstd/build、dependencies/build 等源码目录
+/build/
+/DerivedData/
 *.moved-aside
 *.pbxuser
 !default.pbxuser
@@ -108,7 +109,8 @@ playground.xcworkspace
 Carthage/Build/
 
 # Accio dependency management
-Dependencies/
+# 注意：Windows/macOS 默认大小写不敏感，写成 Dependencies/ 会把本仓库的 dependencies/ 整目录忽略掉
+# Dependencies/
 .accio/
 
 # fastlane

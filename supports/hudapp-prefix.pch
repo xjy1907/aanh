@@ -12,6 +12,12 @@
     #import <os/log.h>
     #import "rootless.h"
     #import "NSUserDefaults+Private.h"
+    #import "NHIdentity.h"
+    // 每机派生（见 NHIdentity.h），不再使用固定 com.nh.notification.*
+    #define NOTIFY_LAUNCHED_HUD  NHNotifyName("launched")
+    #define NOTIFY_DISMISSAL_HUD NHNotifyName("dismissal")
+    #define NOTIFY_RELOAD_HUD    NHNotifyName("reload")
+    #define NOTIFY_RELOAD_APP    NHNotifyName("appreload")
 #endif
 
 #if DEBUG
@@ -31,18 +37,6 @@
 #else
     #define USER_DEFAULTS_PATH ([[NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, NSUserDomainMask, YES) firstObject] stringByAppendingPathComponent:@"com.apple.iBooks.plist"])
 #endif
-
-// HUD -> APP: Notify APP that the HUD's view is appeared.
-#define NOTIFY_LAUNCHED_HUD "com.nh.notification.hud.launched"
-
-// APP -> HUD: Notify HUD to dismiss itself.
-#define NOTIFY_DISMISSAL_HUD "com.nh.notification.hud.dismissal"
-
-// APP -> HUD: Notify HUD that the user defaults has been changed by APP.
-#define NOTIFY_RELOAD_HUD "com.nh.notification.hud.reload"
-
-// HUD -> APP: Notify APP that the user defaults has been changed by HUD.
-#define NOTIFY_RELOAD_APP "com.nh.notification.app.reload"
 
 #ifdef __OBJC__
 #import "hudapp-bridging-header.h"
