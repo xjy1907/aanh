@@ -1,0 +1,18 @@
+{
+  "project": "bnh",
+  "platform": "ios",
+  "github": {
+    "owner": "xjy1907",
+    "repo": "abnh000"
+  },
+  "provider": "github",
+  "codemagic": {},
+  "bitrise": {},
+  "ios": {},
+  "flutter": {
+    "watch": {}
+  },
+  "reactNative": {},
+  "kmp": {},
+  "mobai": {}
+}
