@@ -1246,43 +1246,67 @@ jobs:
             mv build/export/*.ipa "build/$BUILD_ID.ipa"
             echo "Created signed IPA: build/$BUILD_ID.ipa"
           else
-            # For unsigned builds, find .app and create IPA
-            if [ "$PROJECT_TYPE" = "flutter" ]; then
-              # Flutter outputs to build/ios/iphoneos/
-              APP_PATH=$(find "${GITHUB_WORKSPACE}/build/ios/iphoneos" -name "*.app" -type d | head -1)
-            else
-              # Native and React Native/Expo use DerivedData. Ask the project
-              # which bundle this scheme produces: the first .app under
-              # Build/Products is the wrong one whenever the repo has more than
-              # one app target.
-              APP_PATH=$(xcodebuild "$TARGET_FLAG" "$TARGET_PATH" \
-                -scheme "$SCHEME" \
-                -configuration "$CONFIGURATION" \
-                -destination 'generic/platform=iOS' \
-                -derivedDataPath "$DERIVED_DATA_PATH" \
-                -showBuildSettings -json 2>/dev/null \
-                | jq -r 'map(.buildSettings)
-                         | map(select(.PRODUCT_TYPE == "com.apple.product-type.application"
-                                      and (.TARGET_BUILD_DIR | contains("-iphoneos"))))
-                         | map(.TARGET_BUILD_DIR + "/" + .FULL_PRODUCT_NAME)
-                         | first // empty' || true)
-              if [ ! -d "$APP_PATH" ]; then
-                APP_PATH=$(find "$DERIVED_DATA_PATH/Build/Products/${CONFIGURATION}-iphoneos" -maxdepth 1 -name "*.app" -type d -print -quit 2>/dev/null || true)
-              fi
-            fi
-
-            if [ -z "$APP_PATH" ]; then
-              echo "Error: Could not find .app"
-              exit 1
-            fi
-            echo "Found app at: $APP_PATH"
+            # Prefer Pack IPA output (ldid + supports/entitlements.plist). Plain
+            # DerivedData zips have no entitlements → kernel init fails on device.
             cd "$GITHUB_WORKSPACE"
-            mkdir -p build/Payload
-            cp -R "$APP_PATH" build/Payload/
-            cd build
-            zip -rq "$BUILD_ID.ipa" Payload
-            rm -rf Payload
-            echo "Created unsigned IPA: build/$BUILD_ID.ipa"
+            mkdir -p build
+            PACKED_IPA=$(find "$HOME/Desktop/ipa" -maxdepth 1 -name "*.ipa" -type f -print -quit 2>/dev/null || true)
+            if [ -n "$PACKED_IPA" ]; then
+              cp "$PACKED_IPA" "build/$BUILD_ID.ipa"
+              echo "Using Pack IPA (ldid entitlements): $PACKED_IPA -> build/$BUILD_ID.ipa"
+            else
+              # Fallback: find .app, ldid-sign, then zip
+              if [ "$PROJECT_TYPE" = "flutter" ]; then
+                APP_PATH=$(find "${GITHUB_WORKSPACE}/build/ios/iphoneos" -name "*.app" -type d | head -1)
+              else
+                APP_PATH=$(xcodebuild "$TARGET_FLAG" "$TARGET_PATH" \
+                  -scheme "$SCHEME" \
+                  -configuration "$CONFIGURATION" \
+                  -destination 'generic/platform=iOS' \
+                  -derivedDataPath "$DERIVED_DATA_PATH" \
+                  -showBuildSettings -json 2>/dev/null \
+                  | jq -r 'map(.buildSettings)
+                           | map(select(.PRODUCT_TYPE == "com.apple.product-type.application"
+                                        and (.TARGET_BUILD_DIR | contains("-iphoneos"))))
+                           | map(.TARGET_BUILD_DIR + "/" + .FULL_PRODUCT_NAME)
+                           | first // empty' || true)
+                if [ ! -d "$APP_PATH" ]; then
+                  APP_PATH=$(find "$DERIVED_DATA_PATH/Build/Products/${CONFIGURATION}-iphoneos" -maxdepth 1 -name "*.app" -type d -print -quit 2>/dev/null || true)
+                fi
+              fi
+
+              if [ -z "$APP_PATH" ] || [ ! -d "$APP_PATH" ]; then
+                echo "Error: Could not find .app"
+                exit 1
+              fi
+              echo "Found app at: $APP_PATH"
+              export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+              ENTITLEMENTS="${GITHUB_WORKSPACE}/supports/entitlements.plist"
+              if [ ! -f "$ENTITLEMENTS" ]; then
+                echo "::error::Missing $ENTITLEMENTS (required for kernel init entitlements)"
+                exit 1
+              fi
+              if ! command -v ldid >/dev/null 2>&1; then
+                echo "::error::ldid not found; Pack IPA / fallback signing needs it"
+                exit 1
+              fi
+              mkdir -p build/Payload
+              rm -rf build/Payload/*
+              cp -R "$APP_PATH" build/Payload/
+              APP_COPY="build/Payload/$(basename "$APP_PATH")"
+              echo "ldid-signing with $ENTITLEMENTS"
+              ldid -S"$ENTITLEMENTS" "$APP_COPY"
+              EXE_NAME=$(/usr/libexec/PlistBuddy -c "Print :CFBundleExecutable" "$APP_COPY/Info.plist" 2>/dev/null || true)
+              if [ -n "$EXE_NAME" ] && [ -f "$APP_COPY/$EXE_NAME" ]; then
+                ldid -S"$ENTITLEMENTS" "$APP_COPY/$EXE_NAME" || true
+              fi
+              (
+                cd build
+                zip -rq "$BUILD_ID.ipa" Payload
+                rm -rf Payload
+              )
+              echo "Created ldid-signed IPA: build/$BUILD_ID.ipa"
+            fi
           fi
 
       - name: Upload IPA artifact
