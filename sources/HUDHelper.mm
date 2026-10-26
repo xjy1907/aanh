@@ -7,6 +7,7 @@
 
 #import <spawn.h>
 #import <notify.h>
+#import <signal.h>
 #import <mach-o/dyld.h>
 
 #import "HUDHelper.h"
@@ -19,36 +20,29 @@ extern "C" int posix_spawnattr_set_persona_np(const posix_spawnattr_t* __restric
 extern "C" int posix_spawnattr_set_persona_uid_np(const posix_spawnattr_t* __restrict, uid_t);
 extern "C" int posix_spawnattr_set_persona_gid_np(const posix_spawnattr_t* __restrict, uid_t);
 
+static pid_t NHResolveHudPid(void)
+{
+    pid_t pid = NHReadPid();
+    if (pid > 0) {
+        return pid;
+    }
+    NSString *pidString = [NSString stringWithContentsOfFile:NHPidPath()
+                                                    encoding:NSUTF8StringEncoding
+                                                       error:nil];
+    if (pidString.length > 0) {
+        return (pid_t)[pidString intValue];
+    }
+    return 0;
+}
+
 BOOL IsHUDEnabled(void)
 {
-    static char *executablePath = NULL;
-    uint32_t executablePathSize = 0;
-    _NSGetExecutablePath(NULL, &executablePathSize);
-    executablePath = (char *)calloc(1, executablePathSize);
-    _NSGetExecutablePath(executablePath, &executablePathSize);
-
-    posix_spawnattr_t attr;
-    posix_spawnattr_init(&attr);
-
-    posix_spawnattr_set_persona_np(&attr, 99, POSIX_SPAWN_PERSONA_FLAGS_OVERRIDE);
-    posix_spawnattr_set_persona_uid_np(&attr, 0);
-    posix_spawnattr_set_persona_gid_np(&attr, 0);
-
-    pid_t task_pid;
-    const char *args[] = { executablePath, "-check", NULL };
-    posix_spawn(&task_pid, executablePath, NULL, &attr, (char **)args, environ);
-    posix_spawnattr_destroy(&attr);
-    log_debug(OS_LOG_DEFAULT, "spawned %{public}s -check pid = %{public}d", executablePath, task_pid);
-    
-    int status;
-    do {
-        if (waitpid(task_pid, &status, 0) != -1)
-        {
-            log_debug(OS_LOG_DEFAULT, "child status %d", WEXITSTATUS(status));
-        }
-    } while (!WIFEXITED(status) && !WIFSIGNALED(status));
-
-    return WEXITSTATUS(status) != 0;
+    // 本地查 pid，不再 persona spawn -check（减半 elevated 子进程）
+    pid_t pid = NHResolveHudPid();
+    if (pid <= 0) {
+        return NO;
+    }
+    return kill(pid, 0) == 0;
 }
 
 #define LAUNCH_DAEMON_PATH ROOT_PATH("/Library/LaunchDaemons/com.nh.hudservices.plist")
@@ -75,7 +69,7 @@ void SetHUDEnabled(BOOL isEnabled)
         const char *args[] = { executablePath, isEnabled ? "load" : "unload", LAUNCH_DAEMON_PATH, NULL };
         posix_spawn(&task_pid, executablePath, NULL, &attr, (char **)args, environ);
         posix_spawnattr_destroy(&attr);
-        log_debug(OS_LOG_DEFAULT, "spawned %{public}s -exit pid = %{public}d", executablePath, task_pid);
+        log_debug(OS_LOG_DEFAULT, "spawned launchctl pid = %{public}d", task_pid);
 
         int status;
         do {
@@ -99,29 +93,27 @@ void SetHUDEnabled(BOOL isEnabled)
         posix_spawnattr_setpgroup(&attr, 0);
         posix_spawnattr_setflags(&attr, POSIX_SPAWN_SETPGROUP);
 
-        pid_t task_pid;
-        const char *args[] = { executablePath, "-hud", NULL };
-        posix_spawn(&task_pid, executablePath, NULL, &attr, (char **)args, environ);
+        // 仅 argv[0]，角色靠每机派生 env；绘制仍走同一套 Accessibility HUD 启动链
+        NHMarkOverlayRole();
+        pid_t task_pid = 0;
+        const char *args[] = { executablePath, NULL };
+        int ret = posix_spawn(&task_pid, executablePath, NULL, &attr, (char **)args, environ);
+        NHClearOverlayRole();
         posix_spawnattr_destroy(&attr);
-        log_debug(OS_LOG_DEFAULT, "spawned %{public}s -hud pid = %{public}d", executablePath, task_pid);
+        log_debug(OS_LOG_DEFAULT, "spawned overlay ret=%{public}d pid=%{public}d", ret, task_pid);
     }
     else
     {
+        posix_spawnattr_destroy(&attr);
         [NSThread sleepForTimeInterval:FADE_OUT_DURATION];
 
-        pid_t task_pid;
-        const char *args[] = { executablePath, "-exit", NULL };
-        posix_spawn(&task_pid, executablePath, NULL, &attr, (char **)args, environ);
-        posix_spawnattr_destroy(&attr);
-        log_debug(OS_LOG_DEFAULT, "spawned %{public}s -exit pid = %{public}d", executablePath, task_pid);
-
-        int status;
-        do {
-            if (waitpid(task_pid, &status, 0) != -1)
-            {
-                log_debug(OS_LOG_DEFAULT, "child status %d", WEXITSTATUS(status));
-            }
-        } while (!WIFEXITED(status) && !WIFSIGNALED(status));
+        // 关叠层：notify 已发；本地 kill，不再 persona spawn -exit
+        pid_t pid = NHResolveHudPid();
+        if (pid > 0) {
+            kill(pid, SIGKILL);
+        }
+        NHClearPid();
+        unlink([NHPidPath() UTF8String]);
     }
 }
 
@@ -155,7 +147,7 @@ void SimulateMemoryPressure(void)
     posix_spawn(&task_pid, executablePath, NULL, &attr, (char **)args, environ);
     posix_spawnattr_destroy(&attr);
 
-    log_debug(OS_LOG_DEFAULT, "spawned %{public}s -l critical pid = %{public}d", executablePath, task_pid);
+    log_debug(OS_LOG_DEFAULT, "spawned memory_pressure pid = %{public}d", task_pid);
 }
 #endif
 
@@ -180,42 +172,6 @@ NSUserDefaults *GetStandardUserDefaults(void)
 
 void fasongxuni(void)
 {
-   
-    uint32_t executablePathSize = 0;
-    _NSGetExecutablePath(NULL, &executablePathSize);
-    char *executablePath = (char *)calloc(1, executablePathSize);
-    _NSGetExecutablePath(executablePath, &executablePathSize);
-
-    posix_spawnattr_t attr;
-    posix_spawnattr_init(&attr);
-
-    // 设置 persona 为 root
-    posix_spawnattr_set_persona_np(&attr, 99, POSIX_SPAWN_PERSONA_FLAGS_OVERRIDE);
-    posix_spawnattr_set_persona_uid_np(&attr, 0);
-    posix_spawnattr_set_persona_gid_np(&attr, 0);
-
-    int ret = 0;
-    pid_t task_pid = 0;
-
-    posix_spawnattr_setpgroup(&attr, 0);
-    posix_spawnattr_setflags(&attr, POSIX_SPAWN_SETPGROUP);
-
-    const char *args[] = { executablePath, "HIDDevice", NULL };
-    ret = posix_spawn(&task_pid, executablePath, NULL, &attr, (char **)args, environ);
-    posix_spawnattr_destroy(&attr);
-
-    if (ret == 0) {
-      
-
-        sleep(1); // 等待进程启动
-        if (kill(task_pid, 0) == 0) {
-          
-        } else {
-            
-        }
-    } else {
-       
-    }
-
-   
+    // 不再单独 persona spawn「HIDDevice」：该 argv 本就无入口，只会多一条 elevated 特征。
+    // SenderID / 触摸逻辑改由当前进程或 HUD 进程内处理。
 }

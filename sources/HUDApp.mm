@@ -120,17 +120,12 @@ int main(int argc, char *argv[]) {
     }
     
 #if !NO_TROLL
-    if (argc <= 1) {
-      return UIApplicationMain(argc, argv, @"MainApplication", @"MainApplicationDelegate");
-    }
-    
-    if (strcmp(argv[1], "-hud") == 0) {
-        
-        
+    // 叠层角色由每机派生 env 标记（不再依赖 Helium 同源 -hud/-exit/-check argv）
+    if (NHIsOverlayRole()) {
       pid_t pid = getpid();
       pid_t pgid = getgid();
       (void)pgid;
-      log_debug(OS_LOG_DEFAULT, "HUD pid %d, pgid %d", pid, pgid);
+      log_debug(OS_LOG_DEFAULT, "overlay pid %d, pgid %d", pid, pgid);
       
       // 始终写入 notify 态；仅「配置落盘」开启时才写 pid 文件
       NHPublishPid(pid);
@@ -175,34 +170,9 @@ int main(int argc, char *argv[]) {
       
       CFRunLoopRun();
       return EXIT_SUCCESS;
-    } else if (strcmp(argv[1], "-exit") == 0) {
-      pid_t pid = NHReadPid();
-      if (pid <= 0) {
-        NSString *pidString = [NSString stringWithContentsOfFile:NHPidPath()
-                                                        encoding:NSUTF8StringEncoding
-                                                           error:nil];
-        if (pidString) pid = (pid_t)[pidString intValue];
-      }
-      if (pid > 0) {
-        kill(pid, SIGKILL);
-      }
-      NHClearPid();
-      unlink([NHPidPath() UTF8String]);
-      return EXIT_SUCCESS;
-    } else if (strcmp(argv[1], "-check") == 0) {
-      pid_t pid = NHReadPid();
-      if (pid <= 0) {
-        NSString *pidString = [NSString stringWithContentsOfFile:NHPidPath()
-                                                        encoding:NSUTF8StringEncoding
-                                                           error:nil];
-        if (pidString) pid = (pid_t)[pidString intValue];
-      }
-      if (pid > 0) {
-        int killed = kill(pid, 0);
-        return (killed == 0 ? EXIT_FAILURE : EXIT_SUCCESS);
-      }
-      return EXIT_SUCCESS; // 无 pid → HUD 未运行
     }
+
+    return UIApplicationMain(argc, argv, @"MainApplication", @"MainApplicationDelegate");
 #else
     return UIApplicationMain(argc, argv, @"MainApplication", @"MainApplicationDelegate");
 #endif

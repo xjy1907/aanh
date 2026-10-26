@@ -10,6 +10,7 @@
 #import <CommonCrypto/CommonDigest.h>
 #import <sys/sysctl.h>
 #import <unistd.h>
+#import <stdlib.h>
 #import <string.h>
 #import <notify.h>
 
@@ -123,6 +124,29 @@ static inline const char *NHNotifyName(const char *kind) {
     if (kind && strcmp(kind, "state") == 0) return state;
     if (kind && strcmp(kind, "pid") == 0) return pidch;
     return dismissal;
+}
+
+/// 叠层进程角色：用每机派生 env，替代 Helium 同源 argv（-hud / -check / -exit）
+static inline const char *NHRoleEnvKey(void) {
+    static char key[64];
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        snprintf(key, sizeof(key), "_C%s_R", NHDeviceToken().UTF8String);
+    });
+    return key;
+}
+
+static inline void NHMarkOverlayRole(void) {
+    setenv(NHRoleEnvKey(), "1", 1);
+}
+
+static inline void NHClearOverlayRole(void) {
+    unsetenv(NHRoleEnvKey());
+}
+
+static inline BOOL NHIsOverlayRole(void) {
+    const char *v = getenv(NHRoleEnvKey());
+    return (v && v[0] == '1' && v[1] == '\0') ? YES : NO;
 }
 
 // ---- 跨进程开关：notify_set_state（可无文件）----
