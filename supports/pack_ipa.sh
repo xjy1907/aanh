@@ -17,6 +17,11 @@ echo "[Pack IPA] ENTITLEMENTS=${ENTITLEMENTS_PATH}"
 echo "[Pack IPA] PLATFORM_NAME=${PLATFORM_NAME}"
 echo "[Pack IPA] CONFIGURATION=${CONFIGURATION}"
 
+if [ "${PLATFORM_NAME}" != "iphoneos" ]; then
+  echo "[Pack IPA] skip non-device build"
+  exit 0
+fi
+
 if [ -z "${APP_PATH}" ] || [ ! -d "${APP_PATH}" ]; then
   echo "[Pack IPA] ERROR: app not found: ${APP_PATH}"
   echo "[Pack IPA] Tip: choose Any iOS Device (arm64), Scheme Books"
@@ -75,6 +80,35 @@ if [ ! -f "${EXECUTABLE_PATH}" ]; then
   echo "[Pack IPA] ERROR: binary missing: ${EXECUTABLE_PATH}"
   exit 1
 fi
+
+# Soften conspicuous dylib filenames inside the shipped IPA only.
+rename_dylib() {
+  local old="$1" new="$2"
+  local src="${COPIED_APP}/${old}"
+  local dst="${COPIED_APP}/${new}"
+  if [ ! -f "${src}" ]; then
+    return 0
+  fi
+  echo "[Pack IPA] rename ${old} -> ${new}"
+  mv "${src}" "${dst}"
+  install_name_tool -id "@executable_path/${new}" "${dst}" 2>/dev/null || true
+  install_name_tool -change "@executable_path/${old}" "@executable_path/${new}" "${EXECUTABLE_PATH}" 2>/dev/null || true
+  install_name_tool -change "@loader_path/${old}" "@executable_path/${new}" "${EXECUTABLE_PATH}" 2>/dev/null || true
+  if [ -d "${COPIED_APP}/Frameworks" ]; then
+    find "${COPIED_APP}/Frameworks" -type f ! -name "*.plist" ! -name "*.h" 2>/dev/null | while IFS= read -r bin; do
+      install_name_tool -change "@executable_path/${old}" "@executable_path/${new}" "${bin}" 2>/dev/null || true
+      install_name_tool -change "@loader_path/${old}" "@executable_path/${new}" "${bin}" 2>/dev/null || true
+    done
+  fi
+  for d in "${COPIED_APP}"/*.dylib; do
+    [ -f "${d}" ] || continue
+    install_name_tool -change "@loader_path/${old}" "@loader_path/${new}" "${d}" 2>/dev/null || true
+    install_name_tool -change "@executable_path/${old}" "@executable_path/${new}" "${d}" 2>/dev/null || true
+  done
+}
+rename_dylib libjailbreak.dylib libNHSupport.dylib
+rename_dylib libchoma.dylib libNHCodec.dylib
+rename_dylib libxpf.dylib libNHParse.dylib
 
 echo "[Pack IPA] signing with ldid..."
 if ! ldid -S"${ENTITLEMENTS_PATH}" "${COPIED_APP}"; then

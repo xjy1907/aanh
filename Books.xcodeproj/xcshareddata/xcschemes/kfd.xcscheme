@@ -16,7 +16,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "06D4D8A92E18DE11008B33B6"
-               BuildableName = "kfd.framework"
+               BuildableName = "NHKit.framework"
                BlueprintName = "kfd"
                ReferencedContainer = "container:Books.xcodeproj">
             </BuildableReference>
@@ -51,7 +51,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "06D4D8A92E18DE11008B33B6"
-            BuildableName = "kfd.framework"
+            BuildableName = "NHKit.framework"
             BlueprintName = "kfd"
             ReferencedContainer = "container:Books.xcodeproj">
          </BuildableReference>
