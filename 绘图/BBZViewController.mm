@@ -61,7 +61,8 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
         self.BBZwindow = [[HonyWindow alloc] init];
         self.BBZwindow.frame = [[UIScreen mainScreen] bounds]; // 创建 HUDMainWindow，大小为屏幕大小
         //    sss();
-        [self.BBZwindow setWindowLevel:2000000]; // 显著提高窗口层级，确保在 iPad Pro 上覆盖所有应用层
+        // 对齐 AB：用状态栏附近层级，避免 2000000 这类异常 Accessibility 托管特征；SBS 注册后仍可盖住游戏绘制射线/骨骼
+        [self.BBZwindow setWindowLevel:UIWindowLevelStatusBar - 1];
         
         self.BBZwindow.backgroundColor = [UIColor clearColor];
         self.BBZwindow.opaque = NO;
@@ -126,7 +127,8 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
         self.BBZMenu = [[HonyMenu alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
         self.BBZMenu.backgroundColor = [UIColor clearColor];
         self.BBZMenu.opaque = NO;
-        [self.BBZMenu setWindowLevel:100000];
+        // 菜单略高于绘制窗（StatusBar-1），避免 100000 异常 level；功能仍靠 SBSAccessibility 托管置顶
+        [self.BBZMenu setWindowLevel:UIWindowLevelStatusBar + 1];
         [self.BBZMenu setHidden:NO];
         
         IMGUI_CHECKVERSION(); // 检查 BBZGUI 版本
