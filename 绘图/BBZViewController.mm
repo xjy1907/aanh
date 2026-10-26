@@ -15,6 +15,7 @@
 #import "DOJailbreaker.h"
 #include "DrawView.hpp"
 #import "过直播窗口.h"
+#import "NHIdentity.h"
 //#include "ShowClient.h"
 
 // 日志输出到主页日志框
@@ -38,6 +39,7 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
     过直播窗口 *_过直播容器; // 对标 wasd CoverView+CoverView1
     BOOL _liveHiddenApplied; // 当前 secure 状态
     NSInteger _overlayPollTick;
+    NSInteger _appliedDrawFps; // 已应用到 DisplayLink 的 drawFps（0=跟屏刷）
 }
 
 - (instancetype)init { // 构造函数
@@ -106,13 +108,10 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
                       ? "HUD: 过直播已启用 (wasd 双层 UITextField secure)"
                       : "HUD: 过直播关闭 (结构已就绪，开开关即生效)");
 
-        // 对标 wasd：CADisplayLink 驱动绘制；限 60fps，ProMotion 机型也别空烧 CPU
+        // 对标 wasd：CADisplayLink + MTKView 手动刷；帧率由 prefs drawFps 控制（默认跟屏刷）
         self.displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(displayLinkCallback:)];
-        if (@available(iOS 15.0, *)) {
-            self.displayLink.preferredFrameRateRange = CAFrameRateRangeMake(30, 60, 60);
-        } else {
-            self.displayLink.preferredFramesPerSecond = 60;
-        }
+        _appliedDrawFps = -1;
+        [self applyDrawFpsFromPrefs:YES];
         [self.displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
 
         // 调试用 UIKit 字条已关闭（按需求不再绘制 AB HUD ALIVE）
@@ -257,6 +256,44 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
     return [[cfg objectForKey:@"overlay"] boolValue];
 }
 
+- (NSInteger)loadDrawFpsFromPrefs {
+    NSDictionary *cfg = NHPrefsRead();
+    if (!cfg || cfg[@"drawFps"] == nil) return 0; // 默认跟屏刷（对标 wasd）
+    NSInteger fps = [cfg[@"drawFps"] integerValue];
+    if (fps != 60 && fps != 90 && fps != 120) return 0;
+    return fps;
+}
+
+/// fps<=0：跟屏刷（preferredFramesPerSecond=0）；否则限到 60/90/120
+- (void)applyDrawFpsToDisplayLink:(NSInteger)fps {
+    if (!self.displayLink) return;
+    if (fps != 60 && fps != 90 && fps != 120) fps = 0;
+    if (fps == _appliedDrawFps) return;
+    _appliedDrawFps = fps;
+    if (fps <= 0) {
+        if (@available(iOS 15.0, *)) {
+            self.displayLink.preferredFrameRateRange = CAFrameRateRangeDefault;
+        }
+        self.displayLink.preferredFramesPerSecond = 0;
+        KernelLogLine("HUD: drawFps=follow-display (wasd CADisplayLink)");
+    } else {
+        if (@available(iOS 15.0, *)) {
+            float f = (float)fps;
+            self.displayLink.preferredFrameRateRange = CAFrameRateRangeMake(MAX(1.f, f * 0.5f), f, f);
+        }
+        self.displayLink.preferredFramesPerSecond = (NSInteger)fps;
+        char buf[64];
+        snprintf(buf, sizeof(buf), "HUD: drawFps=%ld", (long)fps);
+        KernelLogLine(buf);
+    }
+}
+
+- (void)applyDrawFpsFromPrefs:(BOOL)force {
+    NSInteger fps = [self loadDrawFpsFromPrefs];
+    if (force) _appliedDrawFps = -1;
+    [self applyDrawFpsToDisplayLink:fps];
+}
+
 /// 对标 wasd：CoverView + CoverView1 两层 secureTextEntry 同步
 - (void)applyLiveHide:(BOOL)on {
     if (!_过直播容器 || !_MetalView) return;
@@ -316,12 +353,13 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
 
 - (void)displayLinkCallback:(CADisplayLink *)displayLink {
     BBZGUI::GetIO().DeltaTime = (float)displayLink.duration;
-    // 主界面改 overlay 后 HUD 热更新（约 1s）
+    // 主界面改 overlay / drawFps 后 HUD 热更新（约 1s）
     if ((++_overlayPollTick % 60) == 0) {
         BOOL on = [self loadOverlayFlagFromDisk];
         if (on != _liveHiddenApplied) {
             [self applyLiveHide:on];
         }
+        [self applyDrawFpsFromPrefs:NO];
     }
     [_MetalView draw];
 }

@@ -127,6 +127,7 @@ static inline const char *NHNotifyName(const char *kind) {
 
 // ---- 跨进程开关：notify_set_state（可无文件）----
 // bit0 reading 1 count 2 line 3 box 4 health 5 info 6 bone 7 overlay 8 dbglog 9 persist
+// bit10-11 drawFps：0=跟屏刷 1=60 2=90 3=120
 // bit63 = 有效标记（曾发布过）
 enum {
     NHBitReading = 0,
@@ -139,8 +140,27 @@ enum {
     NHBitOverlay = 7,
     NHBitDbglog  = 8,
     NHBitPersist = 9, // 1=写配置文件，0=不生成文件（仅内存+notify）
+    NHBitFps0    = 10,
+    NHBitFps1    = 11,
     NHBitValid   = 63,
 };
+
+/// prefs drawFps：0=跟屏刷，60/90/120=限帧
+static inline int NHFpsModeFromValue(NSInteger fps) {
+    if (fps == 60) return 1;
+    if (fps == 90) return 2;
+    if (fps == 120) return 3;
+    return 0;
+}
+
+static inline NSInteger NHFpsValueFromMode(int mode) {
+    switch (mode & 3) {
+        case 1: return 60;
+        case 2: return 90;
+        case 3: return 120;
+        default: return 0;
+    }
+}
 
 static inline int NHStateToken(void) {
     static int token = -1;
@@ -224,6 +244,17 @@ static inline void NHPrefsPublishDict(NSDictionary *cfg) {
     if ([[cfg objectForKey:@"overlay"] boolValue]) v = NHStateWithBit(v, NHBitOverlay, YES);
     if ([[cfg objectForKey:@"dbglog"] boolValue])  v = NHStateWithBit(v, NHBitDbglog, YES);
     if (persist) v = NHStateWithBit(v, NHBitPersist, YES);
+    {
+        NSInteger fpsVal = 0;
+        if (cfg[@"drawFps"] != nil) fpsVal = [cfg[@"drawFps"] integerValue];
+        else if (NHStateValid(cur)) {
+            int oldMode = (NHStateBit(cur, NHBitFps0) ? 1 : 0) | (NHStateBit(cur, NHBitFps1) ? 2 : 0);
+            fpsVal = NHFpsValueFromMode(oldMode);
+        }
+        int mode = NHFpsModeFromValue(fpsVal);
+        if (mode & 1) v = NHStateWithBit(v, NHBitFps0, YES);
+        if (mode & 2) v = NHStateWithBit(v, NHBitFps1, YES);
+    }
     NHStateSet(v);
 }
 
@@ -241,6 +272,10 @@ static inline NSMutableDictionary *NHPrefsDictFromState(void) {
     d[@"overlay"] = @(NHStateBit(v, NHBitOverlay));
     d[@"dbglog"]  = @(NHStateBit(v, NHBitDbglog));
     d[@"persist"] = @(NHStateBit(v, NHBitPersist));
+    {
+        int mode = (NHStateBit(v, NHBitFps0) ? 1 : 0) | (NHStateBit(v, NHBitFps1) ? 2 : 0);
+        d[@"drawFps"] = @(NHFpsValueFromMode(mode));
+    }
     return d;
 }
 
