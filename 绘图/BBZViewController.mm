@@ -7,6 +7,7 @@
 
 #import <objc/runtime.h>
 #import <objc/message.h>
+#import <notify.h>
 #import <QuartzCore/CADisplayLink.h>
 #import "BBZViewController.h"
 #import "HonyWindow.h"
@@ -211,6 +212,28 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
         
         // 设置屏幕方向变化的监听器
         [self setupOrientationObserver];
+
+        // 暂停/恢复叠层：停止绘制只藏窗，不杀进程（保留 krkw，二次开启无需再 exploit）
+        {
+            __weak typeof(self) weakSelf = self;
+            static int pauseTok = 0, resumeTok = 0;
+            notify_register_dispatch(NOTIFY_PAUSE_HUD, &pauseTok, dispatch_get_main_queue(), ^(int token) {
+                __strong typeof(weakSelf) self = weakSelf;
+                if (!self) return;
+                [self.BBZwindow setHidden:YES];
+                [self.BBZMenu setHidden:YES];
+                self.displayLink.paused = YES;
+                KernelLogLine("HUD: pause — 叠层已隐藏，进程保留");
+            });
+            notify_register_dispatch(NOTIFY_RESUME_HUD, &resumeTok, dispatch_get_main_queue(), ^(int token) {
+                __strong typeof(weakSelf) self = weakSelf;
+                if (!self) return;
+                [self.BBZwindow setHidden:NO];
+                [self.BBZMenu setHidden:NO];
+                self.displayLink.paused = NO;
+                KernelLogLine("HUD: resume — 叠层已显示");
+            });
+        }
         
         // HUD 进程自检：如未就绪则在后台补跑一次内核初始化，避免跨进程能力缺失
        

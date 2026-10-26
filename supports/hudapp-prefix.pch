@@ -18,6 +18,8 @@
     #define NOTIFY_DISMISSAL_HUD NHNotifyName("dismissal")
     #define NOTIFY_RELOAD_HUD    NHNotifyName("reload")
     #define NOTIFY_RELOAD_APP    NHNotifyName("appreload")
+    #define NOTIFY_PAUSE_HUD     NHNotifyName("pause")   // 隐藏叠层，进程与 krkw 保留（可再次开启）
+    #define NOTIFY_RESUME_HUD    NHNotifyName("resume")  // 重新显示叠层
 #endif
 
 #if DEBUG

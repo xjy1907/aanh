@@ -120,8 +120,8 @@ int main(int argc, char *argv[]) {
     }
     
 #if !NO_TROLL
-    // 叠层角色由每机派生 env 标记（不再依赖 Helium 同源 -hud/-exit/-check argv）
-    if (NHIsOverlayRole()) {
+    // 叠层：每机派生 argv（主）或 env（辅）；不用 Helium 同源 -hud
+    if (NHShouldRunAsOverlay(argc, argv)) {
       pid_t pid = getpid();
       pid_t pgid = getgid();
       (void)pgid;

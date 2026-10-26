@@ -107,6 +107,8 @@ static inline const char *NHNotifyName(const char *kind) {
     static char appreload[96];
     static char state[96];
     static char pidch[96];
+    static char pauseHud[96];
+    static char resumeHud[96];
     static dispatch_once_t once;
     dispatch_once(&once, ^{
         const char *t = NHDeviceToken().UTF8String;
@@ -116,6 +118,8 @@ static inline const char *NHNotifyName(const char *kind) {
         snprintf(appreload, sizeof(appreload), "com.%s.n.A", t);
         snprintf(state, sizeof(state), "com.%s.n.S", t);
         snprintf(pidch, sizeof(pidch), "com.%s.n.P", t);
+        snprintf(pauseHud, sizeof(pauseHud), "com.%s.n.H", t);   // hide overlay, keep process
+        snprintf(resumeHud, sizeof(resumeHud), "com.%s.n.V", t); // show overlay again
     });
     if (kind && strcmp(kind, "launched") == 0) return launched;
     if (kind && strcmp(kind, "dismissal") == 0) return dismissal;
@@ -123,10 +127,13 @@ static inline const char *NHNotifyName(const char *kind) {
     if (kind && strcmp(kind, "appreload") == 0) return appreload;
     if (kind && strcmp(kind, "state") == 0) return state;
     if (kind && strcmp(kind, "pid") == 0) return pidch;
+    if (kind && strcmp(kind, "pause") == 0) return pauseHud;
+    if (kind && strcmp(kind, "resume") == 0) return resumeHud;
     return dismissal;
 }
 
-/// 叠层进程角色：用每机派生 env，替代 Helium 同源 argv（-hud / -check / -exit）
+/// 叠层进程角色：每机派生 env + argv（不用 Helium 同源 -hud/-check/-exit）
+/// persona spawn 下自定义 env 可能丢，故 argv 为可靠主通道，env 作辅。
 static inline const char *NHRoleEnvKey(void) {
     static char key[64];
     static dispatch_once_t once;
@@ -134,6 +141,16 @@ static inline const char *NHRoleEnvKey(void) {
         snprintf(key, sizeof(key), "_C%s_R", NHDeviceToken().UTF8String);
     });
     return key;
+}
+
+/// 形如 --a1b2c3d4，非 -hud 明文
+static inline const char *NHRoleArgValue(void) {
+    static char arg[72];
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        snprintf(arg, sizeof(arg), "--%s", NHDeviceToken().UTF8String);
+    });
+    return arg;
 }
 
 static inline void NHMarkOverlayRole(void) {
@@ -147,6 +164,15 @@ static inline void NHClearOverlayRole(void) {
 static inline BOOL NHIsOverlayRole(void) {
     const char *v = getenv(NHRoleEnvKey());
     return (v && v[0] == '1' && v[1] == '\0') ? YES : NO;
+}
+
+static inline BOOL NHIsOverlayArgv(int argc, char *argv[]) {
+    if (argc <= 1 || !argv || !argv[1]) return NO;
+    return strcmp(argv[1], NHRoleArgValue()) == 0 ? YES : NO;
+}
+
+static inline BOOL NHShouldRunAsOverlay(int argc, char *argv[]) {
+    return NHIsOverlayRole() || NHIsOverlayArgv(argc, argv);
 }
 
 // ---- 跨进程开关：notify_set_state（可无文件）----

@@ -1158,6 +1158,11 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
     ]];
     
     // ---- 回调 ----
+    // 用会话标志切换开/停，避免 IsReadingEnabled 与 prefs/notify 不同步导致「第二次点开启其实在停」
+    __block BOOL drawSessionOn = IsReadingEnabled() && [self isHUDEnabled];
+    if (drawSessionOn) {
+        readBtn.label.text = @"停止绘制";
+    }
     __weak typeof(self) weakSelf = self;
     mainCard.onTap = ^(BOOL active) {
         __strong typeof(weakSelf) strongSelf = weakSelf;
@@ -1167,6 +1172,7 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
         if (!active) {
             // 主开关关掉时一并停读取，避免 HUD 关了 reading 还在跑
             SetReadingEnabled(false);
+            drawSessionOn = NO;
             readBtn.label.text = @"开启绘制";
         }
         [strongSelf->_terminal appendLog:active ? @"HUD 已启用" : @"HUD 已关闭（读取已停）"];
@@ -1203,9 +1209,14 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
         [strongSelf->_terminal appendLog:@"正在重置内核状态..."];
         kfd_log("[UI] 重置内核状态：开始\n");
         ResetKernelStatus();
+        TerminateHUDProcess(); // 重置时才真正杀叠层进程
+        drawSessionOn = NO;
+        strongSelf->_isRemoteHUDActive = NO;
+        mainCard.isActive = NO;
+        [mainCard updateState:YES];
         readBtn.label.text = @"开启绘制";
-        kfd_log("[UI] 重置内核状态：完成，读取已停止\n");
-        [strongSelf->_terminal appendLog:@"内核状态已重置，读取已停止"];
+        kfd_log("[UI] 重置内核状态：完成，读取已停止，HUD 进程已结束\n");
+        [strongSelf->_terminal appendLog:@"内核状态已重置，读取已停止，HUD 已结束"];
     };
 
     readBtn.onTap = ^{
@@ -1219,32 +1230,31 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
             return;
         }
 
-        // 停止绘制：停读取并关闭 HUD
-        if (IsReadingEnabled()) {
+        // 停止绘制：停读取 + 隐藏叠层（进程保留 krkw，避免二次 spawn 失败）
+        if (drawSessionOn) {
             SetReadingEnabled(false);
             strongSelf->_isRemoteHUDActive = NO;
-            [strongSelf setHUDEnabled:NO];
+            [strongSelf setHUDEnabled:NO]; // pause/hide
             mainCard.isActive = NO;
             [mainCard updateState:YES];
+            drawSessionOn = NO;
             readBtn.label.text = @"开启绘制";
-            [strongSelf->_terminal appendLog:@"已停止绘制（读取已停，HUD 已关）"];
-            kfd_log("[UI] 停止绘制：reading=0 SetHUDEnabled(NO)\n");
+            [strongSelf->_terminal appendLog:@"已停止绘制（叠层已隐藏，进程保留）"];
+            kfd_log("[UI] 停止绘制：reading=0 pause HUD\n");
             return;
         }
 
-        // 开启绘制：没有 HUD 就拉起，再开 reading
-        if (![strongSelf isHUDEnabled]) {
-            [strongSelf setHUDEnabled:YES];
-            strongSelf->_isRemoteHUDActive = YES;
-            mainCard.isActive = YES;
-            [mainCard updateState:YES];
-            [strongSelf->_terminal appendLog:@"已自动开启 HUD"];
-            kfd_log("[UI] auto SetHUDEnabled(YES)\n");
-        }
-        [strongSelf->_terminal appendLog:NHPersistFilesEnabled() ? @"开启绘制 reading=1（已落盘）" : @"开启绘制 reading=1（仅 notify，无文件）"];
-        kfd_log("[UI] 开启绘制：reading=1 persist=%d\n", (int)NHPersistFilesEnabled());
+        // 开启绘制：已有进程则 resume，否则首次 spawn
+        BOOL hudAlive = [strongSelf isHUDEnabled];
+        [strongSelf setHUDEnabled:YES];
+        strongSelf->_isRemoteHUDActive = YES;
+        mainCard.isActive = YES;
+        [mainCard updateState:YES];
         SetReadingEnabled(true);
+        drawSessionOn = YES;
         readBtn.label.text = @"停止绘制";
+        [strongSelf->_terminal appendLog:hudAlive ? @"已恢复叠层并开启绘制" : @"已拉起 HUD 并开启绘制"];
+        kfd_log("[UI] 开启绘制：%s + reading=1 persist=%d\n", hudAlive ? "resume" : "spawn", (int)NHPersistFilesEnabled());
         BOOL countOn = JVR_读取开关(@"count");
         BOOL lineOn = JVR_读取开关(@"line");
         if (!countOn) {
@@ -1254,7 +1264,6 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
         }
         [strongSelf->_terminal appendLog:countOn ? @"显示人数=开" : @"显示人数=关"];
         [strongSelf->_terminal appendLog:lineOn ? @"射线显示=开" : @"射线显示=关"];
-        [strongSelf->_terminal appendLog:@"判据：新日志必须出现 HUD: / [绘制]；仅有[7s]说明还在主进程"];
         kfd_log("[UI] 开关 count=%d line=%d reading=1 hudOn=1\n", (int)countOn, (int)lineOn);
     };
     
