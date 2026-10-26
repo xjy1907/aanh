@@ -860,6 +860,18 @@ jobs:
           echo "  identity: $CODE_SIGN_IDENTITY"
           echo "The build writes these into the app target's build settings; its PRODUCT_BUNDLE_IDENTIFIER must match the app id above. Extension targets get the profiles listed above by bundle id."
 
+      # Books "Pack IPA" run script signs with ldid; not preinstalled on GHA runners.
+      - name: Install ldid
+        run: |
+          set -e
+          export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+          if command -v ldid >/dev/null 2>&1; then
+            echo "ldid already present: $(command -v ldid)"
+            exit 0
+          fi
+          HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install ldid
+          echo "ldid=$(command -v ldid)"
+
       - name: Build IPA
         env:
           BUILD_ID: ${{ steps.params.outputs.build_id }}
