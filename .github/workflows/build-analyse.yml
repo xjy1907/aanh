@@ -1,10 +1,8 @@
 name: Xcode - Build and Analyze
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  # Disabled auto push/PR: macos-13 runners no longer start and block the Actions queue.
+  workflow_dispatch:
 
 jobs:
   build:

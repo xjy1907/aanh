@@ -66,9 +66,9 @@ on:
 
 jobs:
   build:
-    # Match this repo's proven CI (build-release.yml): Xcode 14.3.1 is required
-    # because _external/include/xpc conflicts with Xcode 16+/26 system XPC modules.
-    runs-on: macos-13
+    # macos-13/14 are deprecated and queue forever. Use macos-15 + Xcode 16.4
+    # (not latest-stable/Xcode 26) after removing vendored _external/include/xpc.
+    runs-on: macos-15
     permissions:
       contents: write # deletes the trigger tag
     timeout-minutes: 90 # a cold React Native/Expo build on the free runner takes 30-60 minutes
@@ -196,7 +196,7 @@ jobs:
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '14.3.1'
+          xcode-version: '16.4'
 
       - name: Restore DerivedData cache
         uses: actions/cache/restore@v6

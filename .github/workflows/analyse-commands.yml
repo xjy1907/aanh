@@ -1,9 +1,8 @@
 name: Analyse Commands
 
 on:
-  push:
-    branches:
-      - main
+  # Disabled auto push: macos-13 runners no longer start and block the Actions queue.
+  workflow_dispatch:
 
 env:
   THEOS: ''
