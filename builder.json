@@ -1,9 +1,9 @@
 {
-  "project": "bnh",
+  "project": "aanh",
   "platform": "ios",
   "github": {
     "owner": "xjy1907",
-    "repo": "abnh000"
+    "repo": "aanh"
   },
   "provider": "github",
   "codemagic": {},
