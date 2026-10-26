@@ -1098,21 +1098,13 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
     resetBtn.borderGrad.colors = @[(id)JVR_警告色.CGColor, (id)JVR_主色.CGColor];
     [content addSubview:resetBtn];
 
-    // ---- 开始读取按钮 ----
+    // ---- 开启/停止绘制（读取 + HUD）----
     JVRKernelButton *readBtn = [[JVRKernelButton alloc] init];
     readBtn.translatesAutoresizingMaskIntoConstraints = NO;
-    readBtn.label.text = @"开始读取";
+    readBtn.label.text = @"开启绘制";
     readBtn.label.textColor = JVR_副色;
     readBtn.borderGrad.colors = @[(id)JVR_副色.CGColor, (id)JVR_主色.CGColor];
     [content addSubview:readBtn];
-
-    // ---- 关闭 HUD 按钮 ----
-    JVRKernelButton *closeHudBtn = [[JVRKernelButton alloc] init];
-    closeHudBtn.translatesAutoresizingMaskIntoConstraints = NO;
-    closeHudBtn.label.text = @"关闭HUD";
-    closeHudBtn.label.textColor = JVR_警告色;
-    closeHudBtn.borderGrad.colors = @[(id)JVR_警告色.CGColor, (id)[UIColor colorWithRed:0.8f green:0.2f blue:0.2f alpha:1.0f].CGColor];
-    [content addSubview:closeHudBtn];
     
     // ---- 终端 ----
     _terminal = [[JVRTerminal alloc] init];
@@ -1149,12 +1141,8 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
         [readBtn.topAnchor constraintEqualToAnchor:resetBtn.bottomAnchor constant:8],
         [readBtn.leadingAnchor constraintEqualToAnchor:content.leadingAnchor constant:16],
         [readBtn.trailingAnchor constraintEqualToAnchor:content.trailingAnchor constant:-16],
-
-        [closeHudBtn.topAnchor constraintEqualToAnchor:readBtn.bottomAnchor constant:8],
-        [closeHudBtn.leadingAnchor constraintEqualToAnchor:content.leadingAnchor constant:16],
-        [closeHudBtn.trailingAnchor constraintEqualToAnchor:content.trailingAnchor constant:-16],
         
-        [_terminal.topAnchor constraintEqualToAnchor:closeHudBtn.bottomAnchor constant:12],
+        [_terminal.topAnchor constraintEqualToAnchor:readBtn.bottomAnchor constant:12],
         [_terminal.leadingAnchor constraintEqualToAnchor:content.leadingAnchor constant:16],
         [_terminal.trailingAnchor constraintEqualToAnchor:content.trailingAnchor constant:-16],
         [_terminal.heightAnchor constraintEqualToConstant:150],
@@ -1179,7 +1167,7 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
         if (!active) {
             // 主开关关掉时一并停读取，避免 HUD 关了 reading 还在跑
             SetReadingEnabled(false);
-            readBtn.label.text = @"开始读取";
+            readBtn.label.text = @"开启绘制";
         }
         [strongSelf->_terminal appendLog:active ? @"HUD 已启用" : @"HUD 已关闭（读取已停）"];
         kfd_log("[UI] HUD %s\n", active ? "enabled" : "disabled");
@@ -1215,7 +1203,7 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
         [strongSelf->_terminal appendLog:@"正在重置内核状态..."];
         kfd_log("[UI] 重置内核状态：开始\n");
         ResetKernelStatus();
-        readBtn.label.text = @"开始读取";
+        readBtn.label.text = @"开启绘制";
         kfd_log("[UI] 重置内核状态：完成，读取已停止\n");
         [strongSelf->_terminal appendLog:@"内核状态已重置，读取已停止"];
     };
@@ -1227,31 +1215,36 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
         BOOL krkwOk = ((DOJailbreaker *)DOJailbreaker.sharedInstance).isSuccess;
         if (!krkwOk) {
             [strongSelf->_terminal appendLog:@"请先点「初始化内核」获得 krkw"];
-            kfd_log("[UI] 开始读取：拒绝，krkw 未就绪\n");
+            kfd_log("[UI] 开启绘制：拒绝，krkw 未就绪\n");
             return;
         }
 
+        // 停止绘制：停读取并关闭 HUD
         if (IsReadingEnabled()) {
             SetReadingEnabled(false);
-            readBtn.label.text = @"开始读取";
-            [strongSelf->_terminal appendLog:@"已停止读取"];
-            kfd_log("[UI] 开始读取：切换为停止\n");
+            strongSelf->_isRemoteHUDActive = NO;
+            [strongSelf setHUDEnabled:NO];
+            mainCard.isActive = NO;
+            [mainCard updateState:YES];
+            readBtn.label.text = @"开启绘制";
+            [strongSelf->_terminal appendLog:@"已停止绘制（读取已停，HUD 已关）"];
+            kfd_log("[UI] 停止绘制：reading=0 SetHUDEnabled(NO)\n");
             return;
         }
 
-        // 关键：没有 HUD 进程就没有任何像素——自动拉起 HUD（对标 wasd 悬浮窗）
+        // 开启绘制：没有 HUD 就拉起，再开 reading
         if (![strongSelf isHUDEnabled]) {
             [strongSelf setHUDEnabled:YES];
             strongSelf->_isRemoteHUDActive = YES;
             mainCard.isActive = YES;
             [mainCard updateState:YES];
-            [strongSelf->_terminal appendLog:@"已自动开启 HUD（之前未开，所以屏幕上什么都看不到）"];
+            [strongSelf->_terminal appendLog:@"已自动开启 HUD"];
             kfd_log("[UI] auto SetHUDEnabled(YES)\n");
         }
-        [strongSelf->_terminal appendLog:NHPersistFilesEnabled() ? @"开始读取 reading=1（已落盘）" : @"开始读取 reading=1（仅 notify，无文件）"];
-        kfd_log("[UI] 开始读取：reading=1 persist=%d\n", (int)NHPersistFilesEnabled());
+        [strongSelf->_terminal appendLog:NHPersistFilesEnabled() ? @"开启绘制 reading=1（已落盘）" : @"开启绘制 reading=1（仅 notify，无文件）"];
+        kfd_log("[UI] 开启绘制：reading=1 persist=%d\n", (int)NHPersistFilesEnabled());
         SetReadingEnabled(true);
-        readBtn.label.text = @"停止读取";
+        readBtn.label.text = @"停止绘制";
         BOOL countOn = JVR_读取开关(@"count");
         BOOL lineOn = JVR_读取开关(@"line");
         if (!countOn) {
@@ -1263,21 +1256,6 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
         [strongSelf->_terminal appendLog:lineOn ? @"射线显示=开" : @"射线显示=关"];
         [strongSelf->_terminal appendLog:@"判据：新日志必须出现 HUD: / [绘制]；仅有[7s]说明还在主进程"];
         kfd_log("[UI] 开关 count=%d line=%d reading=1 hudOn=1\n", (int)countOn, (int)lineOn);
-    };
-
-    closeHudBtn.onTap = ^{
-        __strong typeof(weakSelf) strongSelf = weakSelf;
-        if (!strongSelf) return;
-
-        // 停读取 + 关 HUD 进程，同步主开关卡片
-        SetReadingEnabled(false);
-        readBtn.label.text = @"开始读取";
-        strongSelf->_isRemoteHUDActive = NO;
-        [strongSelf setHUDEnabled:NO];
-        mainCard.isActive = NO;
-        [mainCard updateState:YES];
-        [strongSelf->_terminal appendLog:@"HUD 已关闭（读取已停）"];
-        kfd_log("[UI] 关闭HUD：reading=0 SetHUDEnabled(NO)\n");
     };
     
     [self reloadMainButtonState];
