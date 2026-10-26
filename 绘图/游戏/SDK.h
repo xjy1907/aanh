@@ -6,7 +6,9 @@
 #define SDK_h
 
 namespace SDK {
-    // 和平精英偏移 (1.38.12)
+    // 和平精英偏移 (1.38.12) —— 对标 wasd OffsetsTool.hpp
+    uint64_t GNames = 0x11FBA198;
+    uint64_t NameEntry = 0xE;
     uint64_t GWorld = 0x1148B608;
     uint64_t PersistentLevel = 0xB8;
     uint64_t ActorArray = 0xA0;
@@ -34,8 +36,11 @@ namespace SDK {
     uint64_t CurrentUsingWeaponSafety = 0x1170;
     uint64_t RepWeaponID = 0xDD0;
     uint64_t bIsAI = 0xB94;
+    uint64_t BoxState = 0x260; // 物资箱开箱状态
+    uint64_t ExplosionTime = 0x88C; // EliteProjectile.ExplosionTime
     // GameState（对标 wasd OffsetsTool）
     uint64_t GameState = 0xAD8;
+    uint64_t ReplicatedWorldTimeSeconds = 0x5FC;
     uint64_t TotalPlayerNum = 0xD98;
     uint64_t PlayerNum = 0xD9C;
     uint64_t AliveTeamNum = 0x148C;

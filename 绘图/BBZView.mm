@@ -11,6 +11,7 @@
 #import "UIApplication+Private.h"
 #import "DOJailbreaker.h"
 #import "LFSenderIDViewController.h"
+#import "游戏/MaterialConfigViewController.h"
 //#import "pp.h"
 
 #ifdef __cplusplus
@@ -1360,7 +1361,11 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
         @{@"title": @"射线显示", @"key": @"line"},
         @{@"title": @"方框显示", @"key": @"box"},
         @{@"title": @"血量显示", @"key": @"health"},
-        @{@"title": @"玩家信息", @"key": @"info"},
+        @{@"title": @"玩家信息", @"key": @"info"},   // 名字 + 队伍
+        @{@"title": @"显示距离", @"key": @"dist"},
+        @{@"title": @"显示手持", @"key": @"weapon"},
+        @{@"title": @"显示背敌", @"key": @"behind"},
+        @{@"title": @"显示物资", @"key": @"loot"},   // 含手雷倒计时
         @{@"title": @"骨骼显示", @"key": @"bone"},
         @{@"title": @"过直播模式", @"key": @"overlay"},
         @{@"title": @"调试日志", @"key": @"dbglog"}, // 默认关；开才写 kfd_debug / 终端诊断
@@ -1383,6 +1388,28 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
         };
         [stack addArrangedSubview:sw];
     }
+
+    // 物资选项卡入口（对标 wasd 物资功能分类）
+    JVRKernelButton *lootBtn = [[JVRKernelButton alloc] init];
+    lootBtn.translatesAutoresizingMaskIntoConstraints = NO;
+    lootBtn.label.text = @"物资功能";
+    lootBtn.label.textColor = JVR_副色;
+    lootBtn.borderGrad.colors = @[(id)JVR_副色.CGColor, (id)JVR_主色.CGColor];
+    __weak typeof(self) weakSelf = self;
+    lootBtn.onTap = ^{
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        if (!strongSelf) return;
+        MaterialConfigViewController *vc = [[MaterialConfigViewController alloc] init];
+        UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:vc];
+        nav.modalPresentationStyle = UIModalPresentationFullScreen;
+        nav.navigationBar.barStyle = UIBarStyleBlack;
+        nav.navigationBar.tintColor = JVR_主色;
+        nav.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName: JVR_文字色};
+        [strongSelf presentViewController:nav animated:YES completion:nil];
+        KernelLogLine("打开物资功能界面");
+    };
+    [lootBtn.heightAnchor constraintEqualToConstant:44].active = YES;
+    [stack addArrangedSubview:lootBtn];
     
     return stack;
 }

@@ -152,6 +152,7 @@ static inline BOOL NHIsOverlayRole(void) {
 // ---- 跨进程开关：notify_set_state（可无文件）----
 // bit0 reading 1 count 2 line 3 box 4 health 5 info 6 bone 7 overlay 8 dbglog 9 persist
 // bit10-11 drawFps：0=跟屏刷 1=60 2=90 3=120
+// bit12 weapon 13 dist 14 behind 15 loot（对标 wasd 手持/距离/背敌/物资）
 // bit63 = 有效标记（曾发布过）
 enum {
     NHBitReading = 0,
@@ -166,8 +167,18 @@ enum {
     NHBitPersist = 9, // 1=写配置文件，0=不生成文件（仅内存+notify）
     NHBitFps0    = 10,
     NHBitFps1    = 11,
+    NHBitWeapon  = 12,
+    NHBitDist    = 13,
+    NHBitBehind  = 14,
+    NHBitLoot    = 15,
     NHBitValid   = 63,
 };
+
+/// 物资配置路径（对标 wasd wuzi.txt）
+static inline NSString *NHWuziPath(void) {
+    return [NHConfigDirectory() stringByAppendingPathComponent:
+            [NSString stringWithFormat:@"wuzi_%@.txt", NHDeviceToken()]];
+}
 
 /// prefs drawFps：0=跟屏刷，60/90/120=限帧
 static inline int NHFpsModeFromValue(NSInteger fps) {
@@ -267,6 +278,10 @@ static inline void NHPrefsPublishDict(NSDictionary *cfg) {
     if ([[cfg objectForKey:@"bone"] boolValue])    v = NHStateWithBit(v, NHBitBone, YES);
     if ([[cfg objectForKey:@"overlay"] boolValue]) v = NHStateWithBit(v, NHBitOverlay, YES);
     if ([[cfg objectForKey:@"dbglog"] boolValue])  v = NHStateWithBit(v, NHBitDbglog, YES);
+    if ([[cfg objectForKey:@"weapon"] boolValue])  v = NHStateWithBit(v, NHBitWeapon, YES);
+    if ([[cfg objectForKey:@"dist"] boolValue])    v = NHStateWithBit(v, NHBitDist, YES);
+    if ([[cfg objectForKey:@"behind"] boolValue])  v = NHStateWithBit(v, NHBitBehind, YES);
+    if ([[cfg objectForKey:@"loot"] boolValue])    v = NHStateWithBit(v, NHBitLoot, YES);
     if (persist) v = NHStateWithBit(v, NHBitPersist, YES);
     {
         NSInteger fpsVal = 0;
@@ -296,6 +311,10 @@ static inline NSMutableDictionary *NHPrefsDictFromState(void) {
     d[@"overlay"] = @(NHStateBit(v, NHBitOverlay));
     d[@"dbglog"]  = @(NHStateBit(v, NHBitDbglog));
     d[@"persist"] = @(NHStateBit(v, NHBitPersist));
+    d[@"weapon"]  = @(NHStateBit(v, NHBitWeapon));
+    d[@"dist"]    = @(NHStateBit(v, NHBitDist));
+    d[@"behind"]  = @(NHStateBit(v, NHBitBehind));
+    d[@"loot"]    = @(NHStateBit(v, NHBitLoot));
     {
         int mode = (NHStateBit(v, NHBitFps0) ? 1 : 0) | (NHStateBit(v, NHBitFps1) ? 2 : 0);
         d[@"drawFps"] = @(NHFpsValueFromMode(mode));

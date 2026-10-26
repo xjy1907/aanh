@@ -5,6 +5,8 @@
 #ifndef 绘制算法_h
 #define 绘制算法_h
 
+#include <string>
+#include <unordered_map>
 #include "绘制类型.h"
 #include "SDK.h"
 
@@ -179,6 +181,34 @@ static string GetPlayerName(long player) {
     NSString *str = [[NSString alloc] initWithBytes:utf16Buf length:nameLen * 2 encoding:NSUTF16LittleEndianStringEncoding];
     if (str) n = [str UTF8String];
     return n;
+}
+
+// 对标 wasd GetClassName：经 GNames 取 Actor 类名（Number 通常为 0x18）
+static string GetClassName(uint64_t moduleBase, uintptr_t address, uintptr_t number) {
+    static std::unordered_map<uintptr_t, string> cache;
+    static const size_t kMaxCache = 300;
+    if (!IsValidAddr(moduleBase) || !IsValidAddr(address)) return "";
+    auto it = cache.find(address);
+    if (it != cache.end()) return it->second;
+
+    char className[256] = {};
+    unsigned int index = vm_read<int>(address + number);
+    unsigned int block = (index / 0x4000) * 0x8;
+    unsigned int offset = (index % 0x4000) * 0x8;
+    uintptr_t namePool = UNSIGN_PTR(vm_read<uint64_t>(moduleBase + SDK::GNames));
+    if (!IsValidAddr(namePool)) return "";
+    uintptr_t namePoolChunk = UNSIGN_PTR(vm_read<uint64_t>(namePool + block));
+    if (!IsValidAddr(namePoolChunk)) return "";
+    uintptr_t nameEntry = UNSIGN_PTR(vm_read<uint64_t>(namePoolChunk + offset));
+    if (!IsValidAddr(nameEntry)) return "";
+    if (!readMemory(nameEntry + SDK::NameEntry, className, sizeof(className) - 1)) return "";
+    className[sizeof(className) - 1] = '\0';
+    string result(className);
+    if (!result.empty()) {
+        if (cache.size() > kMaxCache) cache.clear();
+        cache[address] = result;
+    }
+    return result;
 }
 
 #endif

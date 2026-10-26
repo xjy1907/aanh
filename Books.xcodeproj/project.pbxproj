@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		52D9892696614579B40E3B51 /* MaterialConfigViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5BDB540911244279018928C /* MaterialConfigViewController.mm */; };
+		3AF79ADC4BF24B6098EFBE47 /* ItemConfig.mm in Sources */ = {isa = PBXBuildFile; fileRef = DFB07DA9967C4ED5AAF82D6E /* ItemConfig.mm */; };
+		E3A40925550F4B9F8723608C /* ItemConfig.mm in Sources */ = {isa = PBXBuildFile; fileRef = DFB07DA9967C4ED5AAF82D6E /* ItemConfig.mm */; };
+		1EB561C880AF4623B86304D8 /* MaterialConfigViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5BDB540911244279018928C /* MaterialConfigViewController.mm */; };
 		06D4D8872E18D774008B33B6 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8862E18D774008B33B6 /* IOKit.framework */; };
 		06D4D8932E18D83A008B33B6 /* libpartial.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8902E18D83A008B33B6 /* libpartial.a */; };
 		06D4D8942E18D83A008B33B6 /* libgrabkernel2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8912E18D83A008B33B6 /* libgrabkernel2.a */; };
@@ -253,6 +257,11 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		233F0963537B4745B0582A43 /* ItemConfig.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ItemConfig.h"; sourceTree = "<group>"; };
+		DFB07DA9967C4ED5AAF82D6E /* ItemConfig.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = "ItemConfig.mm"; sourceTree = "<group>"; };
+		89CF838C73764B348300E802 /* MaterialConfigViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MaterialConfigViewController.h"; sourceTree = "<group>"; };
+		B5BDB540911244279018928C /* MaterialConfigViewController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = "MaterialConfigViewController.mm"; sourceTree = "<group>"; };
+		12F1E1CB92F44A6496039626 /* 武器名称.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "武器名称.h"; sourceTree = "<group>"; };
 		061965112DFD77F4008B8D0A /* build.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = build.sh; sourceTree = "<group>"; };
 		06D4D8862E18D774008B33B6 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		06D4D8902E18D83A008B33B6 /* libpartial.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpartial.a; path = libraries/libpartial.a; sourceTree = "<group>"; };
@@ -681,6 +690,11 @@
 		0FE5D6622F5067A100FD4AFC /* 游戏 */ = {
 			isa = PBXGroup;
 			children = (
+				233F0963537B4745B0582A43 /* ItemConfig.h */,
+				DFB07DA9967C4ED5AAF82D6E /* ItemConfig.mm */,
+				89CF838C73764B348300E802 /* MaterialConfigViewController.h */,
+				B5BDB540911244279018928C /* MaterialConfigViewController.mm */,
+				12F1E1CB92F44A6496039626 /* 武器名称.h */,
 				0FE5D65E2F5067A100FD4AFC /* 绘制算法.h */,
 				0FE5D65F2F5067A100FD4AFC /* 绘制类型.h */,
 				0FE5D6602F5067A100FD4AFC /* 物品ID.h */,
@@ -1563,6 +1577,8 @@
 				CC2BAFC22B5CA9DD00A429D1 /* TSSettingsController.swift in Sources */,
 				CC2BAFC42B5CA9DD00A429D1 /* MainApplication.mm in Sources */,
 				CC2BAFC52B5CA9DD00A429D1 /* BBZView.mm in Sources */,
+				52D9892696614579B40E3B51 /* MaterialConfigViewController.mm in Sources */,
+				3AF79ADC4BF24B6098EFBE47 /* ItemConfig.mm in Sources */,
 				CC9130A42B616C18006E3280 /* HUDBackdropView.mm in Sources */,
 				CC2BAFC62B5CA9DD00A429D1 /* ScreenshotInvisibleContainer.swift in Sources */,
 				CC2BAFC72B5CA9DD00A429D1 /* ScreenshotInvincibleContainerProtocol.swift in Sources */,
@@ -1634,6 +1650,8 @@
 				CC711D502B5BF5C6007235A6 /* IOHIDEvent+KIF.m in Sources */,
 				CC8DDA922B655156001C7C9E /* DeactivateHUDIntent.swift in Sources */,
 				1F0BD93B2D6ED703008151DA /* DrawView.mm in Sources */,
+				1EB561C880AF4623B86304D8 /* MaterialConfigViewController.mm in Sources */,
+				E3A40925550F4B9F8723608C /* ItemConfig.mm in Sources */,
 				CC711D572B5BF5C6007235A6 /* SPLarkSettingsCollectionView.swift in Sources */,
 				CC711D552B5BF5C6007235A6 /* SPLarkSettingsController.swift in Sources */,
 				CC711D5B2B5BF5C6007235A6 /* SPLarkControllerExtension.swift in Sources */,

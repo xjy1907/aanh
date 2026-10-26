@@ -48,10 +48,14 @@ static bool 显示方框 = false;
 static bool 显示血量 = false;
 static bool 显示信息 = false;
 static bool 显示骨骼 = false;
+static bool 显示手持 = false, 显示距离 = false, 显示背敌 = false, 显示物资 = false;
+static int 物资大小 = 12;
+static int 背敌样式 = 0; // 0 radar 1 arrow
+static float 背敌距离 = 300.f;
 static float 射线粗细 = 1.0f;
 static float 骨骼粗细 = 1.0f;
 static float 骨骼距离 = 300.0f;
-static const float 绘制距离上限 = 400.0f;
+static float 绘制距离上限 = 400.f;
 static float gCurrentCPUUsage = 0.0f;
 
 // —— 静态玩家缓存（对标 wasd readStaticData，~2s 扫一次 ActorArray）——
@@ -59,6 +63,17 @@ struct CachedPlayer {
     uint64_t addr;
     int team;
     bool bIsAI;
+};
+struct CachedMaterial {
+    uint64_t addr;
+    bool isGrenade;
+    bool isSmoke;
+    std::string className;
+    std::string displayName;
+    float minDistance, maxDistance;
+    ImU32 color;
+    int weaponID;
+    bool isBox;
 };
 static struct {
     uint64_t gWorld = 0;
@@ -68,6 +83,7 @@ static struct {
     int myTeam = 0;
     bool isGameStart = false;
     std::vector<CachedPlayer> players;
+    std::vector<CachedMaterial> materials;
 } gStatic;
 
 // 对标 wasd IM_COL32 默认色
@@ -160,6 +176,7 @@ extern "C" void ResetKernelStatus() {
     bOffsetFindDNE = false;
     gStatic.isGameStart = false;
     gStatic.players.clear();
+    gStatic.materials.clear();
     exploit_v2p_cache_clear();
 
     DOJailbreaker *jb = [DOJailbreaker sharedInstance];
@@ -186,8 +203,175 @@ template<typename T> T vm_read(uint64_t address) {
 #include "游戏/绘制类型.h"
 #include "游戏/SDK.h"
 #include "游戏/绘制算法.h"
+#include "游戏/武器名称.h"
+#include <sstream>
+#include <map>
+#include <unordered_map>
 
 bool getbbz(); // 前向声明：供 7s dump 调用
+
+// —— 物资配置（对标 wasd LoadItemConfigs）——
+struct ItemConfig {
+    std::string className;
+    std::string displayName;
+    float minDistance;
+    float maxDistance;
+    ImU32 color;
+    int weaponID;
+    bool isBox;
+};
+static std::vector<ItemConfig> itemConfigs;
+
+static bool IsBoxType(const std::string &className) {
+    return className.find("BP_AirdropChipBox_C") != std::string::npos ||
+           className.find("SupplyBox") != std::string::npos ||
+           className.find("SafeBox") != std::string::npos ||
+           className.find("HardRadiationBox") != std::string::npos ||
+           className.find("PeakRadiationBox") != std::string::npos ||
+           className.find("MilitarySupp") != std::string::npos;
+}
+
+static ImU32 ParseHexColor(const std::string &hex) {
+    unsigned int r = 255, g = 255, b = 255, a = 255;
+    if (hex.length() == 8) {
+        sscanf(hex.c_str(), "%02x%02x%02x%02x", &r, &g, &b, &a);
+    } else if (hex.length() == 6) {
+        sscanf(hex.c_str(), "%02x%02x%02x", &r, &g, &b);
+    }
+    return IM_COL32(r, g, b, a);
+}
+
+static void LoadItemConfigsFromFile(void) {
+    itemConfigs.clear();
+    NSString *path = NHWuziPath();
+    if (!path) return;
+    NSError *err = nil;
+    NSString *fileContent = [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:&err];
+    if (!fileContent) return;
+    std::string configText([fileContent UTF8String]);
+    std::istringstream stream(configText);
+    std::string line;
+    while (std::getline(stream, line)) {
+        if (line.empty() || line[0] == '#') continue;
+        std::istringstream lineStream(line);
+        std::string className, displayName, hexColor;
+        float minDist = 0, maxDist = 0;
+        int weaponID = 1;
+        if (std::getline(lineStream, className, '|') &&
+            std::getline(lineStream, displayName, '|') &&
+            (lineStream >> minDist) && lineStream.ignore(1) &&
+            (lineStream >> maxDist) && lineStream.ignore(1) &&
+            std::getline(lineStream, hexColor, '|')) {
+            if (!(lineStream >> weaponID)) weaponID = 1;
+            ItemConfig config;
+            config.className = className;
+            config.displayName = displayName;
+            config.minDistance = minDist;
+            config.maxDistance = maxDist;
+            config.color = ParseHexColor(hexColor);
+            config.weaponID = weaponID;
+            config.isBox = IsBoxType(className);
+            itemConfigs.push_back(config);
+        }
+    }
+}
+
+static const ItemConfig *FindItemConfig(const std::string &className) {
+    for (const auto &config : itemConfigs) {
+        if (className.find(config.className) != std::string::npos) {
+            return &config;
+        }
+    }
+    return nullptr;
+}
+
+// 屏幕外敌人指示器（箭头）— 对标 wasd，Health 作参数
+static void OffScreenArrow(Vector2 screenPos, bool isOnScreen, float distance, float health) {
+    if (health <= 0.f || isOnScreen) return;
+    ImU32 arrowColor;
+    if (distance <= 50) arrowColor = IM_COL32(255, 0, 0, 230);
+    else if (distance <= 100) arrowColor = IM_COL32(0, 255, 0, 230);
+    else if (distance <= 150) arrowColor = IM_COL32(0, 0, 255, 230);
+    else arrowColor = IM_COL32(255, 255, 255, 230);
+
+    float centerX = CanvasSize.x / 2.0f;
+    float centerY = CanvasSize.y / 2.0f;
+    float angle = atan2f(screenPos.Y - centerY, screenPos.X - centerX);
+    float radius = 20.0f;
+    float arrowHeight = radius * 0.6f;
+    float arrowWidth = radius * 1.8f;
+    float circleRadius = 45.0f + 20.0f + 55.0f;
+    float arrowCenterX = centerX + circleRadius * cosf(angle);
+    float arrowCenterY = centerY + circleRadius * sinf(angle);
+
+    ImVec2 points[3] = {
+        ImVec2(-arrowWidth / 2, -arrowHeight / 2),
+        ImVec2(arrowWidth / 2, 0),
+        ImVec2(-arrowWidth / 2, arrowHeight / 2)
+    };
+    for (int i = 0; i < 3; i++) {
+        float x = points[i].x, y = points[i].y;
+        points[i].x = arrowCenterX + x * cosf(angle) - y * sinf(angle);
+        points[i].y = arrowCenterY + x * sinf(angle) + y * cosf(angle);
+    }
+    ImDrawList *dl = BBZGUI::GetForegroundDrawList();
+    if (!dl) return;
+    ImDrawListFlags oldFlags = dl->Flags;
+    dl->Flags |= ImDrawListFlags_AntiAliasedLines | ImDrawListFlags_AntiAliasedFill;
+    dl->AddPolyline(points, 3, arrowColor, ImDrawFlags_Closed, 2.0f);
+    dl->Flags = oldFlags;
+
+    char distanceText[16];
+    snprintf(distanceText, sizeof(distanceText), "%d", (int)distance);
+    float textOffsetX = -arrowWidth / 4;
+    float textOffsetY = -5.0f;
+    ImVec2 textPos;
+    textPos.x = arrowCenterX + textOffsetX * cosf(angle) - textOffsetY * sinf(angle);
+    textPos.y = arrowCenterY + textOffsetX * sinf(angle) + textOffsetY * cosf(angle);
+    ImFont *font = BBZGUI::GetFont();
+    if (font) {
+        ImVec2 textSize = font->CalcTextSizeA(10.0f, MAXFLOAT, 0.0f, distanceText);
+        textPos.x -= textSize.x / 2.0f;
+        textPos.y -= textSize.y / 2.0f;
+    }
+    Draw::DrawText(distanceText, textPos, false, arrowColor, true, 10.0f);
+}
+
+// 屏幕外敌人指示器（雷达）— 对标 wasd
+static void OffScreenRadar(Vector2 screenPos, bool isOnScreen, float distance, float health) {
+    if (health <= 0.f || isOnScreen) return;
+    ImU32 arrowColor;
+    if (distance < 75.0f) arrowColor = IM_COL32(255, 0, 0, 255);
+    else if (distance < 150.0f) arrowColor = IM_COL32(255, 255, 0, 255);
+    else arrowColor = IM_COL32(0, 255, 0, 255);
+
+    float centerX = CanvasSize.x / 2.0f;
+    float centerY = CanvasSize.y / 2.0f;
+    float angle = atan2f(screenPos.Y - centerY, screenPos.X - centerX);
+    float circleRadius = fminf(80.0f + distance * 0.5f, 150.0f);
+    float arrowCenterX = centerX + circleRadius * cosf(angle);
+    float arrowCenterY = centerY + circleRadius * sinf(angle);
+
+    ImVec2 points[4] = {
+        ImVec2(0.0f, 0.0f),
+        ImVec2(-22.0f, -8.6f),
+        ImVec2(-18.0f, 0.0f),
+        ImVec2(-22.0f, 8.6f)
+    };
+    float scale = 0.5f;
+    for (int i = 0; i < 4; i++) {
+        float x = points[i].x * scale, y = points[i].y * scale;
+        points[i].x = arrowCenterX + x * cosf(angle) - y * sinf(angle);
+        points[i].y = arrowCenterY + x * sinf(angle) + y * cosf(angle);
+    }
+    ImDrawList *dl = BBZGUI::GetForegroundDrawList();
+    if (!dl) return;
+    ImDrawListFlags oldFlags = dl->Flags;
+    dl->Flags |= ImDrawListFlags_AntiAliasedLines | ImDrawListFlags_AntiAliasedFill;
+    dl->AddConvexPolyFilled(points, 4, arrowColor);
+    dl->AddPolyline(points, 4, IM_COL32(0, 0, 0, 255), ImDrawFlags_Closed, 1.5f);
+    dl->Flags = oldFlags;
+}
 
 static NSString *PrefsPath(void) {
     return NHPrefsPath();
@@ -198,7 +382,8 @@ static void RefreshDrawPrefs(void) {
     NSDictionary *cfg = NHPrefsRead();
     if (!cfg) {
         // 无源：用内存态发布；仅落盘模式才写文件
-        if (gReadingEnabled || 显示人数 || 显示射线 || 显示方框 || 显示血量 || 显示信息 || 显示骨骼) {
+        if (gReadingEnabled || 显示人数 || 显示射线 || 显示方框 || 显示血量 || 显示信息 || 显示骨骼 ||
+            显示手持 || 显示距离 || 显示背敌 || 显示物资) {
             NSMutableDictionary *restore = [NSMutableDictionary dictionary];
             restore[@"reading"] = @(gReadingEnabled);
             restore[@"count"] = @(显示人数);
@@ -207,6 +392,13 @@ static void RefreshDrawPrefs(void) {
             restore[@"health"] = @(显示血量);
             restore[@"info"] = @(显示信息);
             restore[@"bone"] = @(显示骨骼);
+            restore[@"weapon"] = @(显示手持);
+            restore[@"dist"] = @(显示距离);
+            restore[@"behind"] = @(显示背敌);
+            restore[@"loot"] = @(显示物资);
+            restore[@"lootSize"] = @(物资大小);
+            restore[@"behindStyle"] = @(背敌样式);
+            restore[@"behindDist"] = @(背敌距离);
             restore[@"persist"] = @(NHPersistFilesEnabled());
             NHPrefsWrite(restore);
         }
@@ -219,6 +411,13 @@ static void RefreshDrawPrefs(void) {
     显示血量 = [[cfg objectForKey:@"health"] boolValue];
     显示信息 = [[cfg objectForKey:@"info"] boolValue];
     显示骨骼 = [[cfg objectForKey:@"bone"] boolValue];
+    显示手持 = [[cfg objectForKey:@"weapon"] boolValue];
+    显示距离 = [[cfg objectForKey:@"dist"] boolValue];
+    显示背敌 = [[cfg objectForKey:@"behind"] boolValue];
+    显示物资 = [[cfg objectForKey:@"loot"] boolValue];
+    if ([cfg objectForKey:@"lootSize"]) 物资大小 = [[cfg objectForKey:@"lootSize"] intValue];
+    if ([cfg objectForKey:@"behindStyle"]) 背敌样式 = [[cfg objectForKey:@"behindStyle"] intValue];
+    if ([cfg objectForKey:@"behindDist"]) 背敌距离 = [[cfg objectForKey:@"behindDist"] floatValue];
 }
 
 // 不依赖绘制循环：每 7 秒把整条读取链写进 kfd_debug.log
@@ -420,23 +619,31 @@ bool getbbz() {
     });
 }
 
-// 对标 wasd：3s 扫一次 ActorArray，缓存玩家指针；每帧只读缓存列表的位置/血量
+// 对标 wasd：3s 扫一次 ActorArray，缓存玩家/物资；每帧只读缓存列表的位置/血量
 static void RefreshStaticPlayers(void) {
     static CFAbsoluteTime lastRead = 0.0;
     CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
     if (lastRead > 0.0 && (now - lastRead) < 3.0) return;
     lastRead = now;
 
+    // 与扫描同节奏刷新物资配置；物资开启且列表空时也强制重载
+    LoadItemConfigsFromFile();
+
+    auto clearLists = []() {
+        gStatic.players.clear();
+        gStatic.materials.clear();
+    };
+
     if (模块地址 == 0) {
         gStatic.isGameStart = false;
-        gStatic.players.clear();
+        clearLists();
         return;
     }
 
     uint64_t GWorld = UNSIGN_PTR(vm_read<uint64_t>(模块地址 + SDK::GWorld));
     if (!IsValidAddr(GWorld)) {
         gStatic.isGameStart = false;
-        gStatic.players.clear();
+        clearLists();
         return;
     }
 
@@ -444,21 +651,21 @@ static void RefreshStaticPlayers(void) {
     if (!IsValidAddr(NetDriver)) {
         gStatic.isGameStart = false;
         gStatic.gWorld = GWorld;
-        gStatic.players.clear();
+        clearLists();
         return;
     }
 
     uint64_t ServerConnection = UNSIGN_PTR(vm_read<uint64_t>(NetDriver + SDK::ServerConnection));
     if (!IsValidAddr(ServerConnection)) {
         gStatic.isGameStart = false;
-        gStatic.players.clear();
+        clearLists();
         return;
     }
 
     uint64_t PlayerController = UNSIGN_PTR(vm_read<uint64_t>(ServerConnection + SDK::PlayerController));
     if (!IsValidAddr(PlayerController)) {
         gStatic.isGameStart = false;
-        gStatic.players.clear();
+        clearLists();
         return;
     }
 
@@ -472,32 +679,75 @@ static void RefreshStaticPlayers(void) {
     uint64_t PersistentLevel = UNSIGN_PTR(vm_read<uint64_t>(GWorld + SDK::PersistentLevel));
     if (!IsValidAddr(PersistentLevel)) {
         gStatic.isGameStart = false;
-        gStatic.players.clear();
+        clearLists();
         return;
     }
 
     uint64_t ActorArrayPtr = UNSIGN_PTR(vm_read<uint64_t>(PersistentLevel + SDK::ActorArray));
     int ActorCount = vm_read<int>(PersistentLevel + SDK::ActorCount);
     std::vector<CachedPlayer> tmp;
+    std::vector<CachedMaterial> tmpMat;
     if (IsValidAddr(ActorArrayPtr) && ActorCount > 0 && ActorCount <= 10000) {
         tmp.reserve(64);
+        tmpMat.reserve(64);
         for (int i = 0; i < ActorCount; ++i) {
             uint64_t actor = UNSIGN_PTR(vm_read<uint64_t>(ActorArrayPtr + i * 8));
             if (!IsValidAddr(actor) || actor == MyCharacter) continue;
-            if (vm_read<float>(actor + SDK::DefaultSpeedValue) != 479.5f) continue;
 
-            uint64_t pawnStatePtr = UNSIGN_PTR(vm_read<uint64_t>(actor + SDK::PawnStateRepSyncData));
-            int action = IsValidAddr(pawnStatePtr) ? vm_read<int>(pawnStatePtr) : 0;
-            if (action == 1048592 || action == 1048576) continue;
+            if (vm_read<float>(actor + SDK::DefaultSpeedValue) == 479.5f) {
+                uint64_t pawnStatePtr = UNSIGN_PTR(vm_read<uint64_t>(actor + SDK::PawnStateRepSyncData));
+                int action = IsValidAddr(pawnStatePtr) ? vm_read<int>(pawnStatePtr) : 0;
+                if (action == 1048592 || action == 1048576) continue;
 
-            int teamID = vm_read<int>(actor + SDK::TeamID);
-            if (teamID == myTeamID || teamID == -1) continue;
+                int teamID = vm_read<int>(actor + SDK::TeamID);
+                if (teamID == myTeamID || teamID == -1) continue;
 
-            CachedPlayer cp;
-            cp.addr = actor;
-            cp.team = teamID;
-            cp.bIsAI = vm_read<bool>(actor + SDK::bIsAI);
-            tmp.push_back(cp);
+                CachedPlayer cp;
+                cp.addr = actor;
+                cp.team = teamID;
+                cp.bIsAI = vm_read<bool>(actor + SDK::bIsAI);
+                tmp.push_back(cp);
+            } else {
+                // 物资 / 手雷 / 烟雾
+                string className = GetClassName(模块地址, actor, 0x18);
+                if (className.find("ojGrenade_BP_C") != std::string::npos) {
+                    CachedMaterial sm{};
+                    sm.addr = actor;
+                    sm.isGrenade = true;
+                    sm.isSmoke = false;
+                    sm.className = className;
+                    sm.displayName = "手雷";
+                    sm.minDistance = 0;
+                    sm.maxDistance = 9999;
+                    sm.color = IM_COL32(255, 0, 0, 255);
+                    sm.weaponID = 1;
+                    sm.isBox = false;
+                    tmpMat.push_back(sm);
+                } else if (className.find("ProjSmoke") != std::string::npos) {
+                    CachedMaterial sm{};
+                    sm.addr = actor;
+                    sm.isGrenade = false;
+                    sm.isSmoke = true;
+                    sm.className = className;
+                    tmpMat.push_back(sm);
+                } else if (className.length() >= 6 && className.length() < 45) {
+                    const ItemConfig *cfg = FindItemConfig(className);
+                    if (cfg) {
+                        CachedMaterial sm{};
+                        sm.addr = actor;
+                        sm.isGrenade = false;
+                        sm.isSmoke = false;
+                        sm.className = className;
+                        sm.displayName = cfg->displayName;
+                        sm.minDistance = cfg->minDistance;
+                        sm.maxDistance = cfg->maxDistance;
+                        sm.color = cfg->color;
+                        sm.weaponID = cfg->weaponID;
+                        sm.isBox = cfg->isBox;
+                        tmpMat.push_back(sm);
+                    }
+                }
+            }
         }
     }
 
@@ -508,6 +758,7 @@ static void RefreshStaticPlayers(void) {
     gStatic.myTeam = myTeamID;
     gStatic.isGameStart = true;
     gStatic.players.swap(tmp);
+    gStatic.materials.swap(tmpMat);
 }
 
 // 主渲染 —— 对标 wasd：静态列表节流 + 每帧轻量更新
@@ -524,6 +775,7 @@ void Draw::StartBooks() {
         if (gStatic.isGameStart) {
             gStatic.isGameStart = false;
             gStatic.players.clear();
+            gStatic.materials.clear();
         }
         return;
     }
@@ -543,6 +795,15 @@ void Draw::StartBooks() {
         }
     }
     if (!povOk) return;
+
+    // 自身手持：每帧读一次（物资 weaponID==0 过滤 + 可选显示）
+    int 自身手持 = 0;
+    if (IsValidAddr(gStatic.myCharacter)) {
+        uint64_t myWeapon = UNSIGN_PTR(vm_read<uint64_t>(gStatic.myCharacter + SDK::CurrentUsingWeaponSafety));
+        if (IsValidAddr(myWeapon)) {
+            自身手持 = vm_read<int>(myWeapon + SDK::RepWeaponID);
+        }
+    }
 
     int totalEnemies = 0;
     int aiCounts = 0;
@@ -573,25 +834,28 @@ void Draw::StartBooks() {
         float distance = GetDistance(loc, POV.Location) / 100.0f;
         Vector2 LocationScreen = WorldToScreen(loc, POV, sw, sh);
         bool onScreen = isScreenVisible(LocationScreen, canvasVec);
-        if (!onScreen || distance > 绘制距离上限) continue;
+        if (distance > 绘制距离上限 && !(显示背敌 && distance <= 背敌距离)) continue;
 
-        uint64_t mesh = UNSIGN_PTR(vm_read<uint64_t>(actor + SDK::Mesh));
+        uint64_t mesh = 0;
         uint64_t staticMesh = 0;
         FTransform RelativeScale3D{};
         Vector2 HeadScreen = LocationScreen;
-        if (IsValidAddr(mesh)) {
-            staticMesh = UNSIGN_PTR(vm_read<uint64_t>(mesh + SDK::StaticMesh));
-            if (IsValidAddr(staticMesh)) {
-                RelativeScale3D = GetMatrixConversion(mesh + SDK::ComponentToWorld);
-                Vector3 headWorld = GetBoneWithRotation((long)staticMesh, 5, RelativeScale3D);
-                headWorld.Z += 20.0f;
-                HeadScreen = WorldToScreen(headWorld, POV, sw, sh);
+        if (onScreen) {
+            mesh = UNSIGN_PTR(vm_read<uint64_t>(actor + SDK::Mesh));
+            if (IsValidAddr(mesh)) {
+                staticMesh = UNSIGN_PTR(vm_read<uint64_t>(mesh + SDK::StaticMesh));
+                if (IsValidAddr(staticMesh)) {
+                    RelativeScale3D = GetMatrixConversion(mesh + SDK::ComponentToWorld);
+                    Vector3 headWorld = GetBoneWithRotation((long)staticMesh, 5, RelativeScale3D);
+                    headWorld.Z += 20.0f;
+                    HeadScreen = WorldToScreen(headWorld, POV, sw, sh);
+                }
             }
-        }
-        if (!IsValidAddr(staticMesh)) {
-            Vector3 approxHead = loc;
-            approxHead.Z += 85.0f;
-            HeadScreen = WorldToScreen(approxHead, POV, sw, sh);
+            if (!IsValidAddr(staticMesh)) {
+                Vector3 approxHead = loc;
+                approxHead.Z += 85.0f;
+                HeadScreen = WorldToScreen(approxHead, POV, sw, sh);
+            }
         }
 
         ImU32 NameColor = bIsAI ? Colour_人机 : Colour_名字;
@@ -601,7 +865,7 @@ void Draw::StartBooks() {
         ImU32 distanceColor = bIsAI ? Colour_人机 : Colour_白色;
         int teamID = sp.team;
 
-        if (显示信息) {
+        if (显示信息 && onScreen && distance <= 绘制距离上限) {
             if (!bIsAI) {
                 string name = GetPlayerName((long)actor);
                 if (!name.empty()) {
@@ -615,61 +879,149 @@ void Draw::StartBooks() {
             char teamBuf[16];
             snprintf(teamBuf, sizeof(teamBuf), "%d", teamID);
             Draw::DrawText(teamBuf, ImVec2(HeadScreen.X, HeadScreen.Y - 38.0f - 6.0f), true, teamColor, false, 10);
+        }
+
+        if (显示距离 && onScreen && distance <= 绘制距离上限) {
             char distBuf[16];
             snprintf(distBuf, sizeof(distBuf), "%d", (int)distance);
             Draw::DrawText(distBuf, ImVec2(HeadScreen.X, HeadScreen.Y - 38.0f + 4.0f), true, distanceColor, false, 10);
         }
 
-        if (显示射线) {
-            dl->AddLine(ImVec2(屏幕宽度 / 2.0f, 10.0f),
-                        ImVec2(HeadScreen.X, HeadScreen.Y - 70.0f),
-                        lineColor, 射线粗细);
-        }
+        uint64_t weaponPtr = UNSIGN_PTR(vm_read<uint64_t>(actor + SDK::CurrentUsingWeaponSafety));
+        int weapon = IsValidAddr(weaponPtr) ? vm_read<int>(weaponPtr + SDK::RepWeaponID) : 0;
 
-        if (显示血量 && Health > 0) {
-            ImU32 bloodColor;
-            if (Health >= 70) bloodColor = IM_COL32(0, 255, 0, 255);
-            else if (Health >= 35) bloodColor = IM_COL32(255, 255, 0, 255);
-            else bloodColor = IM_COL32(255, 0, 0, 255);
-            float healthRatio = fminf(Health / 100.0f, 1.0f);
-            float end_angle = healthRatio * 2.0f * IM_PI;
-            // 段数 32→16：血条圆弧够用，少一半顶点
-            dl->PathArcTo(ImVec2(HeadScreen.X, HeadScreen.Y - 35), 15.0f, 0.0f, end_angle, 16);
-            dl->PathStroke(bloodColor, 0, 2.0f);
-        }
-
-        if (显示骨骼 && distance <= 骨骼距离 && IsValidAddr(mesh) && IsValidAddr(staticMesh)) {
-            int boneCount = vm_read<int>(mesh + SDK::StaticMesh + 0x8);
-            const int(*skeletonList)[2] = GetSkeletonList(boneCount);
-            static constexpr int kMaxBoneIdx = 128;
-            Vector2 boneScreenPos[kMaxBoneIdx];
-            bool boneCalculated[kMaxBoneIdx];
-            memset(boneCalculated, 0, sizeof(boneCalculated));
-
-            for (int bi = 0; bi < 14; bi++) {
-                for (int j = 0; j < 2; j++) {
-                    int boneIdx = skeletonList[bi][j];
-                    if (boneIdx < 0 || boneIdx >= kMaxBoneIdx) continue;
-                    if (!boneCalculated[boneIdx]) {
-                        Vector3 worldPos = GetBoneWithRotation((long)staticMesh, boneIdx, RelativeScale3D);
-                        boneScreenPos[boneIdx] = WorldToScreen(worldPos, POV, sw, sh);
-                        boneCalculated[boneIdx] = true;
-                    }
+        // 敌人持雷倒计时（对标 wasd enemyGrenadeTimers，约 7.25s）
+        static std::unordered_map<uint64_t, CFAbsoluteTime> enemyGrenadeTimers;
+        if (weapon == 602004 || weapon == 9825004) {
+            if (action >= 10000 && action <= 99999) {
+                if (enemyGrenadeTimers.find(actor) == enemyGrenadeTimers.end()) {
+                    enemyGrenadeTimers[actor] = CFAbsoluteTimeGetCurrent();
                 }
-                int idxSta = skeletonList[bi][0];
-                int idxEnd = skeletonList[bi][1];
-                if (idxSta < 0 || idxSta >= kMaxBoneIdx || idxEnd < 0 || idxEnd >= kMaxBoneIdx) continue;
-                if (!boneCalculated[idxSta] || !boneCalculated[idxEnd]) continue;
-                Draw::DrawLine(ImVec2(boneScreenPos[idxSta].X, boneScreenPos[idxSta].Y),
-                               ImVec2(boneScreenPos[idxEnd].X, boneScreenPos[idxEnd].Y),
-                               boneColor, 骨骼粗细);
+            } else {
+                enemyGrenadeTimers.erase(actor);
+            }
+        } else {
+            enemyGrenadeTimers.erase(actor);
+        }
+
+        if (显示手持 && onScreen && distance <= 绘制距离上限) {
+            if (weapon > 0) {
+                std::string wname = GetWeaponDisplayName(weapon);
+                if (!wname.empty()) {
+                    Draw::DrawText(wname, ImVec2(HeadScreen.X, HeadScreen.Y - 55.0f), true, Colour_黄色, false, 10);
+                }
             }
         }
 
-        if (显示方框) {
-            VectorRect rect;
-            BoxConversion(loc, &rect, POV, canvasVec);
-            Draw::DrawRect(ImVec2(rect.x, rect.y), ImVec2(rect.x + rect.w, rect.y + rect.h), Colour_绿色, 1.0f);
+        if (onScreen && distance <= 绘制距离上限) {
+            auto git = enemyGrenadeTimers.find(actor);
+            if (git != enemyGrenadeTimers.end()) {
+                float enemyGrenadeTime = 7.25f - (float)(CFAbsoluteTimeGetCurrent() - git->second);
+                if (enemyGrenadeTime > 0.0f) {
+                    char gb[16];
+                    snprintf(gb, sizeof(gb), "%d", (int)enemyGrenadeTime);
+                    Draw::DrawText(gb, ImVec2(HeadScreen.X, HeadScreen.Y - 110.0f), true,
+                                   IM_COL32(255, 255, 0, 255), true, 20);
+                }
+            }
+
+            if (显示射线) {
+                dl->AddLine(ImVec2(屏幕宽度 / 2.0f, 10.0f),
+                            ImVec2(HeadScreen.X, HeadScreen.Y - 70.0f),
+                            lineColor, 射线粗细);
+            }
+
+            if (显示血量 && Health > 0) {
+                ImU32 bloodColor;
+                if (Health >= 70) bloodColor = IM_COL32(0, 255, 0, 255);
+                else if (Health >= 35) bloodColor = IM_COL32(255, 255, 0, 255);
+                else bloodColor = IM_COL32(255, 0, 0, 255);
+                float healthRatio = fminf(Health / 100.0f, 1.0f);
+                float end_angle = healthRatio * 2.0f * IM_PI;
+                dl->PathArcTo(ImVec2(HeadScreen.X, HeadScreen.Y - 35), 15.0f, 0.0f, end_angle, 16);
+                dl->PathStroke(bloodColor, 0, 2.0f);
+            }
+
+            if (显示骨骼 && distance <= 骨骼距离 && IsValidAddr(mesh) && IsValidAddr(staticMesh)) {
+                int boneCount = vm_read<int>(mesh + SDK::StaticMesh + 0x8);
+                const int(*skeletonList)[2] = GetSkeletonList(boneCount);
+                static constexpr int kMaxBoneIdx = 128;
+                Vector2 boneScreenPos[kMaxBoneIdx];
+                bool boneCalculated[kMaxBoneIdx];
+                memset(boneCalculated, 0, sizeof(boneCalculated));
+
+                for (int bi = 0; bi < 14; bi++) {
+                    for (int j = 0; j < 2; j++) {
+                        int boneIdx = skeletonList[bi][j];
+                        if (boneIdx < 0 || boneIdx >= kMaxBoneIdx) continue;
+                        if (!boneCalculated[boneIdx]) {
+                            Vector3 worldPos = GetBoneWithRotation((long)staticMesh, boneIdx, RelativeScale3D);
+                            boneScreenPos[boneIdx] = WorldToScreen(worldPos, POV, sw, sh);
+                            boneCalculated[boneIdx] = true;
+                        }
+                    }
+                    int idxSta = skeletonList[bi][0];
+                    int idxEnd = skeletonList[bi][1];
+                    if (idxSta < 0 || idxSta >= kMaxBoneIdx || idxEnd < 0 || idxEnd >= kMaxBoneIdx) continue;
+                    if (!boneCalculated[idxSta] || !boneCalculated[idxEnd]) continue;
+                    Draw::DrawLine(ImVec2(boneScreenPos[idxSta].X, boneScreenPos[idxSta].Y),
+                                   ImVec2(boneScreenPos[idxEnd].X, boneScreenPos[idxEnd].Y),
+                                   boneColor, 骨骼粗细);
+                }
+            }
+
+            if (显示方框) {
+                VectorRect rect;
+                BoxConversion(loc, &rect, POV, canvasVec);
+                Draw::DrawRect(ImVec2(rect.x, rect.y), ImVec2(rect.x + rect.w, rect.y + rect.h), Colour_绿色, 1.0f);
+            }
+        }
+
+        if (显示背敌 && !bIsAI && distance <= 背敌距离) {
+            if (背敌样式 == 0) {
+                OffScreenRadar(LocationScreen, onScreen, distance, Health);
+            } else {
+                OffScreenArrow(LocationScreen, onScreen, distance, Health);
+            }
+        }
+    }
+
+    // ========== 物资 / 手雷（对标 wasd：整块在 显示物资 下）==========
+    if (显示物资) {
+        uint64_t gameState = UNSIGN_PTR(vm_read<uint64_t>(gStatic.gWorld + SDK::GameState));
+        float worldTime = IsValidAddr(gameState)
+            ? vm_read<float>(gameState + SDK::ReplicatedWorldTimeSeconds) : 0.f;
+
+        for (const CachedMaterial &m : gStatic.materials) {
+            if (!IsValidAddr(m.addr) || m.isSmoke) continue;
+
+            Vector3 worldPos = GetRelativeLocation((long)m.addr);
+            if (worldPos.X == 0 && worldPos.Y == 0 && worldPos.Z == 0) continue;
+            Vector2 screen = WorldToScreen(worldPos, POV, sw, sh);
+            float dist = GetDistance(worldPos, POV.Location) / 100.0f;
+            bool visible = isScreenVisible(screen, canvasVec);
+
+            if (m.isGrenade) {
+                float explosionTime = vm_read<float>(m.addr + SDK::ExplosionTime);
+                float countdown = explosionTime - worldTime;
+                if (countdown <= 0.f) continue;
+                if (!visible) continue;
+                char grenadeBuf[48];
+                snprintf(grenadeBuf, sizeof(grenadeBuf), "%d 手雷", (int)countdown);
+                Draw::DrawText(grenadeBuf, ImVec2(screen.X, screen.Y), true, IM_COL32(255, 0, 0, 255), true, 12);
+            } else {
+                if (m.isBox) {
+                    int boxState = vm_read<int>(m.addr + SDK::BoxState);
+                    if (boxState != 0) continue;
+                }
+                bool shouldShow = (m.weaponID == 1) || (m.weaponID == 0 && 自身手持 == 0);
+                if (!shouldShow) continue;
+                if (dist < m.minDistance || dist > m.maxDistance) continue;
+                if (!visible) continue;
+                char itemBuf[128];
+                snprintf(itemBuf, sizeof(itemBuf), "%s   %d", m.displayName.c_str(), (int)dist);
+                Draw::DrawText(itemBuf, ImVec2(screen.X, screen.Y), true, (int)m.color, true, (float)物资大小);
+            }
         }
     }
 
