@@ -51,12 +51,14 @@ static bool 显示骨骼 = false;
 static bool 显示手持 = false, 显示距离 = false, 显示背敌 = false, 显示物资 = false;
 static int 手持样式 = 0; // 0=文字 1=图片（对标 wasd 手持图）
 static int 物资大小 = 12;
-static int 背敌样式 = 0; // 0 radar 1 arrow
+static int 背敌样式 = 0; // 0雷达 1箭头 2花祭
+static int 血量样式 = 0; // 0圆弧 1经典 2花祭
+static int 物资显示模式 = 1; // 0正常(持枪也显示) 1空手(旧逻辑)
 static float 背敌距离 = 300.f;
 static float 射线粗细 = 1.0f;
 static float 骨骼粗细 = 1.0f;
 static float 骨骼距离 = 300.0f;
-static float 绘制距离上限 = 400.f;
+static float 绘制距离上限 = 400.f; // 不含物资；物资用各自配置距离
 static float gCurrentCPUUsage = 0.0f;
 
 // —— 静态玩家缓存（对标 wasd readStaticData，~2s 扫一次 ActorArray）——
@@ -375,6 +377,48 @@ static void OffScreenRadar(Vector2 screenPos, bool isOnScreen, float distance, f
     dl->Flags = oldFlags;
 }
 
+// 花祭背敌：固定半径环绕屏幕中心 360°，空心三角 + 距离（对标花祭 drawBehindEnemyIndicator）
+static void OffScreenHuaji(Vector2 screenPos, bool isOnScreen, float distance, float health) {
+    if (health <= 0.f || isOnScreen) return;
+    ImU32 arrowColor;
+    if (distance <= 50) arrowColor = IM_COL32(255, 0, 0, 230);
+    else if (distance <= 100) arrowColor = IM_COL32(0, 255, 0, 230);
+    else if (distance <= 150) arrowColor = IM_COL32(0, 0, 255, 230);
+    else arrowColor = IM_COL32(255, 255, 255, 230);
+
+    float centerX = CanvasSize.x / 2.0f;
+    float centerY = CanvasSize.y / 2.0f;
+    float angle = atan2f(screenPos.Y - centerY, screenPos.X - centerX);
+    float radius = 20.0f;
+    float arrowHeight = radius * 0.6f;
+    float arrowWidth = radius * 1.8f;
+    float circleRadius = 45.0f + 20.0f + 55.0f; // minRadius+20+55
+    float arrowCenterX = centerX + circleRadius * cosf(angle);
+    float arrowCenterY = centerY + circleRadius * sinf(angle);
+
+    ImVec2 points[3] = {
+        ImVec2(-arrowWidth / 2, -arrowHeight / 2),
+        ImVec2(arrowWidth / 2, 0),
+        ImVec2(-arrowWidth / 2, arrowHeight / 2)
+    };
+    for (int i = 0; i < 3; i++) {
+        float x = points[i].x, y = points[i].y;
+        points[i].x = arrowCenterX + x * cosf(angle) - y * sinf(angle);
+        points[i].y = arrowCenterY + x * sinf(angle) + y * cosf(angle);
+    }
+    ImDrawList *dl = BBZGUI::GetForegroundDrawList();
+    if (!dl) return;
+    ImDrawListFlags oldFlags = dl->Flags;
+    dl->Flags |= ImDrawListFlags_AntiAliasedLines | ImDrawListFlags_AntiAliasedFill;
+    dl->AddPolyline(points, 3, arrowColor, ImDrawFlags_Closed, 2.0f);
+    dl->Flags = oldFlags;
+
+    char distanceText[16];
+    snprintf(distanceText, sizeof(distanceText), "%d", (int)distance);
+    ImVec2 textPos(arrowCenterX - arrowWidth / 4.0f, arrowCenterY - 5.0f);
+    Draw::DrawText(distanceText, textPos, true, arrowColor, true, 10.0f);
+}
+
 static NSString *PrefsPath(void) {
     return NHPrefsPath();
 }
@@ -402,6 +446,12 @@ static void RefreshDrawPrefs(void) {
             restore[@"lootSize"] = @(物资大小);
             restore[@"behindStyle"] = @(背敌样式);
             restore[@"behindDist"] = @(背敌距离);
+            restore[@"healthStyle"] = @(血量样式);
+            restore[@"lootMode"] = @(物资显示模式);
+            restore[@"drawDist"] = @(绘制距离上限);
+            restore[@"boneDist"] = @(骨骼距离);
+            restore[@"boneThick"] = @(骨骼粗细);
+            restore[@"rayThick"] = @(射线粗细);
             restore[@"persist"] = @(NHPersistFilesEnabled());
             NHPrefsWrite(restore);
         }
@@ -422,6 +472,13 @@ static void RefreshDrawPrefs(void) {
     if ([cfg objectForKey:@"lootSize"]) 物资大小 = [[cfg objectForKey:@"lootSize"] intValue];
     if ([cfg objectForKey:@"behindStyle"]) 背敌样式 = [[cfg objectForKey:@"behindStyle"] intValue];
     if ([cfg objectForKey:@"behindDist"]) 背敌距离 = [[cfg objectForKey:@"behindDist"] floatValue];
+    if ([cfg objectForKey:@"healthStyle"]) 血量样式 = [[cfg objectForKey:@"healthStyle"] intValue];
+    if ([cfg objectForKey:@"lootMode"]) 物资显示模式 = [[cfg objectForKey:@"lootMode"] intValue];
+    else 物资显示模式 = 1;
+    if ([cfg objectForKey:@"drawDist"]) 绘制距离上限 = [[cfg objectForKey:@"drawDist"] floatValue];
+    if ([cfg objectForKey:@"boneDist"]) 骨骼距离 = [[cfg objectForKey:@"boneDist"] floatValue];
+    if ([cfg objectForKey:@"boneThick"]) 骨骼粗细 = [[cfg objectForKey:@"boneThick"] floatValue];
+    if ([cfg objectForKey:@"rayThick"]) 射线粗细 = [[cfg objectForKey:@"rayThick"] floatValue];
 }
 
 // 不依赖绘制循环：每 7 秒把整条读取链写进 kfd_debug.log
@@ -912,13 +969,13 @@ void Draw::StartBooks() {
             if (手持样式 == 1) {
                 id<MTLTexture> weaponTexture = nil;
                 if (GetWeaponTexture(weapon, &weaponTexture) && weaponTexture) {
+                    // 对标 wasd：ImTextureID = (__bridge void *)MTLTexture
                     ImVec2 sz(40, 20);
                     ImVec2 p0(HeadScreen.X - sz.x * 0.5f, HeadScreen.Y - 75.0f);
                     ImVec2 p1(p0.x + sz.x, p0.y + sz.y);
-                    dl->AddImage((__bridge ImTextureID)weaponTexture, p0, p1,
+                    dl->AddImage((ImTextureID)(__bridge void *)weaponTexture, p0, p1,
                                  ImVec2(0, 0), ImVec2(1, 1), IM_COL32_WHITE);
                 } else {
-                    // 无图回退文字，避免空白
                     std::string wname = GetWeaponDisplayName(weapon);
                     if (!wname.empty()) {
                         Draw::DrawText(wname, ImVec2(HeadScreen.X, HeadScreen.Y - 55.0f), true, Colour_黄色, false, 10);
@@ -956,9 +1013,34 @@ void Draw::StartBooks() {
                 else if (Health >= 35) bloodColor = IM_COL32(255, 255, 0, 255);
                 else bloodColor = IM_COL32(255, 0, 0, 255);
                 float healthRatio = fminf(Health / 100.0f, 1.0f);
-                float end_angle = healthRatio * 2.0f * IM_PI;
-                dl->PathArcTo(ImVec2(HeadScreen.X, HeadScreen.Y - 35), 15.0f, 0.0f, end_angle, 16);
-                dl->PathStroke(bloodColor, 0, 2.0f);
+                if (血量样式 == 1) {
+                    // 经典矩形血条（wasd）
+                    const float barWidth = 50.0f;
+                    ImVec2 barPos(HeadScreen.X - barWidth / 2.0f, HeadScreen.Y - 10.0f);
+                    float healthWidth = barWidth * healthRatio;
+                    dl->AddRectFilled(barPos, ImVec2(barPos.x + healthWidth, barPos.y + 7.0f), bloodColor, 3.5f);
+                    dl->AddRect(barPos, ImVec2(barPos.x + barWidth, barPos.y + 7.0f), IM_COL32(0, 0, 0, 200), 3.5f, 0, 1.0f);
+                } else if (血量样式 == 2) {
+                    // 花祭分段血条：剩余空心框，已损红/白填充
+                    const float barWidth = 8.0f, barHeight = 3.0f, segmentGap = 0.6f;
+                    const int segments = 6;
+                    int fullSegments = (int)(healthRatio * segments);
+                    float totalWidth = segments * (barWidth + segmentGap) - segmentGap;
+                    float startX = HeadScreen.X - totalWidth / 2.0f;
+                    float y = HeadScreen.Y - 20.0f;
+                    ImU32 fillCol = bIsAI ? IM_COL32(255, 255, 255, 255) : IM_COL32(255, 0, 0, 255);
+                    for (int i = 0; i < segments; i++) {
+                        float x = startX + i * (barWidth + segmentGap);
+                        ImVec2 a(x, y), b(x + barWidth, y + barHeight);
+                        if (i >= fullSegments) dl->AddRectFilled(a, b, fillCol);
+                        dl->AddRect(a, b, IM_COL32(0, 0, 0, 255), 0.0f, 0, 1.0f);
+                    }
+                } else {
+                    // 圆弧（默认）
+                    float end_angle = healthRatio * 2.0f * IM_PI;
+                    dl->PathArcTo(ImVec2(HeadScreen.X, HeadScreen.Y - 35), 15.0f, 0.0f, end_angle, 16);
+                    dl->PathStroke(bloodColor, 0, 2.0f);
+                }
             }
 
             if (显示骨骼 && distance <= 骨骼距离 && IsValidAddr(mesh) && IsValidAddr(staticMesh)) {
@@ -997,10 +1079,12 @@ void Draw::StartBooks() {
         }
 
         if (显示背敌 && !bIsAI && distance <= 背敌距离) {
-            if (背敌样式 == 0) {
-                OffScreenRadar(LocationScreen, onScreen, distance, Health);
-            } else {
+            if (背敌样式 == 1) {
                 OffScreenArrow(LocationScreen, onScreen, distance, Health);
+            } else if (背敌样式 == 2) {
+                OffScreenHuaji(LocationScreen, onScreen, distance, Health);
+            } else {
+                OffScreenRadar(LocationScreen, onScreen, distance, Health);
             }
         }
     }
@@ -1033,7 +1117,10 @@ void Draw::StartBooks() {
                     int boxState = vm_read<int>(m.addr + SDK::BoxState);
                     if (boxState != 0) continue;
                 }
-                bool shouldShow = (m.weaponID == 1) || (m.weaponID == 0 && 自身手持 == 0);
+                // 物资显示模式：0正常=持枪也显示；1空手=旧逻辑（weaponID==0 仅空手显示）
+                bool shouldShow = (物资显示模式 == 0)
+                    ? true
+                    : ((m.weaponID == 1) || (m.weaponID == 0 && 自身手持 == 0));
                 if (!shouldShow) continue;
                 if (dist < m.minDistance || dist > m.maxDistance) continue;
                 if (!visible) continue;

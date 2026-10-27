@@ -12,6 +12,7 @@
 #import "DOJailbreaker.h"
 #import "LFSenderIDViewController.h"
 #import "游戏/MaterialConfigViewController.h"
+#import "游戏/DrawSettingsViewController.h"
 //#import "pp.h"
 
 #ifdef __cplusplus
@@ -1468,13 +1469,35 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
         [stack addArrangedSubview:sw];
     }
 
+    __weak typeof(self) weakSelf = self;
+
+    // 绘制设置（在物资功能上方，对标 wasd 绘制设置）
+    JVRKernelButton *drawSetBtn = [[JVRKernelButton alloc] init];
+    drawSetBtn.translatesAutoresizingMaskIntoConstraints = NO;
+    drawSetBtn.label.text = @"绘制设置";
+    drawSetBtn.label.textColor = JVR_主色;
+    drawSetBtn.borderGrad.colors = @[(id)JVR_主色.CGColor, (id)JVR_副色.CGColor];
+    drawSetBtn.onTap = ^{
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        if (!strongSelf) return;
+        DrawSettingsViewController *vc = [[DrawSettingsViewController alloc] init];
+        UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:vc];
+        nav.modalPresentationStyle = UIModalPresentationFullScreen;
+        nav.navigationBar.barStyle = UIBarStyleBlack;
+        nav.navigationBar.tintColor = JVR_主色;
+        nav.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName: JVR_文字色};
+        [strongSelf presentViewController:nav animated:YES completion:nil];
+        KernelLogLine("打开绘制设置界面");
+    };
+    [drawSetBtn.heightAnchor constraintEqualToConstant:44].active = YES;
+    [stack addArrangedSubview:drawSetBtn];
+
     // 物资选项卡入口（对标 wasd 物资功能分类）
     JVRKernelButton *lootBtn = [[JVRKernelButton alloc] init];
     lootBtn.translatesAutoresizingMaskIntoConstraints = NO;
     lootBtn.label.text = @"物资功能";
     lootBtn.label.textColor = JVR_副色;
     lootBtn.borderGrad.colors = @[(id)JVR_副色.CGColor, (id)JVR_主色.CGColor];
-    __weak typeof(self) weakSelf = self;
     lootBtn.onTap = ^{
         __strong typeof(weakSelf) strongSelf = weakSelf;
         if (!strongSelf) return;

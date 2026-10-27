@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2F50CA52FF96439999D47905 /* stb_image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7E9ECD8FB8C641AFAC9327E1 /* stb_image.cpp */; };
+		48FAF1654B4F4B44B1423CC9 /* DrawSettingsViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = EB75F96552FF49C5B5543956 /* DrawSettingsViewController.mm */; };
 		3BC5ADD429D34DD689FC0109 /* WeaponTextures.mm in Sources */ = {isa = PBXBuildFile; fileRef = 54D381EE9E2145908F6B1B4E /* WeaponTextures.mm */; };
 		52D9892696614579B40E3B51 /* MaterialConfigViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5BDB540911244279018928C /* MaterialConfigViewController.mm */; };
 		3AF79ADC4BF24B6098EFBE47 /* ItemConfig.mm in Sources */ = {isa = PBXBuildFile; fileRef = DFB07DA9967C4ED5AAF82D6E /* ItemConfig.mm */; };
@@ -258,6 +260,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		45098A121F4F429DA0D24586 /* stb_image.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "stb/stb_image.h"; sourceTree = "<group>"; };
+		7E9ECD8FB8C641AFAC9327E1 /* stb_image.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "stb/stb_image.cpp"; sourceTree = "<group>"; };
+		EB75F96552FF49C5B5543956 /* DrawSettingsViewController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = "DrawSettingsViewController.mm"; sourceTree = "<group>"; };
+		EDF4DA4E82ED4BD1B0AC2D30 /* DrawSettingsViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "DrawSettingsViewController.h"; sourceTree = "<group>"; };
 		5486369C49784FF3808FD160 /* WeaponTextures.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WeaponTextures.h; sourceTree = "<group>"; };
 		54D381EE9E2145908F6B1B4E /* WeaponTextures.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = WeaponTextures.mm; sourceTree = "<group>"; };
 		233F0963537B4745B0582A43 /* ItemConfig.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ItemConfig.h"; sourceTree = "<group>"; };
@@ -693,6 +699,10 @@
 		0FE5D6622F5067A100FD4AFC /* 游戏 */ = {
 			isa = PBXGroup;
 			children = (
+				45098A121F4F429DA0D24586 /* stb_image.h */,
+				7E9ECD8FB8C641AFAC9327E1 /* stb_image.cpp */,
+				EB75F96552FF49C5B5543956 /* DrawSettingsViewController.mm */,
+				EDF4DA4E82ED4BD1B0AC2D30 /* DrawSettingsViewController.h */,
 				5486369C49784FF3808FD160 /* WeaponTextures.h */,
 				54D381EE9E2145908F6B1B4E /* WeaponTextures.mm */,
 				233F0963537B4745B0582A43 /* ItemConfig.h */,
@@ -1655,6 +1665,8 @@
 				CC711D502B5BF5C6007235A6 /* IOHIDEvent+KIF.m in Sources */,
 				CC8DDA922B655156001C7C9E /* DeactivateHUDIntent.swift in Sources */,
 				1F0BD93B2D6ED703008151DA /* DrawView.mm in Sources */,
+				2F50CA52FF96439999D47905 /* stb_image.cpp in Sources */,
+				48FAF1654B4F4B44B1423CC9 /* DrawSettingsViewController.mm in Sources */,
 				3BC5ADD429D34DD689FC0109 /* WeaponTextures.mm in Sources */,
 				1EB561C880AF4623B86304D8 /* MaterialConfigViewController.mm in Sources */,
 				E3A40925550F4B9F8723608C /* ItemConfig.mm in Sources */,

@@ -1,150 +1,87 @@
 //
-//  WeaponTextures.mm — 从 wasd 嵌入 PNG 加载 MTLTexture
+//  WeaponTextures.mm — 对标 wasd：stb_image 解码 + Shared MTLTexture
 //
 
 #import "WeaponTextures.h"
-#import <MetalKit/MetalKit.h>
 #import <UIKit/UIKit.h>
 #include <map>
+#include <mutex>
+
+#include "stb/stb_image.h"
 
 #include "images/head.h"
 
 std::map<int, id<MTLTexture>> gWeaponTextures;
+static std::mutex gWeaponTexMutex;
+static BOOL gWeaponTexReady = NO;
 
 static id<MTLTexture> LoadTexFromMemory(id<MTLDevice> device, const unsigned char *data, size_t length) {
     if (!device || !data || length == 0) return nil;
-    @autoreleasepool {
-        NSData *ns = [NSData dataWithBytesNoCopy:(void *)data length:length freeWhenDone:NO];
-        UIImage *img = [UIImage imageWithData:ns];
-        if (!img || !img.CGImage) return nil;
-        MTKTextureLoader *loader = [[MTKTextureLoader alloc] initWithDevice:device];
-        NSError *err = nil;
-        NSDictionary *opts = @{
-            MTKTextureLoaderOptionSRGB : @NO,
-            MTKTextureLoaderOptionTextureUsage : @(MTLTextureUsageShaderRead),
-        };
-        id<MTLTexture> tex = [loader newTextureWithCGImage:img.CGImage options:opts error:&err];
-        return tex;
+    int w = 0, h = 0, channels = 0;
+    unsigned char *pixels = stbi_load_from_memory(data, (int)length, &w, &h, &channels, STBI_rgb_alpha);
+    if (!pixels || w <= 0 || h <= 0) {
+        if (pixels) stbi_image_free(pixels);
+        return nil;
     }
+    MTLTextureDescriptor *desc =
+        [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm
+                                                           width:w
+                                                          height:h
+                                                       mipmapped:NO];
+    desc.usage = MTLTextureUsageShaderRead;
+    desc.storageMode = MTLStorageModeShared;
+    id<MTLTexture> texture = [device newTextureWithDescriptor:desc];
+    if (!texture) {
+        stbi_image_free(pixels);
+        return nil;
+    }
+    MTLRegion region = MTLRegionMake2D(0, 0, (NSUInteger)w, (NSUInteger)h);
+    [texture replaceRegion:region mipmapLevel:0 withBytes:pixels bytesPerRow:(NSUInteger)w * 4];
+    stbi_image_free(pixels);
+    return texture;
 }
 
 static void SetupTextureMappings(void) {
     auto &M = gWeaponTextures;
-    M[9811015] = M[102003];
-    M[9813064] = M[105015];
-    M[9811057] = M[102003];
-    M[9811058] = M[102003];
-    M[9812130] = M[101010];
-    M[9812125] = M[101004];
-    M[9812126] = M[101005];
-    M[9812127] = M[101006];
-    M[9812124] = M[101003];
-    M[9812131] = M[101012];
-    M[9812143] = M[101013];
-    M[9812129] = M[101008];
-    M[9815094] = M[103014];
-    M[9815091] = M[103007];
-    M[9815092] = M[103009];
-    M[9815090] = M[103004];
-    M[9811067] = M[102007];
-    M[9811068] = M[102105];
-    M[9811066] = M[102003];
-    M[9813056] = M[105013];
-    M[9813053] = M[105010];
-    M[9813054] = M[105012];
-    M[9814074] = M[103012];
-    M[9812153] = M[103100];
-    M[9812154] = M[103100];
-    M[9812155] = M[103100];
-    M[9812156] = M[103100];
-    M[9811036] = M[102007];
-    M[9811043] = M[102008];
-    M[9812143] = M[101014];
-    M[9811050] = M[102105];
-    M[9811061] = M[102105];
-    M[9811062] = M[102105];
-    M[9812002] = M[101001];
-    M[9812123] = M[101001];
-    M[9812015] = M[101003];
-    M[9812023] = M[101004];
-    M[9812029] = M[101005];
-    M[9812099] = M[101005];
-    M[9812100] = M[101005];
-    M[9812036] = M[101006];
-    M[9812101] = M[101006];
-    M[9812102] = M[101006];
-    M[9812043] = M[101007];
-    M[9812103] = M[101007];
-    M[9812104] = M[101007];
-    M[9812050] = M[101008];
-    M[9812105] = M[101008];
-    M[9812106] = M[101008];
-    M[9812064] = M[101010];
-    M[9812107] = M[101010];
-    M[9812108] = M[101010];
-    M[9812078] = M[101012];
-    M[9812109] = M[101012];
-    M[9812110] = M[101012];
-    M[9812085] = M[101013];
-    M[9812111] = M[101013];
-    M[9812112] = M[101013];
-    M[9813001] = M[105001];
-    M[9813035] = M[105001];
-    M[9813036] = M[105001];
-    M[9813022] = M[105010];
-    M[9813037] = M[105010];
-    M[9813038] = M[105010];
-    M[9813029] = M[105012];
-    M[9813039] = M[105012];
-    M[9813040] = M[105012];
-    M[9814008] = M[103002];
-    M[9814015] = M[103003];
-    M[9814060] = M[103003];
-    M[9814061] = M[103003];
-    M[9814036] = M[103012];
-    M[9814062] = M[103012];
-    M[9814063] = M[103012];
-    M[103904] = M[103012];
-    M[9814043] = M[103015];
-    M[9814064] = M[103015];
-    M[9814065] = M[103015];
-    M[9815001] = M[103004];
-    M[9815072] = M[103004];
-    M[9815073] = M[103004];
-    M[9815022] = M[103007];
-    M[9815074] = M[103007];
-    M[9815075] = M[103007];
-    M[9815029] = M[103009];
-    M[9815076] = M[103009];
-    M[9815077] = M[103009];
-    M[9815043] = M[103013];
-    M[9815078] = M[103013];
-    M[9815079] = M[103013];
-    M[9815050] = M[103014];
-    M[9815080] = M[103014];
-    M[9815081] = M[103014];
-    M[9815064] = M[103100];
-    M[9815082] = M[103100];
-    M[9815083] = M[103100];
-    M[9825001] = M[602001];
-    M[9825002] = M[602002];
-    M[9825003] = M[602003];
-    M[9825004] = M[602004];
-    M[9826001] = M[602004];
-    M[9826002] = M[602004];
-    M[9810015] = M[104003];
-    M[9810025] = M[104004];
-    M[9810032] = M[104100];
-    M[9810043] = M[104005];
-    M[602104] = M[108001];
+#define ALIAS(dst, src) do { auto it = M.find(src); if (it != M.end() && it->second) M[dst] = it->second; } while (0)
+    ALIAS(9811015, 102003); ALIAS(9813064, 105015); ALIAS(9811057, 102003); ALIAS(9811058, 102003);
+    ALIAS(9812130, 101010); ALIAS(9812125, 101004); ALIAS(9812126, 101005); ALIAS(9812127, 101006);
+    ALIAS(9812124, 101003); ALIAS(9812131, 101012); ALIAS(9812143, 101013); ALIAS(9812129, 101008);
+    ALIAS(9815094, 103014); ALIAS(9815091, 103007); ALIAS(9815092, 103009); ALIAS(9815090, 103004);
+    ALIAS(9811067, 102007); ALIAS(9811068, 102105); ALIAS(9811066, 102003); ALIAS(9813056, 105013);
+    ALIAS(9813053, 105010); ALIAS(9813054, 105012); ALIAS(9814074, 103012); ALIAS(9812153, 103100);
+    ALIAS(9812154, 103100); ALIAS(9812155, 103100); ALIAS(9812156, 103100); ALIAS(9811036, 102007);
+    ALIAS(9811043, 102008); ALIAS(9812143, 101014); ALIAS(9811050, 102105); ALIAS(9811061, 102105);
+    ALIAS(9811062, 102105); ALIAS(9812002, 101001); ALIAS(9812123, 101001); ALIAS(9812015, 101003);
+    ALIAS(9812023, 101004); ALIAS(9812029, 101005); ALIAS(9812099, 101005); ALIAS(9812100, 101005);
+    ALIAS(9812036, 101006); ALIAS(9812101, 101006); ALIAS(9812102, 101006); ALIAS(9812043, 101007);
+    ALIAS(9812103, 101007); ALIAS(9812104, 101007); ALIAS(9812050, 101008); ALIAS(9812105, 101008);
+    ALIAS(9812106, 101008); ALIAS(9812064, 101010); ALIAS(9812107, 101010); ALIAS(9812108, 101010);
+    ALIAS(9812078, 101012); ALIAS(9812109, 101012); ALIAS(9812110, 101012); ALIAS(9812085, 101013);
+    ALIAS(9812111, 101013); ALIAS(9812112, 101013); ALIAS(9813001, 105001); ALIAS(9813035, 105001);
+    ALIAS(9813036, 105001); ALIAS(9813022, 105010); ALIAS(9813037, 105010); ALIAS(9813038, 105010);
+    ALIAS(9813029, 105012); ALIAS(9813039, 105012); ALIAS(9813040, 105012); ALIAS(9814008, 103002);
+    ALIAS(9814015, 103003); ALIAS(9814060, 103003); ALIAS(9814061, 103003); ALIAS(9814036, 103012);
+    ALIAS(9814062, 103012); ALIAS(9814063, 103012); ALIAS(103904, 103012); ALIAS(9814043, 103015);
+    ALIAS(9814064, 103015); ALIAS(9814065, 103015); ALIAS(9815001, 103004); ALIAS(9815072, 103004);
+    ALIAS(9815073, 103004); ALIAS(9815022, 103007); ALIAS(9815074, 103007); ALIAS(9815075, 103007);
+    ALIAS(9815029, 103009); ALIAS(9815076, 103009); ALIAS(9815077, 103009); ALIAS(9815043, 103013);
+    ALIAS(9815078, 103013); ALIAS(9815079, 103013); ALIAS(9815050, 103014); ALIAS(9815080, 103014);
+    ALIAS(9815081, 103014); ALIAS(9815064, 103100); ALIAS(9815082, 103100); ALIAS(9815083, 103100);
+    ALIAS(9825001, 602001); ALIAS(9825002, 602002); ALIAS(9825003, 602003); ALIAS(9825004, 602004);
+    ALIAS(9826001, 602004); ALIAS(9826002, 602004); ALIAS(9810015, 104003); ALIAS(9810025, 104004);
+    ALIAS(9810032, 104100); ALIAS(9810043, 104005); ALIAS(602104, 108001);
+#undef ALIAS
 }
 
 extern "C" void InitWeaponTextures(id<MTLDevice> device) {
     if (!device) return;
     static dispatch_once_t once;
     dispatch_once(&once, ^{
-        dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
-#define L(id) gWeaponTextures[id] = LoadTexFromMemory(device, picture_##id##_png, sizeof(picture_##id##_png))
+        id<MTLDevice> retainedDevice = device;
+        dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+            std::map<int, id<MTLTexture>> local;
+#define L(wid) do { id<MTLTexture> t = LoadTexFromMemory(retainedDevice, picture_##wid##_png, sizeof(picture_##wid##_png)); if (t) local[wid] = t; } while (0)
             L(101001); L(101002); L(101003); L(101004); L(101005); L(101006); L(101007); L(101008);
             L(101009); L(101010); L(101011); L(101012); L(101013); L(101014); L(101016);
             L(102001); L(102002); L(102003); L(102004); L(102005); L(102007); L(102008); L(102009);
@@ -160,13 +97,21 @@ extern "C" void InitWeaponTextures(id<MTLDevice> device) {
             L(108001); L(108002); L(108003); L(108004);
             L(602001); L(602002); L(602003); L(602004); L(602075); L(603201);
 #undef L
-            SetupTextureMappings();
+            {
+                std::lock_guard<std::mutex> lock(gWeaponTexMutex);
+                gWeaponTextures.swap(local);
+                SetupTextureMappings();
+                gWeaponTexReady = YES;
+            }
+            NSLog(@"[WeaponTextures] loaded %zu textures", gWeaponTextures.size());
         });
     });
 }
 
 extern "C" bool GetWeaponTexture(int weaponId, id<MTLTexture> *outTex) {
     if (!outTex || weaponId <= 0) return false;
+    std::lock_guard<std::mutex> lock(gWeaponTexMutex);
+    if (!gWeaponTexReady) return false;
     auto it = gWeaponTextures.find(weaponId);
     if (it == gWeaponTextures.end() || !it->second) return false;
     *outTex = it->second;
