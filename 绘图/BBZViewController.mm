@@ -264,14 +264,14 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
     NSDictionary *cfg = NHPrefsRead();
     if (!cfg || cfg[@"drawFps"] == nil) return 0; // 默认跟屏刷（对标 wasd）
     NSInteger fps = [cfg[@"drawFps"] integerValue];
-    if (fps != 60 && fps != 90 && fps != 120) return 0;
+    if (fps != 30 && fps != 60 && fps != 90 && fps != 120) return 0;
     return fps;
 }
 
-/// fps<=0：跟屏刷（preferredFramesPerSecond=0）；否则限到 60/90/120
+/// fps<=0：跟屏刷（preferredFramesPerSecond=0）；否则限到 30/60/90/120
 - (void)applyDrawFpsToDisplayLink:(NSInteger)fps {
     if (!self.displayLink) return;
-    if (fps != 60 && fps != 90 && fps != 120) fps = 0;
+    if (fps != 30 && fps != 60 && fps != 90 && fps != 120) fps = 0;
     if (fps == _appliedDrawFps) return;
     _appliedDrawFps = fps;
     if (fps <= 0) {
@@ -357,8 +357,12 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
 
 - (void)displayLinkCallback:(CADisplayLink *)displayLink {
     BBZGUI::GetIO().DeltaTime = (float)displayLink.duration;
-    // 主界面改 overlay / drawFps 后 HUD 热更新（约 1s）
-    if ((++_overlayPollTick % 60) == 0) {
+    // 主界面改 overlay / drawFps 后 HUD 热更新（按墙钟约 0.5s，与限帧无关）
+    _overlayPollTick++;
+    static CFAbsoluteTime sLastPrefPoll = 0;
+    CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
+    if (sLastPrefPoll <= 0 || (now - sLastPrefPoll) >= 0.5) {
+        sLastPrefPoll = now;
         BOOL on = [self loadOverlayFlagFromDisk];
         if (on != _liveHiddenApplied) {
             [self applyLiveHide:on];

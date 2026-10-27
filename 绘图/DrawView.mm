@@ -468,17 +468,17 @@ static void RefreshDrawPrefs(void) {
     显示距离 = [[cfg objectForKey:@"dist"] boolValue];
     显示背敌 = [[cfg objectForKey:@"behind"] boolValue];
     显示物资 = [[cfg objectForKey:@"loot"] boolValue];
-    if ([cfg objectForKey:@"weaponStyle"]) 手持样式 = [[cfg objectForKey:@"weaponStyle"] intValue];
-    if ([cfg objectForKey:@"lootSize"]) 物资大小 = [[cfg objectForKey:@"lootSize"] intValue];
-    if ([cfg objectForKey:@"behindStyle"]) 背敌样式 = [[cfg objectForKey:@"behindStyle"] intValue];
-    if ([cfg objectForKey:@"behindDist"]) 背敌距离 = [[cfg objectForKey:@"behindDist"] floatValue];
-    if ([cfg objectForKey:@"healthStyle"]) 血量样式 = [[cfg objectForKey:@"healthStyle"] intValue];
-    if ([cfg objectForKey:@"lootMode"]) 物资显示模式 = [[cfg objectForKey:@"lootMode"] intValue];
+    if (cfg[@"weaponStyle"] != nil) 手持样式 = [cfg[@"weaponStyle"] intValue];
+    if (cfg[@"lootSize"] != nil) 物资大小 = [cfg[@"lootSize"] intValue];
+    if (cfg[@"behindStyle"] != nil) 背敌样式 = [cfg[@"behindStyle"] intValue];
+    if (cfg[@"behindDist"] != nil) 背敌距离 = [cfg[@"behindDist"] floatValue];
+    if (cfg[@"healthStyle"] != nil) 血量样式 = [cfg[@"healthStyle"] intValue];
+    if (cfg[@"lootMode"] != nil) 物资显示模式 = [cfg[@"lootMode"] intValue];
     else 物资显示模式 = 1;
-    if ([cfg objectForKey:@"drawDist"]) 绘制距离上限 = [[cfg objectForKey:@"drawDist"] floatValue];
-    if ([cfg objectForKey:@"boneDist"]) 骨骼距离 = [[cfg objectForKey:@"boneDist"] floatValue];
-    if ([cfg objectForKey:@"boneThick"]) 骨骼粗细 = [[cfg objectForKey:@"boneThick"] floatValue];
-    if ([cfg objectForKey:@"rayThick"]) 射线粗细 = [[cfg objectForKey:@"rayThick"] floatValue];
+    if (cfg[@"drawDist"] != nil) 绘制距离上限 = [cfg[@"drawDist"] floatValue];
+    if (cfg[@"boneDist"] != nil) 骨骼距离 = [cfg[@"boneDist"] floatValue];
+    if (cfg[@"boneThick"] != nil) 骨骼粗细 = [cfg[@"boneThick"] floatValue];
+    if (cfg[@"rayThick"] != nil) 射线粗细 = [cfg[@"rayThick"] floatValue];
 }
 
 // 不依赖绘制循环：每 7 秒把整条读取链写进 kfd_debug.log
@@ -661,10 +661,8 @@ bool getbbz() {
         DrawDbg("[Boot] DrawWindow.load pid=%d 后台轮询+7s诊断+CPU启动", (int)getpid());
         int tick = 0;
         while (true) {
-            // prefs 每 3s 读盘一次，避免每秒 fopen
-            if ((tick % 3) == 0) {
-                RefreshDrawPrefs();
-            }
+            // prefs 每 1s 刷新（含 drawx 扩展项：手持/血量/物资模式等）
+            RefreshDrawPrefs();
             if (gReadingEnabled && ((DOJailbreaker *)DOJailbreaker.sharedInstance).isSuccess) {
                 getbbz(); // 内部已对 pid/基址扫描节流
             }

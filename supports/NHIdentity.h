@@ -151,8 +151,8 @@ static inline BOOL NHIsOverlayRole(void) {
 
 // ---- 跨进程开关：notify_set_state（可无文件）----
 // bit0 reading 1 count 2 line 3 box 4 health 5 info 6 bone 7 overlay 8 dbglog 9 persist
-// bit10-11 drawFps：0=跟屏刷 1=60 2=90 3=120
-// bit12 weapon 13 dist 14 behind 15 loot（对标 wasd 手持/距离/背敌/物资）
+// bit10-11 drawFps：0=跟屏刷 1=60 2=90 3=120（30 与样式等精确值走 drawx extras）
+// bit12 weapon 13 dist 14 behind 15 loot
 // bit63 = 有效标记（曾发布过）
 enum {
     NHBitReading = 0,
@@ -180,12 +180,49 @@ static inline NSString *NHWuziPath(void) {
             [NSString stringWithFormat:@"wuzi_%@.txt", NHDeviceToken()]];
 }
 
-/// prefs drawFps：0=跟屏刷，60/90/120=限帧
+/// 绘制扩展项（样式/距离/粗细/fps 精确值）：主 App↔HUD 跨进程，且不受「配置落盘」开关影响
+static inline NSString *NHDrawExtrasPath(void) {
+    return [NHConfigDirectory() stringByAppendingPathComponent:
+            [NSString stringWithFormat:@"drawx_%@.plist", NHDeviceToken()]];
+}
+
+static inline NSArray<NSString *> *NHDrawExtrasKeys(void) {
+    return @[
+        @"weaponStyle", @"healthStyle", @"behindStyle", @"lootMode",
+        @"lootSize", @"drawDist", @"behindDist", @"boneDist",
+        @"boneThick", @"rayThick", @"drawFps",
+    ];
+}
+
+static inline void NHDrawExtrasWriteFromDict(NSDictionary *cfg) {
+    if (!cfg) return;
+    NSMutableDictionary *patch = [NSMutableDictionary dictionary];
+    for (NSString *k in NHDrawExtrasKeys()) {
+        id v = cfg[k];
+        if (v != nil) patch[k] = v;
+    }
+    if (patch.count == 0) return;
+    NSString *path = NHDrawExtrasPath();
+    NSFileManager *fm = [NSFileManager defaultManager];
+    NSString *dir = [path stringByDeletingLastPathComponent];
+    if (![fm fileExistsAtPath:dir]) {
+        [fm createDirectoryAtPath:dir withIntermediateDirectories:YES attributes:nil error:nil];
+    }
+    NSMutableDictionary *merged = [NSMutableDictionary dictionaryWithContentsOfFile:path] ?: [NSMutableDictionary dictionary];
+    [merged addEntriesFromDictionary:patch];
+    [merged writeToFile:path atomically:YES];
+}
+
+static inline NSDictionary *NHDrawExtrasRead(void) {
+    return [NSDictionary dictionaryWithContentsOfFile:NHDrawExtrasPath()] ?: @{};
+}
+
+/// prefs drawFps：notify 仅编码 60/90/120；30 与精确值以 drawx extras 为准
 static inline int NHFpsModeFromValue(NSInteger fps) {
     if (fps == 60) return 1;
     if (fps == 90) return 2;
     if (fps == 120) return 3;
-    return 0;
+    return 0; // 跟屏刷或 30（30 只写 extras）
 }
 
 static inline NSInteger NHFpsValueFromMode(int mode) {
@@ -262,37 +299,33 @@ static inline void NHClearPid(void) {
     notify_set_state(NHPidToken(), 0);
 }
 
-/// 从字典发布整表状态（persist 缺省时保持当前/默认开）
+/// 从字典发布状态：只更新 cfg 里出现的键，避免稀疏写入把其它开关清零
 static inline void NHPrefsPublishDict(NSDictionary *cfg) {
     if (!cfg) return;
     uint64_t cur = NHStateGet();
-    bool persist = NHStateValid(cur) ? NHStateBit(cur, NHBitPersist) : YES;
-    if (cfg[@"persist"] != nil) persist = [cfg[@"persist"] boolValue];
-    uint64_t v = 0;
-    if ([[cfg objectForKey:@"reading"] boolValue]) v = NHStateWithBit(v, NHBitReading, YES);
-    if ([[cfg objectForKey:@"count"] boolValue])   v = NHStateWithBit(v, NHBitCount, YES);
-    if ([[cfg objectForKey:@"line"] boolValue])    v = NHStateWithBit(v, NHBitLine, YES);
-    if ([[cfg objectForKey:@"box"] boolValue])     v = NHStateWithBit(v, NHBitBox, YES);
-    if ([[cfg objectForKey:@"health"] boolValue])  v = NHStateWithBit(v, NHBitHealth, YES);
-    if ([[cfg objectForKey:@"info"] boolValue])    v = NHStateWithBit(v, NHBitInfo, YES);
-    if ([[cfg objectForKey:@"bone"] boolValue])    v = NHStateWithBit(v, NHBitBone, YES);
-    if ([[cfg objectForKey:@"overlay"] boolValue]) v = NHStateWithBit(v, NHBitOverlay, YES);
-    if ([[cfg objectForKey:@"dbglog"] boolValue])  v = NHStateWithBit(v, NHBitDbglog, YES);
-    if ([[cfg objectForKey:@"weapon"] boolValue])  v = NHStateWithBit(v, NHBitWeapon, YES);
-    if ([[cfg objectForKey:@"dist"] boolValue])    v = NHStateWithBit(v, NHBitDist, YES);
-    if ([[cfg objectForKey:@"behind"] boolValue])  v = NHStateWithBit(v, NHBitBehind, YES);
-    if ([[cfg objectForKey:@"loot"] boolValue])    v = NHStateWithBit(v, NHBitLoot, YES);
-    if (persist) v = NHStateWithBit(v, NHBitPersist, YES);
-    {
-        NSInteger fpsVal = 0;
-        if (cfg[@"drawFps"] != nil) fpsVal = [cfg[@"drawFps"] integerValue];
-        else if (NHStateValid(cur)) {
-            int oldMode = (NHStateBit(cur, NHBitFps0) ? 1 : 0) | (NHStateBit(cur, NHBitFps1) ? 2 : 0);
-            fpsVal = NHFpsValueFromMode(oldMode);
-        }
-        int mode = NHFpsModeFromValue(fpsVal);
-        if (mode & 1) v = NHStateWithBit(v, NHBitFps0, YES);
-        if (mode & 2) v = NHStateWithBit(v, NHBitFps1, YES);
+    uint64_t v = NHStateValid(cur) ? cur : 0;
+    if (cfg[@"reading"] != nil) v = NHStateWithBit(v, NHBitReading, [cfg[@"reading"] boolValue]);
+    if (cfg[@"count"]   != nil) v = NHStateWithBit(v, NHBitCount,   [cfg[@"count"] boolValue]);
+    if (cfg[@"line"]    != nil) v = NHStateWithBit(v, NHBitLine,    [cfg[@"line"] boolValue]);
+    if (cfg[@"box"]     != nil) v = NHStateWithBit(v, NHBitBox,     [cfg[@"box"] boolValue]);
+    if (cfg[@"health"]  != nil) v = NHStateWithBit(v, NHBitHealth,  [cfg[@"health"] boolValue]);
+    if (cfg[@"info"]    != nil) v = NHStateWithBit(v, NHBitInfo,    [cfg[@"info"] boolValue]);
+    if (cfg[@"bone"]    != nil) v = NHStateWithBit(v, NHBitBone,    [cfg[@"bone"] boolValue]);
+    if (cfg[@"overlay"] != nil) v = NHStateWithBit(v, NHBitOverlay, [cfg[@"overlay"] boolValue]);
+    if (cfg[@"dbglog"]  != nil) v = NHStateWithBit(v, NHBitDbglog,  [cfg[@"dbglog"] boolValue]);
+    if (cfg[@"weapon"]  != nil) v = NHStateWithBit(v, NHBitWeapon,  [cfg[@"weapon"] boolValue]);
+    if (cfg[@"dist"]    != nil) v = NHStateWithBit(v, NHBitDist,    [cfg[@"dist"] boolValue]);
+    if (cfg[@"behind"]  != nil) v = NHStateWithBit(v, NHBitBehind,  [cfg[@"behind"] boolValue]);
+    if (cfg[@"loot"]    != nil) v = NHStateWithBit(v, NHBitLoot,    [cfg[@"loot"] boolValue]);
+    if (cfg[@"persist"] != nil) {
+        v = NHStateWithBit(v, NHBitPersist, [cfg[@"persist"] boolValue]);
+    } else if (!NHStateValid(cur)) {
+        v = NHStateWithBit(v, NHBitPersist, YES); // 默认落盘
+    }
+    if (cfg[@"drawFps"] != nil) {
+        int mode = NHFpsModeFromValue([cfg[@"drawFps"] integerValue]);
+        v = NHStateWithBit(v, NHBitFps0, (mode & 1) != 0);
+        v = NHStateWithBit(v, NHBitFps1, (mode & 2) != 0);
     }
     NHStateSet(v);
 }
@@ -322,14 +355,14 @@ static inline NSMutableDictionary *NHPrefsDictFromState(void) {
     return d;
 }
 
-/// 写配置（persist=0 时只走 notify，并尽量删掉已有文件）
+/// 写配置：扩展项始终写入 drawx 旁路；开关仍走 notify；落盘开时再写 cfg
 static inline void NHPrefsWrite(NSDictionary *cfg) {
     if (!cfg) return;
+    NHDrawExtrasWriteFromDict(cfg);
     NHPrefsPublishDict(cfg);
     if (!NHPersistFilesEnabled()) {
         NSString *path = NHPrefsPath();
         [[NSFileManager defaultManager] removeItemAtPath:path error:nil];
-        // pid 文件也不留
         [[NSFileManager defaultManager] removeItemAtPath:NHPidPath() error:nil];
         return;
     }
@@ -344,17 +377,25 @@ static inline void NHPrefsWrite(NSDictionary *cfg) {
     [merged writeToFile:path atomically:YES];
 }
 
-/// 读配置：优先磁盘（落盘模式）；无文件则用 notify；再无则 nil
+/// 读配置：notify/磁盘开关 + 始终合并 drawx 扩展项（样式/距离/fps）
 static inline NSDictionary *NHPrefsRead(void) {
+    NSMutableDictionary *out = nil;
     if (NHPersistFilesEnabled()) {
         NSDictionary *disk = [NSDictionary dictionaryWithContentsOfFile:NHPrefsPath()];
         if (disk) {
-            // 同步到 notify，方便无落盘切换瞬间 HUD 仍可读
             NHPrefsPublishDict(disk);
-            return disk;
+            out = [NSMutableDictionary dictionaryWithDictionary:disk];
         }
     }
-    return NHPrefsDictFromState();
+    if (!out) {
+        NSDictionary *st = NHPrefsDictFromState();
+        out = st ? [NSMutableDictionary dictionaryWithDictionary:st] : [NSMutableDictionary dictionary];
+    }
+    NSDictionary *extras = NHDrawExtrasRead();
+    if (extras.count > 0) {
+        [out addEntriesFromDictionary:extras];
+    }
+    return out.count > 0 ? out : nil;
 }
 
 #ifdef __cplusplus

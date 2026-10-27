@@ -96,9 +96,9 @@ static BOOL JVR_读取开关(NSString* key) {
     return v;
 }
 
-/// drawFps：0=跟屏刷，60/90/120（对标 wasd 选项卡存档方式）
+/// drawFps：0=跟屏刷，30/60/90/120（对标 wasd 选项卡存档方式）
 static NSInteger JVR_规范化DrawFps(NSInteger fps) {
-    if (fps == 60 || fps == 90 || fps == 120) return fps;
+    if (fps == 30 || fps == 60 || fps == 90 || fps == 120) return fps;
     return 0;
 }
 
@@ -124,17 +124,19 @@ static NSInteger JVR_读取DrawFps(void) {
 }
 
 static NSInteger JVR_DrawFpsToSegmentIndex(NSInteger fps) {
-    if (fps == 60) return 1;
-    if (fps == 90) return 2;
-    if (fps == 120) return 3;
+    if (fps == 30) return 1;
+    if (fps == 60) return 2;
+    if (fps == 90) return 3;
+    if (fps == 120) return 4;
     return 0; // 跟屏刷
 }
 
 static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
     switch (idx) {
-        case 1: return 60;
-        case 2: return 90;
-        case 3: return 120;
+        case 1: return 30;
+        case 2: return 60;
+        case 3: return 90;
+        case 4: return 120;
         default: return 0;
     }
 }
@@ -217,7 +219,7 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
 
 // ========================================
 // 绘制帧率选项卡（对标 wasd 血量样式：UISegmentedControl）
-// 跟屏刷 / 60 / 90 / 120
+// 跟屏刷 / 30 / 60 / 90 / 120
 // ========================================
 @interface JVRFpsSegmentRow : UIView
 @property (nonatomic, strong) UILabel *titleLabel;
@@ -250,8 +252,8 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
         self.titleLabel.textColor = JVR_文字色;
         [self addSubview:self.titleLabel];
 
-        // 对标 wasd options 分段；默认跟屏刷=0（与 wasd CADisplayLink 不限帧一致）
-        self.segment = [[UISegmentedControl alloc] initWithItems:@[ @"跟屏刷", @"60", @"90", @"120" ]];
+        // 默认跟屏刷=0；加 30 便于肉眼确认限帧是否生效
+        self.segment = [[UISegmentedControl alloc] initWithItems:@[ @"跟屏刷", @"30", @"60", @"90", @"120" ]];
         self.segment.translatesAutoresizingMaskIntoConstraints = NO;
         self.segment.selectedSegmentIndex = JVR_DrawFpsToSegmentIndex(JVR_读取DrawFps());
         if (@available(iOS 13.0, *)) {
@@ -1412,7 +1414,7 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
     stack.spacing = 8.0f;
     stack.alignment = UIStackViewAlignmentFill;
 
-    // 对标 wasd「血量样式」分段选项：跟屏刷 / 60 / 90 / 120
+    // 对标 wasd「血量样式」分段选项：跟屏刷 / 30 / 60 / 90 / 120
     JVRFpsSegmentRow *fpsRow = [[JVRFpsSegmentRow alloc] init];
     fpsRow.translatesAutoresizingMaskIntoConstraints = NO;
     fpsRow.onChange = ^(NSInteger fps) {
@@ -1429,7 +1431,9 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
         NSMutableDictionary *cfg = [NSMutableDictionary dictionary];
         NSDictionary *cur = NHPrefsRead();
         if (cur) [cfg addEntriesFromDictionary:cur];
+        else [cfg addEntriesFromDictionary:JVR_开关缓存()];
         cfg[@"weaponStyle"] = @(style);
+        JVR_开关缓存()[@"weaponStyle"] = @(style);
         NHPrefsWrite(cfg);
         KernelLogLine(style == 1 ? "手持样式 = 图片" : "手持样式 = 文字");
         kfd_log("[UI] weaponStyle=%ld\n", (long)style);
