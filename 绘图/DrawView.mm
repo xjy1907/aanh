@@ -49,6 +49,7 @@ static bool 显示血量 = false;
 static bool 显示信息 = false;
 static bool 显示骨骼 = false;
 static bool 显示手持 = false, 显示距离 = false, 显示背敌 = false, 显示物资 = false;
+static int 手持样式 = 0; // 0=文字 1=图片（对标 wasd 手持图）
 static int 物资大小 = 12;
 static int 背敌样式 = 0; // 0 radar 1 arrow
 static float 背敌距离 = 300.f;
@@ -204,6 +205,7 @@ template<typename T> T vm_read(uint64_t address) {
 #include "游戏/SDK.h"
 #include "游戏/绘制算法.h"
 #include "游戏/武器名称.h"
+#include "游戏/WeaponTextures.h"
 #include <sstream>
 #include <map>
 #include <unordered_map>
@@ -393,6 +395,7 @@ static void RefreshDrawPrefs(void) {
             restore[@"info"] = @(显示信息);
             restore[@"bone"] = @(显示骨骼);
             restore[@"weapon"] = @(显示手持);
+            restore[@"weaponStyle"] = @(手持样式);
             restore[@"dist"] = @(显示距离);
             restore[@"behind"] = @(显示背敌);
             restore[@"loot"] = @(显示物资);
@@ -415,6 +418,7 @@ static void RefreshDrawPrefs(void) {
     显示距离 = [[cfg objectForKey:@"dist"] boolValue];
     显示背敌 = [[cfg objectForKey:@"behind"] boolValue];
     显示物资 = [[cfg objectForKey:@"loot"] boolValue];
+    if ([cfg objectForKey:@"weaponStyle"]) 手持样式 = [[cfg objectForKey:@"weaponStyle"] intValue];
     if ([cfg objectForKey:@"lootSize"]) 物资大小 = [[cfg objectForKey:@"lootSize"] intValue];
     if ([cfg objectForKey:@"behindStyle"]) 背敌样式 = [[cfg objectForKey:@"behindStyle"] intValue];
     if ([cfg objectForKey:@"behindDist"]) 背敌距离 = [[cfg objectForKey:@"behindDist"] floatValue];
@@ -904,8 +908,23 @@ void Draw::StartBooks() {
             enemyGrenadeTimers.erase(actor);
         }
 
-        if (显示手持 && onScreen && distance <= 绘制距离上限) {
-            if (weapon > 0) {
+        if (显示手持 && onScreen && distance <= 绘制距离上限 && weapon > 0) {
+            if (手持样式 == 1) {
+                id<MTLTexture> weaponTexture = nil;
+                if (GetWeaponTexture(weapon, &weaponTexture) && weaponTexture) {
+                    ImVec2 sz(40, 20);
+                    ImVec2 p0(HeadScreen.X - sz.x * 0.5f, HeadScreen.Y - 75.0f);
+                    ImVec2 p1(p0.x + sz.x, p0.y + sz.y);
+                    dl->AddImage((__bridge ImTextureID)weaponTexture, p0, p1,
+                                 ImVec2(0, 0), ImVec2(1, 1), IM_COL32_WHITE);
+                } else {
+                    // 无图回退文字，避免空白
+                    std::string wname = GetWeaponDisplayName(weapon);
+                    if (!wname.empty()) {
+                        Draw::DrawText(wname, ImVec2(HeadScreen.X, HeadScreen.Y - 55.0f), true, Colour_黄色, false, 10);
+                    }
+                }
+            } else {
                 std::string wname = GetWeaponDisplayName(weapon);
                 if (!wname.empty()) {
                     Draw::DrawText(wname, ImVec2(HeadScreen.X, HeadScreen.Y - 55.0f), true, Colour_黄色, false, 10);

@@ -16,6 +16,7 @@
 #include "DrawView.hpp"
 #import "过直播窗口.h"
 #import "NHIdentity.h"
+#import "游戏/WeaponTextures.h"
 //#include "ShowClient.h"
 
 // 日志输出到主页日志框
@@ -180,6 +181,9 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
         if (!_mtlCommandQueue) { // 如果创建失败
             return YES; // 返回 YES，结束启动
         }
+
+        // 手持图片纹理（对标 wasd initImageTexture）
+        InitWeaponTextures(_MetalView.device);
         
         _BBZHostingController = [[objc_getClass("SBSAccessibilityWindowHostingController") alloc] init]; // 初始化无障碍窗口托管控制器
         BBZMenuHostingController = [[objc_getClass("SBSAccessibilityWindowHostingController") alloc] init]; // 初始化另一个无障碍窗口托管控制器

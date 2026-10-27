@@ -165,21 +165,33 @@ static inline const int (*GetSkeletonList(int boneCount))[2] {
     }
 }
 
+// 对标 wasd：FString 布局为 Data*(+0) + ArrayNum(+8)；从 Data 读 UTF16
 static string GetPlayerName(long player) {
-    string n = "";
-    if (!IsValidAddr(player)) return n;
-    uint64_t namePtr = UNSIGN_PTR(vm_read<uint64_t>(player + SDK::PlayerName));
-    if (!IsValidAddr(namePtr)) return n;
-    
-    uint32_t nameLen = vm_read<uint32_t>(namePtr + 0x8);
-    if (nameLen <= 0 || nameLen > 64) return n;
-    
-    uint64_t nameData = namePtr + 0xC;
-    char16_t utf16Buf[64] = {0};
-    readMemory(nameData, utf16Buf, nameLen * 2);
-    
-    NSString *str = [[NSString alloc] initWithBytes:utf16Buf length:nameLen * 2 encoding:NSUTF16LittleEndianStringEncoding];
-    if (str) n = [str UTF8String];
+    static std::unordered_map<long, string> nameCache;
+    static const size_t kMaxNameCache = 300;
+    if (!IsValidAddr(player)) return "";
+    auto it = nameCache.find(player);
+    if (it != nameCache.end()) return it->second;
+
+    uint64_t data = UNSIGN_PTR(vm_read<uint64_t>(player + SDK::PlayerName));
+    if (!IsValidAddr(data)) return "";
+
+    int32_t nameLen = vm_read<int32_t>(player + SDK::PlayerName + 0x8);
+    if (nameLen <= 0 || nameLen > 32) nameLen = 16; // wasd 固定读 16 wchar
+
+    char16_t utf16Buf[33] = {0};
+    size_t bytes = (size_t)nameLen * sizeof(char16_t);
+    if (bytes > sizeof(utf16Buf) - sizeof(char16_t)) bytes = sizeof(utf16Buf) - sizeof(char16_t);
+    if (!readMemory(data, utf16Buf, bytes)) return "";
+
+    NSString *str = [[NSString alloc] initWithBytes:utf16Buf
+                                             length:bytes
+                                           encoding:NSUTF16LittleEndianStringEncoding];
+    string n = (str.length > 0) ? string([str UTF8String]) : "";
+    if (!n.empty()) {
+        if (nameCache.size() > kMaxNameCache) nameCache.clear();
+        nameCache[player] = n;
+    }
     return n;
 }
 

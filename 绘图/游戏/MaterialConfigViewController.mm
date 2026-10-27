@@ -55,6 +55,8 @@ static NSString *MCHexFromColor(UIColor *color) {
 @property (nonatomic, strong) UITableView *tableView;
 @property (nonatomic, strong) UIScrollView *categoryScroll;
 @property (nonatomic, strong) UIView *categoryContent;
+@property (nonatomic, strong) UIView *batchBar;
+@property (nonatomic, strong) UITextField *batchDistField;
 @property (nonatomic, strong) UISlider *sizeSlider;
 @property (nonatomic, strong) UILabel *sizeValueLabel;
 @property (nonatomic, strong) NSArray<NSString *> *categories;
@@ -338,6 +340,78 @@ static NSString *MCHexFromColor(UIColor *color) {
   }
   [self updateCategoryButtonStyles];
 
+  // 本分类批量：全选 / 反选 / 取消 + 距离输入确认（只影响当前分页面）
+  self.batchBar = [[UIView alloc] init];
+  self.batchBar.translatesAutoresizingMaskIntoConstraints = NO;
+  self.batchBar.backgroundColor = [UIColor colorWithWhite:0.07 alpha:1];
+  [self.view addSubview:self.batchBar];
+
+  UIButton *(^makeBatchBtn)(NSString *, SEL, UIColor *) = ^UIButton *(NSString *title, SEL sel, UIColor *bg) {
+    UIButton *b = [UIButton buttonWithType:UIButtonTypeSystem];
+    b.translatesAutoresizingMaskIntoConstraints = NO;
+    [b setTitle:title forState:UIControlStateNormal];
+    [b setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    b.titleLabel.font = [UIFont systemFontOfSize:12 weight:UIFontWeightSemibold];
+    b.backgroundColor = bg;
+    b.layer.cornerRadius = 6;
+    [b addTarget:self action:sel forControlEvents:UIControlEventTouchUpInside];
+    [self.batchBar addSubview:b];
+    return b;
+  };
+  UIButton *allBtn = makeBatchBtn(@"全选", @selector(onBatchSelectAll), [UIColor colorWithRed:0.15 green:0.65 blue:0.35 alpha:1]);
+  UIButton *invBtn = makeBatchBtn(@"反选", @selector(onBatchInvert), [UIColor colorWithRed:0.85 green:0.65 blue:0.15 alpha:1]);
+  UIButton *clrBtn = makeBatchBtn(@"取消", @selector(onBatchClear), [UIColor colorWithRed:0.85 green:0.25 blue:0.3 alpha:1]);
+
+  UILabel *distHint = [[UILabel alloc] init];
+  distHint.translatesAutoresizingMaskIntoConstraints = NO;
+  distHint.text = @"距离";
+  distHint.textColor = [UIColor colorWithWhite:0.7 alpha:1];
+  distHint.font = [UIFont systemFontOfSize:12];
+  [self.batchBar addSubview:distHint];
+
+  self.batchDistField = [[UITextField alloc] init];
+  self.batchDistField.translatesAutoresizingMaskIntoConstraints = NO;
+  self.batchDistField.placeholder = @"如 300";
+  self.batchDistField.textColor = [UIColor whiteColor];
+  self.batchDistField.font = [UIFont systemFontOfSize:13];
+  self.batchDistField.textAlignment = NSTextAlignmentCenter;
+  self.batchDistField.keyboardType = UIKeyboardTypeNumberPad;
+  self.batchDistField.backgroundColor = [UIColor colorWithWhite:0.14 alpha:1];
+  self.batchDistField.layer.cornerRadius = 5;
+  self.batchDistField.layer.borderWidth = 0.5;
+  self.batchDistField.layer.borderColor = [cyan colorWithAlphaComponent:0.4].CGColor;
+  self.batchDistField.delegate = self;
+  [self.batchBar addSubview:self.batchDistField];
+
+  UIButton *confirmBtn = makeBatchBtn(@"确认", @selector(onBatchDistanceConfirm), cyan);
+  [confirmBtn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+
+  [NSLayoutConstraint activateConstraints:@[
+    [allBtn.leadingAnchor constraintEqualToAnchor:self.batchBar.leadingAnchor constant:10],
+    [allBtn.centerYAnchor constraintEqualToAnchor:self.batchBar.centerYAnchor],
+    [allBtn.widthAnchor constraintEqualToConstant:48],
+    [allBtn.heightAnchor constraintEqualToConstant:28],
+    [invBtn.leadingAnchor constraintEqualToAnchor:allBtn.trailingAnchor constant:6],
+    [invBtn.centerYAnchor constraintEqualToAnchor:self.batchBar.centerYAnchor],
+    [invBtn.widthAnchor constraintEqualToConstant:48],
+    [invBtn.heightAnchor constraintEqualToConstant:28],
+    [clrBtn.leadingAnchor constraintEqualToAnchor:invBtn.trailingAnchor constant:6],
+    [clrBtn.centerYAnchor constraintEqualToAnchor:self.batchBar.centerYAnchor],
+    [clrBtn.widthAnchor constraintEqualToConstant:48],
+    [clrBtn.heightAnchor constraintEqualToConstant:28],
+    [distHint.leadingAnchor constraintEqualToAnchor:clrBtn.trailingAnchor constant:10],
+    [distHint.centerYAnchor constraintEqualToAnchor:self.batchBar.centerYAnchor],
+    [self.batchDistField.leadingAnchor constraintEqualToAnchor:distHint.trailingAnchor constant:4],
+    [self.batchDistField.centerYAnchor constraintEqualToAnchor:self.batchBar.centerYAnchor],
+    [self.batchDistField.widthAnchor constraintEqualToConstant:64],
+    [self.batchDistField.heightAnchor constraintEqualToConstant:28],
+    [confirmBtn.leadingAnchor constraintEqualToAnchor:self.batchDistField.trailingAnchor constant:6],
+    [confirmBtn.centerYAnchor constraintEqualToAnchor:self.batchBar.centerYAnchor],
+    [confirmBtn.widthAnchor constraintEqualToConstant:48],
+    [confirmBtn.heightAnchor constraintEqualToConstant:28],
+    [confirmBtn.trailingAnchor constraintLessThanOrEqualToAnchor:self.batchBar.trailingAnchor constant:-10],
+  ]];
+
   // 表头说明
   UIView *header = [[UIView alloc] init];
   header.translatesAutoresizingMaskIntoConstraints = NO;
@@ -417,7 +491,12 @@ static NSString *MCHexFromColor(UIColor *color) {
     [self.categoryContent.trailingAnchor constraintEqualToAnchor:self.categoryScroll.trailingAnchor],
     [self.categoryContent.heightAnchor constraintEqualToAnchor:self.categoryScroll.heightAnchor],
 
-    [header.topAnchor constraintEqualToAnchor:self.categoryScroll.bottomAnchor],
+    [self.batchBar.topAnchor constraintEqualToAnchor:self.categoryScroll.bottomAnchor],
+    [self.batchBar.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
+    [self.batchBar.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor],
+    [self.batchBar.heightAnchor constraintEqualToConstant:40],
+
+    [header.topAnchor constraintEqualToAnchor:self.batchBar.bottomAnchor],
     [header.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor],
     [header.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor],
     [header.heightAnchor constraintEqualToConstant:28],
@@ -549,6 +628,39 @@ static NSString *MCHexFromColor(UIColor *color) {
   ]];
 
   return cell;
+}
+
+#pragma mark - 本分类批量
+
+- (void)onBatchSelectAll {
+  for (MCItemState *st in self.currentItems) st.enabled = YES;
+  [self rewriteWuziFile];
+  [self.tableView reloadData];
+}
+
+- (void)onBatchInvert {
+  for (MCItemState *st in self.currentItems) st.enabled = !st.enabled;
+  [self rewriteWuziFile];
+  [self.tableView reloadData];
+}
+
+- (void)onBatchClear {
+  for (MCItemState *st in self.currentItems) st.enabled = NO;
+  [self rewriteWuziFile];
+  [self.tableView reloadData];
+}
+
+- (void)onBatchDistanceConfirm {
+  [self.batchDistField resignFirstResponder];
+  float v = [self.batchDistField.text floatValue];
+  if (v < 0) v = 0;
+  if (v > 9999) v = 9999;
+  if (self.batchDistField.text.length == 0) return;
+  for (MCItemState *st in self.currentItems) {
+    st.maxDistance = v;
+  }
+  [self rewriteWuziFile];
+  [self.tableView reloadData];
 }
 
 #pragma mark - Actions

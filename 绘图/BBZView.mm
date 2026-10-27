@@ -285,6 +285,72 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
 
 @end
 
+// 手持样式：文字 / 图片
+@interface JVRWeaponStyleRow : UIView
+@property (nonatomic, strong) UILabel *titleLabel;
+@property (nonatomic, strong) UISegmentedControl *segment;
+@property (nonatomic, copy) void (^onChange)(NSInteger style); // 0文字 1图片
+@end
+
+@implementation JVRWeaponStyleRow
+- (instancetype)init {
+    self = [super initWithFrame:CGRectZero];
+    if (self) {
+        self.backgroundColor = [JVR_卡片色 colorWithAlphaComponent:0.6f];
+        self.layer.cornerRadius = 8.0f;
+        self.layer.borderWidth = 1.0f;
+        self.layer.borderColor = JVR_边框色.CGColor;
+
+        UIView *accent = [[UIView alloc] init];
+        accent.translatesAutoresizingMaskIntoConstraints = NO;
+        accent.backgroundColor = JVR_副色;
+        accent.layer.cornerRadius = 1.5f;
+        [self addSubview:accent];
+
+        self.titleLabel = [[UILabel alloc] init];
+        self.titleLabel.translatesAutoresizingMaskIntoConstraints = NO;
+        self.titleLabel.text = @"手持样式";
+        self.titleLabel.font = [UIFont systemFontOfSize:14.0f weight:UIFontWeightMedium];
+        self.titleLabel.textColor = JVR_文字色;
+        [self addSubview:self.titleLabel];
+
+        self.segment = [[UISegmentedControl alloc] initWithItems:@[ @"文字", @"图片" ]];
+        self.segment.translatesAutoresizingMaskIntoConstraints = NO;
+        NSInteger cur = 0;
+        NSDictionary *cfg = NHPrefsRead();
+        if (cfg[@"weaponStyle"]) cur = [cfg[@"weaponStyle"] integerValue];
+        if (cur < 0) cur = 0;
+        if (cur > 1) cur = 1;
+        self.segment.selectedSegmentIndex = cur;
+        if (@available(iOS 13.0, *)) {
+            self.segment.selectedSegmentTintColor = [JVR_副色 colorWithAlphaComponent:0.55f];
+            [self.segment setTitleTextAttributes:@{ NSForegroundColorAttributeName: JVR_文字色 } forState:UIControlStateNormal];
+            [self.segment setTitleTextAttributes:@{ NSForegroundColorAttributeName: [UIColor whiteColor] } forState:UIControlStateSelected];
+        }
+        [self.segment addTarget:self action:@selector(onSegment:) forControlEvents:UIControlEventValueChanged];
+        [self addSubview:self.segment];
+
+        [NSLayoutConstraint activateConstraints:@[
+            [accent.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:10],
+            [accent.topAnchor constraintEqualToAnchor:self.topAnchor constant:12],
+            [accent.widthAnchor constraintEqualToConstant:3],
+            [accent.heightAnchor constraintEqualToConstant:18],
+            [self.titleLabel.leadingAnchor constraintEqualToAnchor:accent.trailingAnchor constant:10],
+            [self.titleLabel.centerYAnchor constraintEqualToAnchor:accent.centerYAnchor],
+            [self.segment.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:12],
+            [self.segment.trailingAnchor constraintEqualToAnchor:self.trailingAnchor constant:-12],
+            [self.segment.topAnchor constraintEqualToAnchor:self.titleLabel.bottomAnchor constant:10],
+            [self.segment.heightAnchor constraintEqualToConstant:30],
+            [self.heightAnchor constraintEqualToConstant:72],
+        ]];
+    }
+    return self;
+}
+- (void)onSegment:(UISegmentedControl *)sender {
+    if (self.onChange) self.onChange(sender.selectedSegmentIndex);
+}
+@end
+
 @implementation JVRNeonSwitch
 
 - (instancetype)initWithTitle:(NSString *)title key:(NSString *)key {
@@ -1355,6 +1421,19 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
         kfd_log("[UI] drawFps=%ld DRAWFPS_SEG_V1\n", (long)fps);
     };
     [stack addArrangedSubview:fpsRow];
+
+    JVRWeaponStyleRow *weaponStyleRow = [[JVRWeaponStyleRow alloc] init];
+    weaponStyleRow.translatesAutoresizingMaskIntoConstraints = NO;
+    weaponStyleRow.onChange = ^(NSInteger style) {
+        NSMutableDictionary *cfg = [NSMutableDictionary dictionary];
+        NSDictionary *cur = NHPrefsRead();
+        if (cur) [cfg addEntriesFromDictionary:cur];
+        cfg[@"weaponStyle"] = @(style);
+        NHPrefsWrite(cfg);
+        KernelLogLine(style == 1 ? "手持样式 = 图片" : "手持样式 = 文字");
+        kfd_log("[UI] weaponStyle=%ld\n", (long)style);
+    };
+    [stack addArrangedSubview:weaponStyleRow];
     
     NSArray *configs = @[
         @{@"title": @"显示人数", @"key": @"count"},

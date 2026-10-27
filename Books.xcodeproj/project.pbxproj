@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3BC5ADD429D34DD689FC0109 /* WeaponTextures.mm in Sources */ = {isa = PBXBuildFile; fileRef = 54D381EE9E2145908F6B1B4E /* WeaponTextures.mm */; };
 		52D9892696614579B40E3B51 /* MaterialConfigViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5BDB540911244279018928C /* MaterialConfigViewController.mm */; };
 		3AF79ADC4BF24B6098EFBE47 /* ItemConfig.mm in Sources */ = {isa = PBXBuildFile; fileRef = DFB07DA9967C4ED5AAF82D6E /* ItemConfig.mm */; };
 		E3A40925550F4B9F8723608C /* ItemConfig.mm in Sources */ = {isa = PBXBuildFile; fileRef = DFB07DA9967C4ED5AAF82D6E /* ItemConfig.mm */; };
@@ -257,6 +258,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		5486369C49784FF3808FD160 /* WeaponTextures.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WeaponTextures.h; sourceTree = "<group>"; };
+		54D381EE9E2145908F6B1B4E /* WeaponTextures.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = WeaponTextures.mm; sourceTree = "<group>"; };
 		233F0963537B4745B0582A43 /* ItemConfig.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ItemConfig.h"; sourceTree = "<group>"; };
 		DFB07DA9967C4ED5AAF82D6E /* ItemConfig.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = "ItemConfig.mm"; sourceTree = "<group>"; };
 		89CF838C73764B348300E802 /* MaterialConfigViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MaterialConfigViewController.h"; sourceTree = "<group>"; };
@@ -690,6 +693,8 @@
 		0FE5D6622F5067A100FD4AFC /* 游戏 */ = {
 			isa = PBXGroup;
 			children = (
+				5486369C49784FF3808FD160 /* WeaponTextures.h */,
+				54D381EE9E2145908F6B1B4E /* WeaponTextures.mm */,
 				233F0963537B4745B0582A43 /* ItemConfig.h */,
 				DFB07DA9967C4ED5AAF82D6E /* ItemConfig.mm */,
 				89CF838C73764B348300E802 /* MaterialConfigViewController.h */,
@@ -1650,6 +1655,7 @@
 				CC711D502B5BF5C6007235A6 /* IOHIDEvent+KIF.m in Sources */,
 				CC8DDA922B655156001C7C9E /* DeactivateHUDIntent.swift in Sources */,
 				1F0BD93B2D6ED703008151DA /* DrawView.mm in Sources */,
+				3BC5ADD429D34DD689FC0109 /* WeaponTextures.mm in Sources */,
 				1EB561C880AF4623B86304D8 /* MaterialConfigViewController.mm in Sources */,
 				E3A40925550F4B9F8723608C /* ItemConfig.mm in Sources */,
 				CC711D572B5BF5C6007235A6 /* SPLarkSettingsCollectionView.swift in Sources */,
