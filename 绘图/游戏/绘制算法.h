@@ -52,13 +52,24 @@ static void WorldToCameraSpace(Vector3 worldLocation, CoViewInfo camViewInfo,
     if (outForward) *outForward = Dot(vDelta, vAxisX);
 }
 
-// 全景背敌角度（水平环绕）：前=屏上、后=屏下、右=右、左=左
-// 用相机右/前分量 atan2(-tz, tx)，不用屏幕投影（身后 Z 钳制会指错方向）
-static float PanoramaBehindAngle(Vector3 worldLocation, CoViewInfo camViewInfo) {
+// 背敌瞄准角（对标花祭）：从屏幕中心指向敌人投影方向，顶角始终朝向人物
+// 等价于 WorldToScreen（Z≥1 钳制）后 atan2(sy-cy, sx-cx) = atan2(-ty, tx)
+static float BehindAimAngle(Vector3 worldLocation, CoViewInfo camViewInfo) {
     float tx = 0.f, ty = 0.f, tz = 0.f;
     WorldToCameraSpace(worldLocation, camViewInfo, &tx, &ty, &tz);
-    (void)ty;
-    return atan2f(-tz, tx);
+    float dx = tx;
+    float dy = -ty; // 屏幕 Y 向下
+    if (dx * dx + dy * dy < 1e-8f) {
+        // 几乎在光轴上：正后方默认朝屏底，正前方无侧向角
+        return (tz < 0.f) ? ((float)M_PI * 0.5f) : 0.f;
+    }
+    (void)tz;
+    return atan2f(dy, dx);
+}
+
+// 兼容旧名
+static inline float PanoramaBehindAngle(Vector3 worldLocation, CoViewInfo camViewInfo) {
+    return BehindAimAngle(worldLocation, camViewInfo);
 }
 
 static Vector2 WorldToScreen(Vector3 worldLocation, CoViewInfo camViewInfo, int width, int height) {

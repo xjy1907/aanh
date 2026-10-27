@@ -374,105 +374,26 @@ static void DrawBehindRadarAtAngle(float angle, float distance) {
     dl->Flags = oldFlags;
 }
 
-// 屏幕外敌人指示器（箭头）— 背后模式：仅屏幕外，角由屏幕坐标算
-static void OffScreenArrow(Vector2 screenPos, bool isOnScreen, float distance, float health) {
-    if (health <= 0.f || isOnScreen) return;
-    float centerX = CanvasSize.x / 2.0f;
-    float centerY = CanvasSize.y / 2.0f;
-    DrawBehindArrowAtAngle(atan2f(screenPos.Y - centerY, screenPos.X - centerX), distance, true);
-}
-
-// 屏幕外敌人指示器（雷达）— 背后模式
-static void OffScreenRadar(Vector2 screenPos, bool isOnScreen, float distance, float health) {
-    if (health <= 0.f || isOnScreen) return;
-    float centerX = CanvasSize.x / 2.0f;
-    float centerY = CanvasSize.y / 2.0f;
-    DrawBehindRadarAtAngle(atan2f(screenPos.Y - centerY, screenPos.X - centerX), distance);
-}
-
-// 花祭背敌样式 — 背后模式
-static void OffScreenHuaji(Vector2 screenPos, bool isOnScreen, float distance, float health) {
-    if (health <= 0.f || isOnScreen) return;
-    float centerX = CanvasSize.x / 2.0f;
-    float centerY = CanvasSize.y / 2.0f;
-    float angle = atan2f(screenPos.Y - centerY, screenPos.X - centerX);
-    ImU32 arrowColor;
-    if (distance <= 50) arrowColor = IM_COL32(255, 0, 0, 230);
-    else if (distance <= 100) arrowColor = IM_COL32(0, 255, 0, 230);
-    else if (distance <= 150) arrowColor = IM_COL32(0, 0, 255, 230);
-    else arrowColor = IM_COL32(255, 255, 255, 230);
-    float radius = 20.0f;
-    float arrowHeight = radius * 0.6f;
-    float arrowWidth = radius * 1.8f;
-    float circleRadius = 45.0f + 20.0f + 55.0f;
-    float arrowCenterX = centerX + circleRadius * cosf(angle);
-    float arrowCenterY = centerY + circleRadius * sinf(angle);
-    ImVec2 points[3] = {
-        ImVec2(-arrowWidth / 2, -arrowHeight / 2),
-        ImVec2(arrowWidth / 2, 0),
-        ImVec2(-arrowWidth / 2, arrowHeight / 2)
-    };
-    for (int i = 0; i < 3; i++) {
-        float x = points[i].x, y = points[i].y;
-        points[i].x = arrowCenterX + x * cosf(angle) - y * sinf(angle);
-        points[i].y = arrowCenterY + x * sinf(angle) + y * cosf(angle);
+// 按样式绘制背敌（angle 必须是 BehindAimAngle，顶角朝向敌人）
+static void DrawBehindByStyle(float aimAngle, float distance) {
+    if (背敌样式 == 0) {
+        DrawBehindRadarAtAngle(aimAngle, distance);
+    } else {
+        // 箭头 / 花祭：同一套空心三角 + 距离（旋转与花祭一致）
+        DrawBehindArrowAtAngle(aimAngle, distance, true);
     }
-    ImDrawList *dl = BBZGUI::GetForegroundDrawList();
-    if (!dl) return;
-    ImDrawListFlags oldFlags = dl->Flags;
-    dl->Flags |= ImDrawListFlags_AntiAliasedLines | ImDrawListFlags_AntiAliasedFill;
-    dl->AddPolyline(points, 3, arrowColor, ImDrawFlags_Closed, 2.0f);
-    dl->Flags = oldFlags;
-    char distanceText[16];
-    snprintf(distanceText, sizeof(distanceText), "%d", (int)distance);
-    ImVec2 textPos(arrowCenterX - arrowWidth / 4.0f, arrowCenterY - 5.0f);
-    Draw::DrawText(distanceText, textPos, true, arrowColor, true, 10.0f);
 }
 
-// 全景模式：360° 水平环绕——前方敌人箭头在上、后方在下（不因「在屏内」跳过）
+// 背后模式：仅屏幕外（对标花祭 isOutOfView）
+static void OffScreenBehindMode(Vector3 worldPos, CoViewInfo pov, bool isOnScreen, float distance, float health) {
+    if (health <= 0.f || isOnScreen) return;
+    DrawBehindByStyle(BehindAimAngle(worldPos, pov), distance);
+}
+
+// 全景模式：始终指示；角度与花祭相同（屏心→敌人），身后也能对准
 static void OffScreenPanorama(Vector3 worldPos, CoViewInfo pov, float distance, float health) {
     if (health <= 0.f) return;
-    float angle = PanoramaBehindAngle(worldPos, pov);
-    if (背敌样式 == 0) {
-        DrawBehindRadarAtAngle(angle, distance);
-    } else if (背敌样式 == 2) {
-        // 花祭空心三角配色
-        ImU32 arrowColor;
-        if (distance <= 50) arrowColor = IM_COL32(255, 0, 0, 230);
-        else if (distance <= 100) arrowColor = IM_COL32(0, 255, 0, 230);
-        else if (distance <= 150) arrowColor = IM_COL32(0, 0, 255, 230);
-        else arrowColor = IM_COL32(255, 255, 255, 230);
-        float centerX = CanvasSize.x / 2.0f;
-        float centerY = CanvasSize.y / 2.0f;
-        float radius = 20.0f;
-        float arrowHeight = radius * 0.6f;
-        float arrowWidth = radius * 1.8f;
-        float circleRadius = 45.0f + 20.0f + 55.0f;
-        float arrowCenterX = centerX + circleRadius * cosf(angle);
-        float arrowCenterY = centerY + circleRadius * sinf(angle);
-        ImVec2 points[3] = {
-            ImVec2(-arrowWidth / 2, -arrowHeight / 2),
-            ImVec2(arrowWidth / 2, 0),
-            ImVec2(-arrowWidth / 2, arrowHeight / 2)
-        };
-        for (int i = 0; i < 3; i++) {
-            float x = points[i].x, y = points[i].y;
-            points[i].x = arrowCenterX + x * cosf(angle) - y * sinf(angle);
-            points[i].y = arrowCenterY + x * sinf(angle) + y * cosf(angle);
-        }
-        ImDrawList *dl = BBZGUI::GetForegroundDrawList();
-        if (!dl) return;
-        ImDrawListFlags oldFlags = dl->Flags;
-        dl->Flags |= ImDrawListFlags_AntiAliasedLines | ImDrawListFlags_AntiAliasedFill;
-        dl->AddPolyline(points, 3, arrowColor, ImDrawFlags_Closed, 2.0f);
-        dl->Flags = oldFlags;
-        char distanceText[16];
-        snprintf(distanceText, sizeof(distanceText), "%d", (int)distance);
-        Draw::DrawText(distanceText, ImVec2(arrowCenterX - arrowWidth / 4.0f, arrowCenterY - 5.0f),
-                       true, arrowColor, true, 10.0f);
-    } else {
-        DrawBehindArrowAtAngle(angle, distance, true);
-    }
+    DrawBehindByStyle(BehindAimAngle(worldPos, pov), distance);
 }
 
 static NSString *PrefsPath(void) {
@@ -1142,14 +1063,9 @@ void Draw::StartBooks() {
 
         if (显示背敌 && !bIsAI && distance <= 背敌距离) {
             if (背敌模式 == 1) {
-                // 全景：前方箭头在上、后方在下（水平 360）
                 OffScreenPanorama(loc, POV, distance, Health);
-            } else if (背敌样式 == 1) {
-                OffScreenArrow(LocationScreen, onScreen, distance, Health);
-            } else if (背敌样式 == 2) {
-                OffScreenHuaji(LocationScreen, onScreen, distance, Health);
             } else {
-                OffScreenRadar(LocationScreen, onScreen, distance, Health);
+                OffScreenBehindMode(loc, POV, onScreen, distance, Health);
             }
         }
     }
