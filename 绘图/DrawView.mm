@@ -429,20 +429,48 @@ static void OffScreenHuaji(Vector2 screenPos, bool isOnScreen, float distance, f
     Draw::DrawText(distanceText, textPos, true, arrowColor, true, 10.0f);
 }
 
-// 全景模式：相机空间角度，身后/侧方无死角（花祭环绕）
+// 全景模式：360° 水平环绕——前方敌人箭头在上、后方在下（不因「在屏内」跳过）
 static void OffScreenPanorama(Vector3 worldPos, CoViewInfo pov, float distance, float health) {
     if (health <= 0.f) return;
-    float tx = 0.f, ty = 0.f, tz = 0.f;
-    WorldToCameraSpace(worldPos, pov, &tx, &ty, &tz);
-    // 真正在视野内且在屏幕内则不画；身后即使 W2S 落在屏内也要画
-    Vector2 screen = WorldToScreen(worldPos, pov, (int)CanvasSize.x, (int)CanvasSize.y);
-    bool onScreen = isScreenVisible(screen, Vector2(CanvasSize.x, CanvasSize.y));
-    if (onScreen && tz >= 1.0f) return;
     float angle = PanoramaBehindAngle(worldPos, pov);
     if (背敌样式 == 0) {
         DrawBehindRadarAtAngle(angle, distance);
+    } else if (背敌样式 == 2) {
+        // 花祭空心三角配色
+        ImU32 arrowColor;
+        if (distance <= 50) arrowColor = IM_COL32(255, 0, 0, 230);
+        else if (distance <= 100) arrowColor = IM_COL32(0, 255, 0, 230);
+        else if (distance <= 150) arrowColor = IM_COL32(0, 0, 255, 230);
+        else arrowColor = IM_COL32(255, 255, 255, 230);
+        float centerX = CanvasSize.x / 2.0f;
+        float centerY = CanvasSize.y / 2.0f;
+        float radius = 20.0f;
+        float arrowHeight = radius * 0.6f;
+        float arrowWidth = radius * 1.8f;
+        float circleRadius = 45.0f + 20.0f + 55.0f;
+        float arrowCenterX = centerX + circleRadius * cosf(angle);
+        float arrowCenterY = centerY + circleRadius * sinf(angle);
+        ImVec2 points[3] = {
+            ImVec2(-arrowWidth / 2, -arrowHeight / 2),
+            ImVec2(arrowWidth / 2, 0),
+            ImVec2(-arrowWidth / 2, arrowHeight / 2)
+        };
+        for (int i = 0; i < 3; i++) {
+            float x = points[i].x, y = points[i].y;
+            points[i].x = arrowCenterX + x * cosf(angle) - y * sinf(angle);
+            points[i].y = arrowCenterY + x * sinf(angle) + y * cosf(angle);
+        }
+        ImDrawList *dl = BBZGUI::GetForegroundDrawList();
+        if (!dl) return;
+        ImDrawListFlags oldFlags = dl->Flags;
+        dl->Flags |= ImDrawListFlags_AntiAliasedLines | ImDrawListFlags_AntiAliasedFill;
+        dl->AddPolyline(points, 3, arrowColor, ImDrawFlags_Closed, 2.0f);
+        dl->Flags = oldFlags;
+        char distanceText[16];
+        snprintf(distanceText, sizeof(distanceText), "%d", (int)distance);
+        Draw::DrawText(distanceText, ImVec2(arrowCenterX - arrowWidth / 4.0f, arrowCenterY - 5.0f),
+                       true, arrowColor, true, 10.0f);
     } else {
-        // 箭头 / 花祭样式均用固定半径空心三角 + 距离
         DrawBehindArrowAtAngle(angle, distance, true);
     }
 }
@@ -697,7 +725,7 @@ bool getbbz() {
         DrawDbg("[Boot] DrawWindow.load pid=%d 后台轮询+7s诊断+CPU启动", (int)getpid());
         int tick = 0;
         while (true) {
-            // prefs 每 1s 刷新（含 drawx 扩展项：手持/血量/物资模式等）
+            // prefs 每 1s 刷新（含 drx 扩展项：手持/血量/物资模式等）
             RefreshDrawPrefs();
             if (gReadingEnabled && ((DOJailbreaker *)DOJailbreaker.sharedInstance).isSuccess) {
                 getbbz(); // 内部已对 pid/基址扫描节流
@@ -1114,7 +1142,7 @@ void Draw::StartBooks() {
 
         if (显示背敌 && !bIsAI && distance <= 背敌距离) {
             if (背敌模式 == 1) {
-                // 全景：相机空间角度，360 无死角（对标花祭环绕）
+                // 全景：前方箭头在上、后方在下（水平 360）
                 OffScreenPanorama(loc, POV, distance, Health);
             } else if (背敌样式 == 1) {
                 OffScreenArrow(LocationScreen, onScreen, distance, Health);

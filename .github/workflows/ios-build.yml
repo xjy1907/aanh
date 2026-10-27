@@ -1279,16 +1279,57 @@ jobs:
               mkdir -p build/Payload
               cp -R "$APP_PATH" build/Payload/
               APP_COPY="build/Payload/$(basename "$APP_PATH")"
+              EXE_NAME=$(/usr/libexec/PlistBuddy -c "Print :CFBundleExecutable" "$APP_COPY/Info.plist" 2>/dev/null || true)
+              EXECUTABLE_PATH=""
+              if [ -n "$EXE_NAME" ] && [ -f "$APP_COPY/$EXE_NAME" ]; then
+                EXECUTABLE_PATH="$APP_COPY/$EXE_NAME"
+              fi
+              # 与 supports/pack_ipa.sh 一致：出货 IPA 内改掉扎眼 dylib 文件名
+              rename_dylib() {
+                local old="$1" new="$2"
+                local src="${APP_COPY}/${old}"
+                local dst="${APP_COPY}/${new}"
+                if [ ! -f "${src}" ]; then
+                  return 0
+                fi
+                echo "rename ${old} -> ${new}"
+                mv "${src}" "${dst}"
+                install_name_tool -id "@executable_path/${new}" "${dst}" 2>/dev/null || true
+                if [ -n "${EXECUTABLE_PATH}" ]; then
+                  install_name_tool -change "@executable_path/${old}" "@executable_path/${new}" "${EXECUTABLE_PATH}" 2>/dev/null || true
+                  install_name_tool -change "@loader_path/${old}" "@executable_path/${new}" "${EXECUTABLE_PATH}" 2>/dev/null || true
+                fi
+                if [ -d "${APP_COPY}/Frameworks" ]; then
+                  find "${APP_COPY}/Frameworks" -type f ! -name "*.plist" ! -name "*.h" 2>/dev/null | while IFS= read -r bin; do
+                    install_name_tool -change "@executable_path/${old}" "@executable_path/${new}" "${bin}" 2>/dev/null || true
+                    install_name_tool -change "@loader_path/${old}" "@executable_path/${new}" "${bin}" 2>/dev/null || true
+                  done
+                fi
+                for d in "${APP_COPY}"/*.dylib; do
+                  [ -f "${d}" ] || continue
+                  install_name_tool -change "@loader_path/${old}" "@loader_path/${new}" "${d}" 2>/dev/null || true
+                  install_name_tool -change "@executable_path/${old}" "@executable_path/${new}" "${d}" 2>/dev/null || true
+                done
+              }
+              rename_dylib libjailbreak.dylib libNHSupport.dylib
+              rename_dylib libchoma.dylib libNHCodec.dylib
+              rename_dylib libxpf.dylib libNHParse.dylib
               echo "ldid-signing with $ENTITLEMENTS"
               ldid -S"$ENTITLEMENTS" "$APP_COPY"
-              EXE_NAME=$(/usr/libexec/PlistBuddy -c "Print :CFBundleExecutable" "$APP_COPY/Info.plist" 2>/dev/null || true)
-              if [ -n "$EXE_NAME" ] && [ -f "$APP_COPY/$EXE_NAME" ]; then
-                ldid -S"$ENTITLEMENTS" "$APP_COPY/$EXE_NAME" || true
-                if ! strings "$APP_COPY/$EXE_NAME" | grep -q 'DRAWFPS_SEG_V1'; then
+              if [ -n "$EXECUTABLE_PATH" ]; then
+                ldid -S"$ENTITLEMENTS" "$EXECUTABLE_PATH" || true
+                if ! strings "$EXECUTABLE_PATH" | grep -q 'DRAWFPS_SEG_V1'; then
                   echo "::error::Books binary missing DRAWFPS_SEG_V1 — FPS panel not linked"
                   exit 1
                 fi
                 echo "Verified DRAWFPS_SEG_V1 in binary"
+                if [ -f "${APP_COPY}/libjailbreak.dylib" ] || [ -f "${APP_COPY}/libchoma.dylib" ] || [ -f "${APP_COPY}/libxpf.dylib" ]; then
+                  echo "::error::IPA still contains unrenamed libjailbreak/libchoma/libxpf"
+                  exit 1
+                fi
+                if [ -f "${APP_COPY}/libNHSupport.dylib" ]; then
+                  echo "Verified renamed dylibs (libNHSupport/libNHCodec/libNHParse)"
+                fi
               fi
               (
                 cd build

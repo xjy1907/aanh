@@ -151,7 +151,7 @@ static inline BOOL NHIsOverlayRole(void) {
 
 // ---- 跨进程开关：notify_set_state（可无文件）----
 // bit0 reading 1 count 2 line 3 box 4 health 5 info 6 bone 7 overlay 8 dbglog 9 persist
-// bit10-11 drawFps：0=跟屏刷 1=60 2=90 3=120（30 与样式等精确值走 drawx extras）
+// bit10-11 drawFps：0=跟屏刷 1=60 2=90 3=120（30 与样式等精确值走 drx extras）
 // bit12 weapon 13 dist 14 behind 15 loot
 // bit63 = 有效标记（曾发布过）
 enum {
@@ -174,16 +174,32 @@ enum {
     NHBitValid   = 63,
 };
 
-/// 物资配置路径（对标 wasd wuzi.txt）
+/// 物资配置路径（短前缀 wzi_；兼容旧 wuzi_）
 static inline NSString *NHWuziPath(void) {
-    return [NHConfigDirectory() stringByAppendingPathComponent:
-            [NSString stringWithFormat:@"wuzi_%@.txt", NHDeviceToken()]];
+    static NSString *path = nil;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        NSString *token = NHDeviceToken();
+        path = [NHConfigDirectory() stringByAppendingPathComponent:
+                [NSString stringWithFormat:@"wzi_%@.txt", token]];
+        NHMigrateFile([NHConfigDirectory() stringByAppendingPathComponent:
+                       [NSString stringWithFormat:@"wuzi_%@.txt", token]], path);
+    });
+    return path;
 }
 
-/// 绘制扩展项（样式/距离/粗细/fps 精确值）：主 App↔HUD 跨进程，且不受「配置落盘」开关影响
+/// 绘制扩展项（短前缀 drx_；兼容旧 drawx_）：跨进程，不受「配置落盘」影响
 static inline NSString *NHDrawExtrasPath(void) {
-    return [NHConfigDirectory() stringByAppendingPathComponent:
-            [NSString stringWithFormat:@"drawx_%@.plist", NHDeviceToken()]];
+    static NSString *path = nil;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        NSString *token = NHDeviceToken();
+        path = [NHConfigDirectory() stringByAppendingPathComponent:
+                [NSString stringWithFormat:@"drx_%@.plist", token]];
+        NHMigrateFile([NHConfigDirectory() stringByAppendingPathComponent:
+                       [NSString stringWithFormat:@"drawx_%@.plist", token]], path);
+    });
+    return path;
 }
 
 static inline NSArray<NSString *> *NHDrawExtrasKeys(void) {
@@ -217,7 +233,7 @@ static inline NSDictionary *NHDrawExtrasRead(void) {
     return [NSDictionary dictionaryWithContentsOfFile:NHDrawExtrasPath()] ?: @{};
 }
 
-/// prefs drawFps：notify 仅编码 60/90/120；30 与精确值以 drawx extras 为准
+/// prefs drawFps：notify 仅编码 60/90/120；30 与精确值以 drx extras 为准
 static inline int NHFpsModeFromValue(NSInteger fps) {
     if (fps == 60) return 1;
     if (fps == 90) return 2;
@@ -355,7 +371,7 @@ static inline NSMutableDictionary *NHPrefsDictFromState(void) {
     return d;
 }
 
-/// 写配置：扩展项始终写入 drawx 旁路；开关仍走 notify；落盘开时再写 cfg
+/// 写配置：扩展项始终写入 drx 旁路；开关仍走 notify；落盘开时再写 cfg
 static inline void NHPrefsWrite(NSDictionary *cfg) {
     if (!cfg) return;
     NHDrawExtrasWriteFromDict(cfg);
@@ -377,7 +393,7 @@ static inline void NHPrefsWrite(NSDictionary *cfg) {
     [merged writeToFile:path atomically:YES];
 }
 
-/// 读配置：notify/磁盘开关 + 始终合并 drawx 扩展项（样式/距离/fps）
+/// 读配置：notify/磁盘开关 + 始终合并 drx 扩展项（样式/距离/fps）
 static inline NSDictionary *NHPrefsRead(void) {
     NSMutableDictionary *out = nil;
     if (NHPersistFilesEnabled()) {
