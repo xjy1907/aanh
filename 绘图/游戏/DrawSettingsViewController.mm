@@ -82,9 +82,10 @@
     [self mkSeg:@"物资显示模式" key:@"lootMode" options:@[@"正常显示", @"空手显示"]],
     [self mkSeg:@"血量样式" key:@"healthStyle" options:@[@"圆弧", @"经典", @"花祭"]],
     [self mkSeg:@"背敌样式" key:@"behindStyle" options:@[@"雷达", @"箭头", @"花祭"]],
-    [self mkSlider:@"绘制距离" key:@"drawDist" min:50 max:500 step:1 kind:1],
-    [self mkSlider:@"背敌距离" key:@"behindDist" min:50 max:500 step:1 kind:1],
-    [self mkSlider:@"骨骼距离" key:@"boneDist" min:50 max:500 step:1 kind:1],
+    [self mkSeg:@"背敌模式" key:@"behindMode" options:@[@"背后模式", @"全景模式"]],
+    [self mkSlider:@"绘制距离" key:@"drawDist" min:0 max:500 step:1 kind:1],
+    [self mkSlider:@"背敌距离" key:@"behindDist" min:0 max:500 step:1 kind:1],
+    [self mkSlider:@"骨骼距离" key:@"boneDist" min:0 max:500 step:1 kind:1],
     [self mkSlider:@"骨骼粗细" key:@"boneThick" min:0.5 max:4 step:0.1 kind:0],
     [self mkSlider:@"射线粗细" key:@"rayThick" min:0.5 max:4 step:0.1 kind:0],
     [self mkSlider:@"物资大小" key:@"lootSize" min:6 max:24 step:1 kind:1],
@@ -138,8 +139,13 @@
     NSInteger cur = [self intForKey:row.key def:0];
     if (cur < 0) cur = 0;
     if (cur >= (NSInteger)row.options.count) cur = 0;
-    // lootMode: UI 0正常 1空手；prefs 同
-    if ([row.key isEqualToString:@"lootMode"] && self.prefs[row.key] == nil) cur = 1; // 默认空手=旧逻辑
+    // 默认：物资正常 / 血量经典 / 背敌箭头 / 背敌全景
+    if (self.prefs[row.key] == nil) {
+      if ([row.key isEqualToString:@"lootMode"]) cur = 0;
+      else if ([row.key isEqualToString:@"healthStyle"]) cur = 1;
+      else if ([row.key isEqualToString:@"behindStyle"]) cur = 1;
+      else if ([row.key isEqualToString:@"behindMode"]) cur = 1;
+    }
     seg.selectedSegmentIndex = cur;
     if (@available(iOS 13.0, *)) {
       seg.selectedSegmentTintColor = [cyan colorWithAlphaComponent:0.45];
@@ -160,9 +166,9 @@
     float defV = 300;
     if ([row.key isEqualToString:@"boneThick"] || [row.key isEqualToString:@"rayThick"]) defV = 1.0f;
     if ([row.key isEqualToString:@"lootSize"]) defV = 12;
-    if ([row.key isEqualToString:@"drawDist"]) defV = 400;
-    if ([row.key isEqualToString:@"behindDist"]) defV = 300;
-    if ([row.key isEqualToString:@"boneDist"]) defV = 300;
+    if ([row.key isEqualToString:@"drawDist"]) defV = 252;
+    if ([row.key isEqualToString:@"behindDist"]) defV = 252;
+    if ([row.key isEqualToString:@"boneDist"]) defV = 30;
     float cur = [self floatForKey:row.key def:defV];
 
     UILabel *val = [[UILabel alloc] init];

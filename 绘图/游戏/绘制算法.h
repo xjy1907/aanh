@@ -39,20 +39,35 @@ static FMatrix RotatorToMatrix(FRotator rotation) {
     return matrix;
 }
 
+// 相机空间：X=右 Y=上 Z=前（不钳制 Z，供全景背敌算角）
+static void WorldToCameraSpace(Vector3 worldLocation, CoViewInfo camViewInfo,
+                               float *outRight, float *outUp, float *outForward) {
+    FMatrix tempMatrix = RotatorToMatrix(camViewInfo.Rotation);
+    Vector3 vAxisX(tempMatrix[0][0], tempMatrix[0][1], tempMatrix[0][2]);
+    Vector3 vAxisY(tempMatrix[1][0], tempMatrix[1][1], tempMatrix[1][2]);
+    Vector3 vAxisZ(tempMatrix[2][0], tempMatrix[2][1], tempMatrix[2][2]);
+    Vector3 vDelta = worldLocation - camViewInfo.Location;
+    if (outRight) *outRight = Dot(vDelta, vAxisY);
+    if (outUp) *outUp = Dot(vDelta, vAxisZ);
+    if (outForward) *outForward = Dot(vDelta, vAxisX);
+}
+
+// 全景背敌角度：不钳制 Z，避免身后敌人被投到屏幕中心形成死角（对标花祭环绕指示）
+static float PanoramaBehindAngle(Vector3 worldLocation, CoViewInfo camViewInfo) {
+    float tx = 0.f, ty = 0.f, tz = 0.f;
+    WorldToCameraSpace(worldLocation, camViewInfo, &tx, &ty, &tz);
+    if (tz >= 1.0f) return atan2f(-ty, tx);
+    return atan2f(ty, -tx);
+}
+
 static Vector2 WorldToScreen(Vector3 worldLocation, CoViewInfo camViewInfo, int width, int height) {
     float fovRadian = camViewInfo.FOV * (M_PI / 360.0f);
     float tanFov = tanf(fovRadian);
     if (tanFov == 0) tanFov = 0.001f;
     float screenCenterX = width / 2.0f;
     float screenCenterY = height / 2.0f;
-    FMatrix tempMatrix = RotatorToMatrix(camViewInfo.Rotation);
-    Vector3 vAxisX(tempMatrix[0][0], tempMatrix[0][1], tempMatrix[0][2]);
-    Vector3 vAxisY(tempMatrix[1][0], tempMatrix[1][1], tempMatrix[1][2]);
-    Vector3 vAxisZ(tempMatrix[2][0], tempMatrix[2][1], tempMatrix[2][2]);
-    Vector3 vDelta = worldLocation - camViewInfo.Location;
-    float transformedX = Dot(vDelta, vAxisY);
-    float transformedY = Dot(vDelta, vAxisZ);
-    float transformedZ = Dot(vDelta, vAxisX);
+    float transformedX = 0.f, transformedY = 0.f, transformedZ = 0.f;
+    WorldToCameraSpace(worldLocation, camViewInfo, &transformedX, &transformedY, &transformedZ);
     if (transformedZ < 1.0f) transformedZ = 1.0f;
     return Vector2(screenCenterX + transformedX * (screenCenterX / tanFov) / transformedZ,
                    screenCenterY - transformedY * (screenCenterX / tanFov) / transformedZ);

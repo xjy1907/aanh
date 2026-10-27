@@ -51,14 +51,15 @@ static bool 显示骨骼 = false;
 static bool 显示手持 = false, 显示距离 = false, 显示背敌 = false, 显示物资 = false;
 static int 手持样式 = 0; // 0=文字 1=图片（对标 wasd 手持图）
 static int 物资大小 = 12;
-static int 背敌样式 = 0; // 0雷达 1箭头 2花祭
-static int 血量样式 = 0; // 0圆弧 1经典 2花祭
-static int 物资显示模式 = 1; // 0正常(持枪也显示) 1空手(旧逻辑)
-static float 背敌距离 = 300.f;
+static int 背敌样式 = 1; // 0雷达 1箭头 2花祭；默认箭头
+static int 背敌模式 = 1; // 0背后模式 1全景模式；默认全景
+static int 血量样式 = 1; // 0圆弧 1经典 2花祭；默认经典
+static int 物资显示模式 = 0; // 0正常(持枪也显示) 1空手(旧逻辑)；默认正常
+static float 背敌距离 = 252.f;
 static float 射线粗细 = 1.0f;
 static float 骨骼粗细 = 1.0f;
-static float 骨骼距离 = 300.0f;
-static float 绘制距离上限 = 400.f; // 不含物资；物资用各自配置距离
+static float 骨骼距离 = 30.0f;
+static float 绘制距离上限 = 252.f; // 不含物资；物资用各自配置距离
 static float gCurrentCPUUsage = 0.0f;
 
 // —— 静态玩家缓存（对标 wasd readStaticData，~2s 扫一次 ActorArray）——
@@ -289,9 +290,8 @@ static const ItemConfig *FindItemConfig(const std::string &className) {
     return nullptr;
 }
 
-// 屏幕外敌人指示器（箭头）— 对标 wasd，Health 作参数
-static void OffScreenArrow(Vector2 screenPos, bool isOnScreen, float distance, float health) {
-    if (health <= 0.f || isOnScreen) return;
+// 背敌箭头本体（angle 已算好；固定半径环绕屏幕中心）
+static void DrawBehindArrowAtAngle(float angle, float distance, bool withDistanceText) {
     ImU32 arrowColor;
     if (distance <= 50) arrowColor = IM_COL32(255, 0, 0, 230);
     else if (distance <= 100) arrowColor = IM_COL32(0, 255, 0, 230);
@@ -300,7 +300,6 @@ static void OffScreenArrow(Vector2 screenPos, bool isOnScreen, float distance, f
 
     float centerX = CanvasSize.x / 2.0f;
     float centerY = CanvasSize.y / 2.0f;
-    float angle = atan2f(screenPos.Y - centerY, screenPos.X - centerX);
     float radius = 20.0f;
     float arrowHeight = radius * 0.6f;
     float arrowWidth = radius * 1.8f;
@@ -325,6 +324,7 @@ static void OffScreenArrow(Vector2 screenPos, bool isOnScreen, float distance, f
     dl->AddPolyline(points, 3, arrowColor, ImDrawFlags_Closed, 2.0f);
     dl->Flags = oldFlags;
 
+    if (!withDistanceText) return;
     char distanceText[16];
     snprintf(distanceText, sizeof(distanceText), "%d", (int)distance);
     float textOffsetX = -arrowWidth / 4;
@@ -341,9 +341,7 @@ static void OffScreenArrow(Vector2 screenPos, bool isOnScreen, float distance, f
     Draw::DrawText(distanceText, textPos, false, arrowColor, true, 10.0f);
 }
 
-// 屏幕外敌人指示器（雷达）— 对标 wasd
-static void OffScreenRadar(Vector2 screenPos, bool isOnScreen, float distance, float health) {
-    if (health <= 0.f || isOnScreen) return;
+static void DrawBehindRadarAtAngle(float angle, float distance) {
     ImU32 arrowColor;
     if (distance < 75.0f) arrowColor = IM_COL32(255, 0, 0, 255);
     else if (distance < 150.0f) arrowColor = IM_COL32(255, 255, 0, 255);
@@ -351,7 +349,6 @@ static void OffScreenRadar(Vector2 screenPos, bool isOnScreen, float distance, f
 
     float centerX = CanvasSize.x / 2.0f;
     float centerY = CanvasSize.y / 2.0f;
-    float angle = atan2f(screenPos.Y - centerY, screenPos.X - centerX);
     float circleRadius = fminf(80.0f + distance * 0.5f, 150.0f);
     float arrowCenterX = centerX + circleRadius * cosf(angle);
     float arrowCenterY = centerY + circleRadius * sinf(angle);
@@ -377,25 +374,39 @@ static void OffScreenRadar(Vector2 screenPos, bool isOnScreen, float distance, f
     dl->Flags = oldFlags;
 }
 
-// 花祭背敌：固定半径环绕屏幕中心 360°，空心三角 + 距离（对标花祭 drawBehindEnemyIndicator）
+// 屏幕外敌人指示器（箭头）— 背后模式：仅屏幕外，角由屏幕坐标算
+static void OffScreenArrow(Vector2 screenPos, bool isOnScreen, float distance, float health) {
+    if (health <= 0.f || isOnScreen) return;
+    float centerX = CanvasSize.x / 2.0f;
+    float centerY = CanvasSize.y / 2.0f;
+    DrawBehindArrowAtAngle(atan2f(screenPos.Y - centerY, screenPos.X - centerX), distance, true);
+}
+
+// 屏幕外敌人指示器（雷达）— 背后模式
+static void OffScreenRadar(Vector2 screenPos, bool isOnScreen, float distance, float health) {
+    if (health <= 0.f || isOnScreen) return;
+    float centerX = CanvasSize.x / 2.0f;
+    float centerY = CanvasSize.y / 2.0f;
+    DrawBehindRadarAtAngle(atan2f(screenPos.Y - centerY, screenPos.X - centerX), distance);
+}
+
+// 花祭背敌样式 — 背后模式
 static void OffScreenHuaji(Vector2 screenPos, bool isOnScreen, float distance, float health) {
     if (health <= 0.f || isOnScreen) return;
+    float centerX = CanvasSize.x / 2.0f;
+    float centerY = CanvasSize.y / 2.0f;
+    float angle = atan2f(screenPos.Y - centerY, screenPos.X - centerX);
     ImU32 arrowColor;
     if (distance <= 50) arrowColor = IM_COL32(255, 0, 0, 230);
     else if (distance <= 100) arrowColor = IM_COL32(0, 255, 0, 230);
     else if (distance <= 150) arrowColor = IM_COL32(0, 0, 255, 230);
     else arrowColor = IM_COL32(255, 255, 255, 230);
-
-    float centerX = CanvasSize.x / 2.0f;
-    float centerY = CanvasSize.y / 2.0f;
-    float angle = atan2f(screenPos.Y - centerY, screenPos.X - centerX);
     float radius = 20.0f;
     float arrowHeight = radius * 0.6f;
     float arrowWidth = radius * 1.8f;
-    float circleRadius = 45.0f + 20.0f + 55.0f; // minRadius+20+55
+    float circleRadius = 45.0f + 20.0f + 55.0f;
     float arrowCenterX = centerX + circleRadius * cosf(angle);
     float arrowCenterY = centerY + circleRadius * sinf(angle);
-
     ImVec2 points[3] = {
         ImVec2(-arrowWidth / 2, -arrowHeight / 2),
         ImVec2(arrowWidth / 2, 0),
@@ -412,11 +423,28 @@ static void OffScreenHuaji(Vector2 screenPos, bool isOnScreen, float distance, f
     dl->Flags |= ImDrawListFlags_AntiAliasedLines | ImDrawListFlags_AntiAliasedFill;
     dl->AddPolyline(points, 3, arrowColor, ImDrawFlags_Closed, 2.0f);
     dl->Flags = oldFlags;
-
     char distanceText[16];
     snprintf(distanceText, sizeof(distanceText), "%d", (int)distance);
     ImVec2 textPos(arrowCenterX - arrowWidth / 4.0f, arrowCenterY - 5.0f);
     Draw::DrawText(distanceText, textPos, true, arrowColor, true, 10.0f);
+}
+
+// 全景模式：相机空间角度，身后/侧方无死角（花祭环绕）
+static void OffScreenPanorama(Vector3 worldPos, CoViewInfo pov, float distance, float health) {
+    if (health <= 0.f) return;
+    float tx = 0.f, ty = 0.f, tz = 0.f;
+    WorldToCameraSpace(worldPos, pov, &tx, &ty, &tz);
+    // 真正在视野内且在屏幕内则不画；身后即使 W2S 落在屏内也要画
+    Vector2 screen = WorldToScreen(worldPos, pov, (int)CanvasSize.x, (int)CanvasSize.y);
+    bool onScreen = isScreenVisible(screen, Vector2(CanvasSize.x, CanvasSize.y));
+    if (onScreen && tz >= 1.0f) return;
+    float angle = PanoramaBehindAngle(worldPos, pov);
+    if (背敌样式 == 0) {
+        DrawBehindRadarAtAngle(angle, distance);
+    } else {
+        // 箭头 / 花祭样式均用固定半径空心三角 + 距离
+        DrawBehindArrowAtAngle(angle, distance, true);
+    }
 }
 
 static NSString *PrefsPath(void) {
@@ -445,6 +473,7 @@ static void RefreshDrawPrefs(void) {
             restore[@"loot"] = @(显示物资);
             restore[@"lootSize"] = @(物资大小);
             restore[@"behindStyle"] = @(背敌样式);
+            restore[@"behindMode"] = @(背敌模式);
             restore[@"behindDist"] = @(背敌距离);
             restore[@"healthStyle"] = @(血量样式);
             restore[@"lootMode"] = @(物资显示模式);
@@ -471,12 +500,19 @@ static void RefreshDrawPrefs(void) {
     if (cfg[@"weaponStyle"] != nil) 手持样式 = [cfg[@"weaponStyle"] intValue];
     if (cfg[@"lootSize"] != nil) 物资大小 = [cfg[@"lootSize"] intValue];
     if (cfg[@"behindStyle"] != nil) 背敌样式 = [cfg[@"behindStyle"] intValue];
+    else 背敌样式 = 1;
+    if (cfg[@"behindMode"] != nil) 背敌模式 = [cfg[@"behindMode"] intValue];
+    else 背敌模式 = 1;
     if (cfg[@"behindDist"] != nil) 背敌距离 = [cfg[@"behindDist"] floatValue];
+    else 背敌距离 = 252.f;
     if (cfg[@"healthStyle"] != nil) 血量样式 = [cfg[@"healthStyle"] intValue];
+    else 血量样式 = 1;
     if (cfg[@"lootMode"] != nil) 物资显示模式 = [cfg[@"lootMode"] intValue];
-    else 物资显示模式 = 1;
+    else 物资显示模式 = 0;
     if (cfg[@"drawDist"] != nil) 绘制距离上限 = [cfg[@"drawDist"] floatValue];
+    else 绘制距离上限 = 252.f;
     if (cfg[@"boneDist"] != nil) 骨骼距离 = [cfg[@"boneDist"] floatValue];
+    else 骨骼距离 = 30.f;
     if (cfg[@"boneThick"] != nil) 骨骼粗细 = [cfg[@"boneThick"] floatValue];
     if (cfg[@"rayThick"] != nil) 射线粗细 = [cfg[@"rayThick"] floatValue];
 }
@@ -1077,7 +1113,10 @@ void Draw::StartBooks() {
         }
 
         if (显示背敌 && !bIsAI && distance <= 背敌距离) {
-            if (背敌样式 == 1) {
+            if (背敌模式 == 1) {
+                // 全景：相机空间角度，360 无死角（对标花祭环绕）
+                OffScreenPanorama(loc, POV, distance, Health);
+            } else if (背敌样式 == 1) {
                 OffScreenArrow(LocationScreen, onScreen, distance, Health);
             } else if (背敌样式 == 2) {
                 OffScreenHuaji(LocationScreen, onScreen, distance, Health);

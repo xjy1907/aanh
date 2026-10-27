@@ -188,7 +188,7 @@ static inline NSString *NHDrawExtrasPath(void) {
 
 static inline NSArray<NSString *> *NHDrawExtrasKeys(void) {
     return @[
-        @"weaponStyle", @"healthStyle", @"behindStyle", @"lootMode",
+        @"weaponStyle", @"healthStyle", @"behindStyle", @"behindMode", @"lootMode",
         @"lootSize", @"drawDist", @"behindDist", @"boneDist",
         @"boneThick", @"rayThick", @"drawFps",
     ];
@@ -277,10 +277,10 @@ static inline uint64_t NHStateWithBit(uint64_t v, int bit, bool on) {
     return v & ~(1ULL << bit);
 }
 
-/// 默认落盘；仅当 state 有效且 persist=0 时关闭落盘
+/// 默认不落盘；仅当 state 有效且 persist=1 时开启落盘
 static inline bool NHPersistFilesEnabled(void) {
     uint64_t v = NHStateGet();
-    if (!NHStateValid(v)) return YES;
+    if (!NHStateValid(v)) return NO;
     return NHStateBit(v, NHBitPersist);
 }
 
@@ -320,7 +320,7 @@ static inline void NHPrefsPublishDict(NSDictionary *cfg) {
     if (cfg[@"persist"] != nil) {
         v = NHStateWithBit(v, NHBitPersist, [cfg[@"persist"] boolValue]);
     } else if (!NHStateValid(cur)) {
-        v = NHStateWithBit(v, NHBitPersist, YES); // 默认落盘
+        v = NHStateWithBit(v, NHBitPersist, NO); // 默认关
     }
     if (cfg[@"drawFps"] != nil) {
         int mode = NHFpsModeFromValue([cfg[@"drawFps"] integerValue]);

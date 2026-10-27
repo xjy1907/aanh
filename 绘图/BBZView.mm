@@ -57,8 +57,8 @@ static NSMutableDictionary *JVR_开关缓存(void) {
     static dispatch_once_t once;
     dispatch_once(&once, ^{
         cache = [NSMutableDictionary dictionary];
-        // 默认落盘开；无有效 state 时 UI 显示为开
-        cache[@"persist"] = @YES;
+        // 默认落盘关；无有效 state 时 UI 显示为关
+        cache[@"persist"] = @NO;
     });
     return cache;
 }
@@ -83,12 +83,12 @@ static BOOL JVR_读取开关(NSString* key) {
         if (cached.count > 0) {
             NHPrefsWrite(cached);
         }
-        if ([key isEqualToString:@"persist"]) return YES; // 默认落盘
+        if ([key isEqualToString:@"persist"]) return NO; // 默认关
         return [[cached objectForKey:key] boolValue];
     }
     BOOL v;
     if ([key isEqualToString:@"persist"]) {
-        v = cfg[@"persist"] != nil ? [cfg[@"persist"] boolValue] : YES;
+        v = cfg[@"persist"] != nil ? [cfg[@"persist"] boolValue] : NO;
     } else {
         v = [[cfg objectForKey:key] boolValue];
     }
@@ -1453,7 +1453,7 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
         @{@"title": @"骨骼显示", @"key": @"bone"},
         @{@"title": @"过直播模式", @"key": @"overlay"},
         @{@"title": @"调试日志", @"key": @"dbglog"}, // 默认关；开才写 kfd_debug / 终端诊断
-        @{@"title": @"配置落盘", @"key": @"persist"}, // 默认开；关则不生成 cfg/pid 文件，仅 notify 同步
+        @{@"title": @"配置落盘", @"key": @"persist"}, // 默认关；开才写 cfg/pid 文件，否则仅 notify 同步
     ];
     
     for (NSDictionary *cfg in configs) {
