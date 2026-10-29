@@ -233,12 +233,12 @@ static inline NSDictionary *NHDrawExtrasRead(void) {
     return [NSDictionary dictionaryWithContentsOfFile:NHDrawExtrasPath()] ?: @{};
 }
 
-/// prefs drawFps：notify 仅编码 60/90/120；30 与精确值以 drx extras 为准
+/// prefs drawFps：notify 仅编码 60/90/120；0/30 以 drx extras 为准（未配置时业务层默认 60）
 static inline int NHFpsModeFromValue(NSInteger fps) {
     if (fps == 60) return 1;
     if (fps == 90) return 2;
     if (fps == 120) return 3;
-    return 0; // 跟屏刷或 30（30 只写 extras）
+    return 0; // 跟屏刷或 30（精确值写 extras）
 }
 
 static inline NSInteger NHFpsValueFromMode(int mode) {
@@ -246,7 +246,7 @@ static inline NSInteger NHFpsValueFromMode(int mode) {
         case 1: return 60;
         case 2: return 90;
         case 3: return 120;
-        default: return 0;
+        default: return 0; // 未编码：由 extras / 业务默认 60 决定
     }
 }
 

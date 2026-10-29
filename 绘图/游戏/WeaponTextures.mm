@@ -4,6 +4,7 @@
 
 #import "WeaponTextures.h"
 #import <UIKit/UIKit.h>
+#include <atomic>
 #include <map>
 #include <mutex>
 
@@ -13,7 +14,7 @@
 
 std::map<int, id<MTLTexture>> gWeaponTextures;
 static std::mutex gWeaponTexMutex;
-static BOOL gWeaponTexReady = NO;
+static std::atomic<bool> gWeaponTexReady{false};
 
 static id<MTLTexture> LoadTexFromMemory(id<MTLDevice> device, const unsigned char *data, size_t length) {
     if (!device || !data || length == 0) return nil;
@@ -101,8 +102,8 @@ extern "C" void InitWeaponTextures(id<MTLDevice> device) {
                 std::lock_guard<std::mutex> lock(gWeaponTexMutex);
                 gWeaponTextures.swap(local);
                 SetupTextureMappings();
-                gWeaponTexReady = YES;
             }
+            gWeaponTexReady.store(true, std::memory_order_release);
             NSLog(@"[WeaponTextures] loaded %zu textures", gWeaponTextures.size());
         });
     });
@@ -110,8 +111,8 @@ extern "C" void InitWeaponTextures(id<MTLDevice> device) {
 
 extern "C" bool GetWeaponTexture(int weaponId, id<MTLTexture> *outTex) {
     if (!outTex || weaponId <= 0) return false;
-    std::lock_guard<std::mutex> lock(gWeaponTexMutex);
-    if (!gWeaponTexReady) return false;
+    // 加载完成后只读 map，无锁（写侧仅初始化一次 swap）
+    if (!gWeaponTexReady.load(std::memory_order_acquire)) return false;
     auto it = gWeaponTextures.find(weaponId);
     if (it == gWeaponTextures.end() || !it->second) return false;
     *outTex = it->second;

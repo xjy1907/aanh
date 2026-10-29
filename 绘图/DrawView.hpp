@@ -110,12 +110,13 @@ inline void DrawConvexPolyFilled(const ImVec2* points, int num_points, ImU32 col
     DrawListFG()->AddConvexPolyFilled(points, num_points, color);
 }
 
-inline void DrawText(string text, ImVec2 pos, bool isCentered, int color, bool outline, float fontSize)
+inline void DrawText(const char *str, ImVec2 pos, bool isCentered, int color, bool outline, float fontSize)
 {
-    const char *str = text.c_str();
+    if (!str) return;
     ImVec2 vec2 = pos;
     ImDrawList* dl = DrawListFG();
-    
+    if (!dl) return;
+
     if (isCentered) {
         ImFont* font = BBZGUI::GetFont();
         if (font) {
@@ -133,6 +134,11 @@ inline void DrawText(string text, ImVec2 pos, bool isCentered, int color, bool o
         dl->AddTextX(ImVec2(vec2.x - 1, vec2.y + 1), outlineColor, fontSize, str);
     }
     dl->AddTextX(vec2, color, fontSize, str);
+}
+
+inline void DrawText(const string &text, ImVec2 pos, bool isCentered, int color, bool outline, float fontSize)
+{
+    DrawText(text.c_str(), pos, isCentered, color, outline, fontSize);
 }
 
 }

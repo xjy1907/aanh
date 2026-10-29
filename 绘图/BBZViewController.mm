@@ -24,6 +24,7 @@
 extern "C" {
 #endif
 void KernelLogLine(const char *line);
+bool IsReadingEnabled(void);
 #ifdef __cplusplus
 }
 #endif
@@ -109,7 +110,7 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
                       ? "HUD: 过直播已启用 (wasd 双层 UITextField secure)"
                       : "HUD: 过直播关闭 (结构已就绪，开开关即生效)");
 
-        // 对标 wasd：CADisplayLink + MTKView 手动刷；帧率由 prefs drawFps 控制（默认跟屏刷）
+        // CADisplayLink + MTKView 手动刷；帧率由 prefs drawFps 控制（默认 60，降 CPU）
         self.displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(displayLinkCallback:)];
         _appliedDrawFps = -1;
         [self applyDrawFpsFromPrefs:YES];
@@ -256,22 +257,44 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
 }
 
 - (BOOL)loadOverlayFlagFromDisk {
+    // 热路径：优先 notify state，避免每次读盘
+    NSDictionary *st = NHPrefsDictFromState();
+    if (st) return [[st objectForKey:@"overlay"] boolValue];
     NSDictionary *cfg = NHPrefsRead();
     return [[cfg objectForKey:@"overlay"] boolValue];
 }
 
 - (NSInteger)loadDrawFpsFromPrefs {
-    NSDictionary *cfg = NHPrefsRead();
-    if (!cfg || cfg[@"drawFps"] == nil) return 0; // 默认跟屏刷（对标 wasd）
-    NSInteger fps = [cfg[@"drawFps"] integerValue];
-    if (fps != 30 && fps != 60 && fps != 90 && fps != 120) return 0;
+    // 默认 60（对齐历史 perf 提交）；0=跟屏刷仅在用户显式选择时
+    static NSInteger sCachedFps = 60;
+    static CFAbsoluteTime sLastExtras = 0;
+    CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
+    if (sLastExtras > 0 && (now - sLastExtras) < 2.0) {
+        return sCachedFps;
+    }
+    sLastExtras = now;
+
+    NSInteger fps = 60;
+    NSDictionary *ex = NHDrawExtrasRead();
+    if (ex[@"drawFps"] != nil) {
+        fps = [ex[@"drawFps"] integerValue];
+    } else {
+        NSDictionary *st = NHPrefsDictFromState();
+        if (st[@"drawFps"] != nil) {
+            NSInteger modeFps = [st[@"drawFps"] integerValue];
+            // state 仅编码 60/90/120；为 0 时保持默认 60（未写入 extras）
+            if (modeFps == 60 || modeFps == 90 || modeFps == 120) fps = modeFps;
+        }
+    }
+    if (fps != 0 && fps != 30 && fps != 60 && fps != 90 && fps != 120) fps = 60;
+    sCachedFps = fps;
     return fps;
 }
 
-/// fps<=0：跟屏刷（preferredFramesPerSecond=0）；否则限到 30/60/90/120
+/// fps<=0：跟屏刷；1=空闲保活；否则 30/60/90/120（非法值回落 60）
 - (void)applyDrawFpsToDisplayLink:(NSInteger)fps {
     if (!self.displayLink) return;
-    if (fps != 30 && fps != 60 && fps != 90 && fps != 120) fps = 0;
+    if (fps != 0 && fps != 1 && fps != 30 && fps != 60 && fps != 90 && fps != 120) fps = 60;
     if (fps == _appliedDrawFps) return;
     _appliedDrawFps = fps;
     if (fps <= 0) {
@@ -279,7 +302,7 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
             self.displayLink.preferredFrameRateRange = CAFrameRateRangeDefault;
         }
         self.displayLink.preferredFramesPerSecond = 0;
-        KernelLogLine("HUD: drawFps=follow-display (wasd CADisplayLink)");
+        KernelLogLine("HUD: drawFps=follow-display");
     } else {
         if (@available(iOS 15.0, *)) {
             float f = (float)fps;
@@ -357,17 +380,22 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
 
 - (void)displayLinkCallback:(CADisplayLink *)displayLink {
     BBZGUI::GetIO().DeltaTime = (float)displayLink.duration;
-    // 主界面改 overlay / drawFps 后 HUD 热更新（按墙钟约 0.5s，与限帧无关）
+    // overlay / drawFps 热更新：2s 一次，且优先走 notify（不对每次读盘）
     _overlayPollTick++;
     static CFAbsoluteTime sLastPrefPoll = 0;
     CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
-    if (sLastPrefPoll <= 0 || (now - sLastPrefPoll) >= 0.5) {
+    if (sLastPrefPoll <= 0 || (now - sLastPrefPoll) >= 2.0) {
         sLastPrefPoll = now;
         BOOL on = [self loadOverlayFlagFromDisk];
         if (on != _liveHiddenApplied) {
             [self applyLiveHide:on];
         }
-        [self applyDrawFpsFromPrefs:NO];
+        // 未开启读取：1fps 保活轮询；开启后恢复 prefs 帧率
+        if (!IsReadingEnabled()) {
+            [self applyDrawFpsToDisplayLink:1];
+        } else {
+            [self applyDrawFpsFromPrefs:NO];
+        }
     }
     [_MetalView draw];
 }

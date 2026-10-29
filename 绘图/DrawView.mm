@@ -246,10 +246,18 @@ static ImU32 ParseHexColor(const std::string &hex) {
     return IM_COL32(r, g, b, a);
 }
 
+static NSTimeInterval sWuziMtime = -1.0;
+
 static void LoadItemConfigsFromFile(void) {
-    itemConfigs.clear();
     NSString *path = NHWuziPath();
     if (!path) return;
+    NSDictionary *attrs = [[NSFileManager defaultManager] attributesOfItemAtPath:path error:nil];
+    NSDate *mod = attrs[NSFileModificationDate];
+    NSTimeInterval mt = mod ? mod.timeIntervalSince1970 : 0;
+    // mtime 未变且已有缓存：跳过整文件解析
+    if (mt > 0 && mt == sWuziMtime && !itemConfigs.empty()) return;
+
+    itemConfigs.clear();
     NSError *err = nil;
     NSString *fileContent = [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:&err];
     if (!fileContent) return;
@@ -279,6 +287,7 @@ static void LoadItemConfigsFromFile(void) {
             itemConfigs.push_back(config);
         }
     }
+    sWuziMtime = mt;
 }
 
 static const ItemConfig *FindItemConfig(const std::string &className) {
@@ -319,10 +328,7 @@ static void DrawBehindArrowAtAngle(float angle, float distance, bool withDistanc
     }
     ImDrawList *dl = BBZGUI::GetForegroundDrawList();
     if (!dl) return;
-    ImDrawListFlags oldFlags = dl->Flags;
-    dl->Flags |= ImDrawListFlags_AntiAliasedLines | ImDrawListFlags_AntiAliasedFill;
     dl->AddPolyline(points, 3, arrowColor, ImDrawFlags_Closed, 2.0f);
-    dl->Flags = oldFlags;
 
     if (!withDistanceText) return;
     char distanceText[16];
@@ -367,11 +373,8 @@ static void DrawBehindRadarAtAngle(float angle, float distance) {
     }
     ImDrawList *dl = BBZGUI::GetForegroundDrawList();
     if (!dl) return;
-    ImDrawListFlags oldFlags = dl->Flags;
-    dl->Flags |= ImDrawListFlags_AntiAliasedLines | ImDrawListFlags_AntiAliasedFill;
     dl->AddConvexPolyFilled(points, 4, arrowColor);
     dl->AddPolyline(points, 4, IM_COL32(0, 0, 0, 255), ImDrawFlags_Closed, 1.5f);
-    dl->Flags = oldFlags;
 }
 
 // 按样式绘制背敌（angle 必须是 BehindAimAngle，顶角朝向敌人）
@@ -670,8 +673,8 @@ static void RefreshStaticPlayers(void) {
     if (lastRead > 0.0 && (now - lastRead) < 3.0) return;
     lastRead = now;
 
-    // 与扫描同节奏刷新物资配置；物资开启且列表空时也强制重载
-    LoadItemConfigsFromFile();
+    // 仅物资开启时按 mtime 热更新配置，避免每 3s 整文件解析
+    if (显示物资) LoadItemConfigsFromFile();
 
     auto clearLists = []() {
         gStatic.players.clear();
@@ -751,8 +754,8 @@ static void RefreshStaticPlayers(void) {
                 cp.team = teamID;
                 cp.bIsAI = vm_read<bool>(actor + SDK::bIsAI);
                 tmp.push_back(cp);
-            } else {
-                // 物资 / 手雷 / 烟雾
+            } else if (显示物资) {
+                // 物资 / 手雷 / 烟雾（关物资时跳过类名解析）
                 string className = GetClassName(模块地址, actor, 0x18);
                 if (className.find("ojGrenade_BP_C") != std::string::npos) {
                     CachedMaterial sm{};
@@ -840,14 +843,17 @@ void Draw::StartBooks() {
     }
     if (!povOk) return;
 
-    // 自身手持：每帧读一次（物资 weaponID==0 过滤 + 可选显示）
+    // 自身手持：仅物资「空手模式」需要
     int 自身手持 = 0;
-    if (IsValidAddr(gStatic.myCharacter)) {
+    if (显示物资 && 物资显示模式 == 1 && IsValidAddr(gStatic.myCharacter)) {
         uint64_t myWeapon = UNSIGN_PTR(vm_read<uint64_t>(gStatic.myCharacter + SDK::CurrentUsingWeaponSafety));
         if (IsValidAddr(myWeapon)) {
             自身手持 = vm_read<int>(myWeapon + SDK::RepWeaponID);
         }
     }
+
+    const bool needHeadESP = 显示信息 || 显示距离 || 显示射线 || 显示血量 || 显示手持 || 显示方框;
+    const bool needBoneMesh = 显示骨骼;
 
     int totalEnemies = 0;
     int aiCounts = 0;
@@ -884,15 +890,18 @@ void Draw::StartBooks() {
         uint64_t staticMesh = 0;
         FTransform RelativeScale3D{};
         Vector2 HeadScreen = LocationScreen;
-        if (onScreen) {
-            mesh = UNSIGN_PTR(vm_read<uint64_t>(actor + SDK::Mesh));
-            if (IsValidAddr(mesh)) {
-                staticMesh = UNSIGN_PTR(vm_read<uint64_t>(mesh + SDK::StaticMesh));
-                if (IsValidAddr(staticMesh)) {
-                    RelativeScale3D = GetMatrixConversion(mesh + SDK::ComponentToWorld);
-                    Vector3 headWorld = GetBoneWithRotation((long)staticMesh, 5, RelativeScale3D);
-                    headWorld.Z += 20.0f;
-                    HeadScreen = WorldToScreen(headWorld, POV, sw, sh);
+        // 骨骼才读 mesh；其余头顶 ESP 用近似头点，少一轮骨矩阵读
+        if (onScreen && distance <= 绘制距离上限 && (needBoneMesh || needHeadESP)) {
+            if (needBoneMesh) {
+                mesh = UNSIGN_PTR(vm_read<uint64_t>(actor + SDK::Mesh));
+                if (IsValidAddr(mesh)) {
+                    staticMesh = UNSIGN_PTR(vm_read<uint64_t>(mesh + SDK::StaticMesh));
+                    if (IsValidAddr(staticMesh)) {
+                        RelativeScale3D = GetMatrixConversion(mesh + SDK::ComponentToWorld);
+                        Vector3 headWorld = GetBoneWithRotation((long)staticMesh, 5, RelativeScale3D);
+                        headWorld.Z += 20.0f;
+                        HeadScreen = WorldToScreen(headWorld, POV, sw, sh);
+                    }
                 }
             }
             if (!IsValidAddr(staticMesh)) {
@@ -931,8 +940,12 @@ void Draw::StartBooks() {
             Draw::DrawText(distBuf, ImVec2(HeadScreen.X, HeadScreen.Y - 38.0f + 4.0f), true, distanceColor, false, 10);
         }
 
-        uint64_t weaponPtr = UNSIGN_PTR(vm_read<uint64_t>(actor + SDK::CurrentUsingWeaponSafety));
-        int weapon = IsValidAddr(weaponPtr) ? vm_read<int>(weaponPtr + SDK::RepWeaponID) : 0;
+        // 手持显示或屏内雷计时才读武器，避免关功能仍每帧读
+        int weapon = 0;
+        if (显示手持 || onScreen) {
+            uint64_t weaponPtr = UNSIGN_PTR(vm_read<uint64_t>(actor + SDK::CurrentUsingWeaponSafety));
+            weapon = IsValidAddr(weaponPtr) ? vm_read<int>(weaponPtr + SDK::RepWeaponID) : 0;
+        }
 
         // 敌人持雷倒计时（对标 wasd enemyGrenadeTimers，约 7.25s）
         static std::unordered_map<uint64_t, CFAbsoluteTime> enemyGrenadeTimers;

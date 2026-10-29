@@ -96,10 +96,10 @@ static BOOL JVR_读取开关(NSString* key) {
     return v;
 }
 
-/// drawFps：0=跟屏刷，30/60/90/120（对标 wasd 选项卡存档方式）
+/// drawFps：0=跟屏刷，30/60/90/120；未配置时默认 60（降 CPU）
 static NSInteger JVR_规范化DrawFps(NSInteger fps) {
-    if (fps == 30 || fps == 60 || fps == 90 || fps == 120) return fps;
-    return 0;
+    if (fps == 0 || fps == 30 || fps == 60 || fps == 90 || fps == 120) return fps;
+    return 60;
 }
 
 static void JVR_保存DrawFps(NSInteger fps) {
@@ -117,27 +117,27 @@ static NSInteger JVR_读取DrawFps(void) {
     id cached = JVR_开关缓存()[@"drawFps"];
     if (cached != nil) return JVR_规范化DrawFps([cached integerValue]);
     NSDictionary *cfg = NHPrefsRead();
-    NSInteger fps = (cfg && cfg[@"drawFps"] != nil) ? [cfg[@"drawFps"] integerValue] : 0;
+    NSInteger fps = (cfg && cfg[@"drawFps"] != nil) ? [cfg[@"drawFps"] integerValue] : 60;
     fps = JVR_规范化DrawFps(fps);
     JVR_开关缓存()[@"drawFps"] = @(fps);
     return fps;
 }
 
 static NSInteger JVR_DrawFpsToSegmentIndex(NSInteger fps) {
+    if (fps == 0) return 0;  // 跟屏刷
     if (fps == 30) return 1;
-    if (fps == 60) return 2;
     if (fps == 90) return 3;
     if (fps == 120) return 4;
-    return 0; // 跟屏刷
+    return 2; // 默认 / 60
 }
 
 static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
     switch (idx) {
+        case 0: return 0;
         case 1: return 30;
-        case 2: return 60;
         case 3: return 90;
         case 4: return 120;
-        default: return 0;
+        default: return 60;
     }
 }
 
@@ -252,7 +252,7 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
         self.titleLabel.textColor = JVR_文字色;
         [self addSubview:self.titleLabel];
 
-        // 默认跟屏刷=0；加 30 便于肉眼确认限帧是否生效
+        // 默认 60；跟屏刷/30/90/120 可选
         self.segment = [[UISegmentedControl alloc] initWithItems:@[ @"跟屏刷", @"30", @"60", @"90", @"120" ]];
         self.segment.translatesAutoresizingMaskIntoConstraints = NO;
         self.segment.selectedSegmentIndex = JVR_DrawFpsToSegmentIndex(JVR_读取DrawFps());
