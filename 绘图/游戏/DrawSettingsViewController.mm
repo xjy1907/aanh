@@ -166,8 +166,8 @@
   } else {
     float defV = 300;
     if ([row.key isEqualToString:@"boneThick"] || [row.key isEqualToString:@"rayThick"]) defV = 1.0f;
-    if ([row.key isEqualToString:@"lootSize"]) defV = 12;
-    if ([row.key isEqualToString:@"infoSize"]) defV = 10;
+    if ([row.key isEqualToString:@"lootSize"]) defV = 13;
+    if ([row.key isEqualToString:@"infoSize"]) defV = 12;
     if ([row.key isEqualToString:@"drawDist"]) defV = 252;
     if ([row.key isEqualToString:@"behindDist"]) defV = 252;
     if ([row.key isEqualToString:@"boneDist"]) defV = 30;

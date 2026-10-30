@@ -42,16 +42,17 @@ static bool gReadingEnabled = false;
 bool 总开关 = true;
 
 // 绘制开关（对标 wasd / BBZView plist key）
-static bool 显示人数 = false;
+static bool 显示人数 = false; // 保留开关；真人/人机条常显，不再门控
 static bool 显示射线 = false;
 static bool 显示方框 = false;
 static bool 显示血量 = false;
 static bool 显示信息 = false;
 static bool 显示骨骼 = false;
+static bool 人机隐藏 = false; // 对标 wasd：静态扫描跳过人机
 static bool 显示手持 = false, 显示距离 = false, 显示背敌 = false, 显示物资 = false;
 static int 手持样式 = 0; // 0=文字 1=图片（对标 wasd 手持图）
-static int 物资大小 = 12;
-static int 信息大小 = 10; // 名字/队号/距离/手持/背敌距离字号
+static int 物资大小 = 13;
+static int 信息大小 = 12; // 名字/队号/距离/手持/背敌距离字号
 static int 背敌样式 = 1; // 0雷达 1箭头 2花祭；默认箭头
 static int 背敌模式 = 1; // 0背后模式 1全景模式；默认全景
 static int 血量样式 = 1; // 0圆弧 1经典 2花祭；默认经典
@@ -411,7 +412,7 @@ static void RefreshDrawPrefs(void) {
     if (!cfg) {
         // 无源：用内存态发布；仅落盘模式才写文件
         if (gReadingEnabled || 显示人数 || 显示射线 || 显示方框 || 显示血量 || 显示信息 || 显示骨骼 ||
-            显示手持 || 显示距离 || 显示背敌 || 显示物资) {
+            人机隐藏 || 显示手持 || 显示距离 || 显示背敌 || 显示物资) {
             NSMutableDictionary *restore = [NSMutableDictionary dictionary];
             restore[@"reading"] = @(gReadingEnabled);
             restore[@"count"] = @(显示人数);
@@ -420,6 +421,7 @@ static void RefreshDrawPrefs(void) {
             restore[@"health"] = @(显示血量);
             restore[@"info"] = @(显示信息);
             restore[@"bone"] = @(显示骨骼);
+            restore[@"hideAi"] = @(人机隐藏);
             restore[@"weapon"] = @(显示手持);
             restore[@"weaponStyle"] = @(手持样式);
             restore[@"dist"] = @(显示距离);
@@ -448,14 +450,16 @@ static void RefreshDrawPrefs(void) {
     显示血量 = [[cfg objectForKey:@"health"] boolValue];
     显示信息 = [[cfg objectForKey:@"info"] boolValue];
     显示骨骼 = [[cfg objectForKey:@"bone"] boolValue];
+    人机隐藏 = [[cfg objectForKey:@"hideAi"] boolValue];
     显示手持 = [[cfg objectForKey:@"weapon"] boolValue];
     显示距离 = [[cfg objectForKey:@"dist"] boolValue];
     显示背敌 = [[cfg objectForKey:@"behind"] boolValue];
     显示物资 = [[cfg objectForKey:@"loot"] boolValue];
     if (cfg[@"weaponStyle"] != nil) 手持样式 = [cfg[@"weaponStyle"] intValue];
     if (cfg[@"lootSize"] != nil) 物资大小 = [cfg[@"lootSize"] intValue];
+    else 物资大小 = 13;
     if (cfg[@"infoSize"] != nil) 信息大小 = [cfg[@"infoSize"] intValue];
-    else 信息大小 = 10;
+    else 信息大小 = 12;
     if (cfg[@"behindStyle"] != nil) 背敌样式 = [cfg[@"behindStyle"] intValue];
     else 背敌样式 = 1;
     if (cfg[@"behindMode"] != nil) 背敌模式 = [cfg[@"behindMode"] intValue];
@@ -517,7 +521,7 @@ static void DumpReadPipelineEvery7s(void) {
     int actorCount = IsValidAddr(Level) ? vm_read<int>(Level + SDK::ActorCount) : -1;
 
     int realCnt = 0, aiCnt = 0, speedHit = 0;
-    if (IsValidAddr(actors) && actorCount > 0 && actorCount < 10000) {
+    if (IsValidAddr(actors) && actorCount > 0 && actorCount < 50000) {
         for (int i = 0; i < actorCount; ++i) {
             uint64_t actor = UNSIGN_PTR(vm_read<uint64_t>(actors + i * 8));
             if (!IsValidAddr(actor)) continue;
@@ -671,15 +675,11 @@ bool getbbz() {
     });
 }
 
-// 对标 wasd：3s 扫一次 ActorArray，缓存玩家/物资；每帧只读缓存列表的位置/血量
-static void RefreshStaticPlayers(void) {
-    static CFAbsoluteTime lastRead = 0.0;
-    CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
-    if (lastRead > 0.0 && (now - lastRead) < 3.0) return;
-    lastRead = now;
+// 对标 wasd：3s 扫一次 ActorArray；换图强制重扫。禁止每帧全表扫（CPU 爆炸主因）
+static CFAbsoluteTime sStaticLastRead = 0.0;
 
-    // 仅物资开启时按 mtime 热更新配置，避免每 3s 整文件解析
-    if (显示物资) LoadItemConfigsFromFile();
+static void RefreshStaticPlayers(bool force) {
+    CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
 
     auto clearLists = []() {
         gStatic.players.clear();
@@ -688,36 +688,50 @@ static void RefreshStaticPlayers(void) {
 
     if (模块地址 == 0) {
         gStatic.isGameStart = false;
+        gStatic.gWorld = 0;
         clearLists();
         return;
     }
 
     uint64_t GWorld = UNSIGN_PTR(vm_read<uint64_t>(模块地址 + SDK::GWorld));
+    // 换图：立即重扫一次，但不要在 FOV/PCM 抖动时每帧 Invalidate
+    if (IsValidAddr(GWorld) && gStatic.gWorld != 0 && GWorld != gStatic.gWorld) {
+        force = true;
+        clearLists();
+        gStatic.isGameStart = false;
+    }
+    if (!force && sStaticLastRead > 0.0 && (now - sStaticLastRead) < 3.0) return;
+    sStaticLastRead = now;
+
+    // 仅物资开启时按 mtime 热更新配置，避免每 3s 整文件解析
+    if (显示物资) LoadItemConfigsFromFile();
+
     if (!IsValidAddr(GWorld)) {
         gStatic.isGameStart = false;
+        gStatic.gWorld = 0;
         clearLists();
         return;
     }
 
     uint64_t NetDriver = UNSIGN_PTR(vm_read<uint64_t>(GWorld + SDK::NetDriver));
     if (!IsValidAddr(NetDriver)) {
-        gStatic.isGameStart = false;
-        gStatic.gWorld = GWorld;
-        clearLists();
+        // 大厅：清空；对局中短暂读失败则保留上一帧缓存，避免真人:00
+        if (!gStatic.isGameStart) {
+            gStatic.gWorld = GWorld;
+            clearLists();
+        }
         return;
     }
 
     uint64_t ServerConnection = UNSIGN_PTR(vm_read<uint64_t>(NetDriver + SDK::ServerConnection));
     if (!IsValidAddr(ServerConnection)) {
-        gStatic.isGameStart = false;
-        clearLists();
+        if (!gStatic.isGameStart) clearLists();
         return;
     }
 
     uint64_t PlayerController = UNSIGN_PTR(vm_read<uint64_t>(ServerConnection + SDK::PlayerController));
     if (!IsValidAddr(PlayerController)) {
-        gStatic.isGameStart = false;
-        clearLists();
+        if (!gStatic.isGameStart) clearLists();
         return;
     }
 
@@ -728,10 +742,24 @@ static void RefreshStaticPlayers(void) {
         myTeamID = vm_read<int>(MyCharacter + SDK::TeamID);
     }
 
+    // PCM 瞬时无效：保留旧 PCM/列表，勿把 isGameStart 打成 false（否则 HUD 真人:00 且整帧不画）
+    if (!IsValidAddr(PlayerCameraManager)) {
+        gStatic.gWorld = GWorld;
+        gStatic.playerController = PlayerController;
+        gStatic.myCharacter = MyCharacter;
+        gStatic.myTeam = myTeamID;
+        if (!IsValidAddr(gStatic.playerCameraManager)) {
+            gStatic.isGameStart = false;
+        }
+        return;
+    }
+
     uint64_t PersistentLevel = UNSIGN_PTR(vm_read<uint64_t>(GWorld + SDK::PersistentLevel));
     if (!IsValidAddr(PersistentLevel)) {
-        gStatic.isGameStart = false;
-        clearLists();
+        gStatic.gWorld = GWorld;
+        gStatic.playerController = PlayerController;
+        gStatic.playerCameraManager = PlayerCameraManager;
+        if (!gStatic.isGameStart) clearLists();
         return;
     }
 
@@ -739,10 +767,13 @@ static void RefreshStaticPlayers(void) {
     int ActorCount = vm_read<int>(PersistentLevel + SDK::ActorCount);
     std::vector<CachedPlayer> tmp;
     std::vector<CachedMaterial> tmpMat;
-    if (IsValidAddr(ActorArrayPtr) && ActorCount > 0 && ActorCount <= 10000) {
+    // 关键：ActorCount>10000 整表跳过 → GameState 有人数但本地真人:00
+    // 性能：仍 3s 一扫；单次最多扫 20000，避免失败版 1s×50000 的 CPU 爆炸
+    if (IsValidAddr(ActorArrayPtr) && ActorCount > 0 && ActorCount < 50000) {
+        const int scanN = (ActorCount > 20000) ? 20000 : ActorCount;
         tmp.reserve(64);
         tmpMat.reserve(64);
-        for (int i = 0; i < ActorCount; ++i) {
+        for (int i = 0; i < scanN; ++i) {
             uint64_t actor = UNSIGN_PTR(vm_read<uint64_t>(ActorArrayPtr + i * 8));
             if (!IsValidAddr(actor) || actor == MyCharacter) continue;
 
@@ -752,12 +783,16 @@ static void RefreshStaticPlayers(void) {
                 if (action == 1048592 || action == 1048576) continue;
 
                 int teamID = vm_read<int>(actor + SDK::TeamID);
-                if (teamID == myTeamID || teamID == -1) continue;
+                if (teamID == -1) continue;
+                if (myTeamID > 0 && teamID == myTeamID) continue;
+
+                bool isAI = vm_read<bool>(actor + SDK::bIsAI);
+                if (人机隐藏 && isAI) continue;
 
                 CachedPlayer cp;
                 cp.addr = actor;
                 cp.team = teamID;
-                cp.bIsAI = vm_read<bool>(actor + SDK::bIsAI);
+                cp.bIsAI = isAI;
                 tmp.push_back(cp);
             } else if (显示物资) {
                 // 物资 / 手雷 / 烟雾（关物资时跳过类名解析）
@@ -834,8 +869,54 @@ void Draw::StartBooks() {
     if (!((DOJailbreaker *)DOJailbreaker.sharedInstance).isSuccess) return;
     if (模块地址 == 0 || !总开关) return;
 
-    RefreshStaticPlayers();
-    if (!gStatic.isGameStart || !IsValidAddr(gStatic.playerCameraManager)) return;
+    RefreshStaticPlayers(false);
+
+    // 每帧只刷新相机指针，绝不因此触发全表 Actor 扫描
+    if (IsValidAddr(gStatic.playerController)) {
+        uint64_t pcmNow = UNSIGN_PTR(vm_read<uint64_t>(gStatic.playerController + SDK::PlayerCameraManager));
+        if (IsValidAddr(pcmNow)) gStatic.playerCameraManager = pcmNow;
+    }
+
+    // 顶部 GameState + 中间真人/人机：常显；无列表时先画 HUD 再返回
+    static int s全图 = 0, s真人 = 0, s队伍 = 0;
+    auto drawHud = [&](int totalEnemies, int aiCounts) {
+        char buf1[40], buf2[40];
+        snprintf(buf1, sizeof(buf1), "真人:%02d", totalEnemies);
+        snprintf(buf2, sizeof(buf2), "人机:%02d", aiCounts);
+        Draw::DrawText(buf1, ImVec2(屏幕宽度 / 2.0f - 50.0f, 50.0f), true, Colour_骨骼, true, 22);
+        Draw::DrawText(buf2, ImVec2(屏幕宽度 / 2.0f + 50.0f, 50.0f), true, Colour_人机, true, 22);
+
+        static CFAbsoluteTime sGsLast = 0.0;
+        CFAbsoluteTime gsNow = CFAbsoluteTimeGetCurrent();
+        if (gsNow - sGsLast >= 1.0) {
+            sGsLast = gsNow;
+            uint64_t gw = gStatic.gWorld;
+            if (模块地址 != 0) {
+                uint64_t live = UNSIGN_PTR(vm_read<uint64_t>(模块地址 + SDK::GWorld));
+                if (IsValidAddr(live)) gw = live;
+            }
+            if (IsValidAddr(gw)) {
+                uint64_t gameStateBase = UNSIGN_PTR(vm_read<uint64_t>(gw + SDK::GameState));
+                if (IsValidAddr(gameStateBase)) {
+                    int n全图 = vm_read<int>(gameStateBase + SDK::TotalPlayerNum);
+                    int n真人 = vm_read<int>(gameStateBase + SDK::PlayerNum);
+                    int n队伍 = vm_read<int>(gameStateBase + SDK::AliveTeamNum);
+                    if (n全图 >= 0 && n全图 <= 200) s全图 = n全图;
+                    if (n真人 >= 0 && n真人 <= 200) s真人 = n真人;
+                    if (n队伍 >= 0 && n队伍 <= 100) s队伍 = n队伍;
+                }
+            }
+        }
+        char gameInfo[128];
+        snprintf(gameInfo, sizeof(gameInfo), "全图: %02d | 真人: %02d | 队伍: %02d | CPU: %.1f%%",
+                 s全图, s真人, s队伍, gCurrentCPUUsage);
+        Draw::DrawText(gameInfo, ImVec2(屏幕宽度 * 0.14f, 25.0f), false, Colour_白色, true, 16);
+    };
+
+    if (!gStatic.isGameStart || !IsValidAddr(gStatic.playerCameraManager)) {
+        drawHud(0, 0);
+        return;
+    }
 
     CoViewInfo POV = vm_read<CoViewInfo>(gStatic.playerCameraManager + SDK::ViewTarget);
     bool povOk = (POV.FOV > 1.0f && POV.FOV <= 170.0f);
@@ -846,7 +927,8 @@ void Draw::StartBooks() {
             povOk = true;
         }
     }
-    if (!povOk) return;
+    // FOV 异常：默认 90 继续画；禁止 Invalidate+全表重扫（失败版 CPU 主因）
+    if (!povOk) POV.FOV = 90.0f;
 
     // 自身手持：仅物资「空手模式」需要
     int 自身手持 = 0;
@@ -874,17 +956,22 @@ void Draw::StartBooks() {
         int action = IsValidAddr(pawnStatePtr) ? vm_read<int>(pawnStatePtr) : 0;
         if (action == 1048592 || action == 1048576) continue;
 
+        // 不因 HealthMax<=0 丢弃（训练岛未就绪 Pawn）；仅剔除异常百分比
         float healthMax = vm_read<float>(actor + SDK::HealthMax);
-        if (healthMax <= 0) continue;
-        float Health = (vm_read<float>(actor + SDK::Health) / healthMax) * 100.0f;
+        float healthRaw = vm_read<float>(actor + SDK::Health);
+        float Health = (healthMax > 1e-3f) ? ((healthRaw / healthMax) * 100.0f) : healthRaw;
         if (Health > 100.0f) continue;
+
+        Vector3 loc = GetRelativeLocation((long)actor);
+        if (loc.X == 0.f && loc.Y == 0.f && loc.Z == 0.f) {
+            loc = GetRelativeLocation((long)actor);
+        }
 
         bool bIsAI = sp.bIsAI;
         if (!bIsAI) totalEnemies++;
         else aiCounts++;
 
-        Vector3 loc = GetRelativeLocation((long)actor);
-        if (loc.X == 0 && loc.Y == 0 && loc.Z == 0) continue;
+        if (loc.X == 0.f && loc.Y == 0.f && loc.Z == 0.f) continue;
 
         float distance = GetDistance(loc, POV.Location) / 100.0f;
         Vector2 LocationScreen = WorldToScreen(loc, POV, sw, sh);
@@ -1130,31 +1217,7 @@ void Draw::StartBooks() {
         }
     }
 
-    if (显示人数) {
-        char buf1[40], buf2[40];
-        snprintf(buf1, sizeof(buf1), "真人:%02d", totalEnemies);
-        snprintf(buf2, sizeof(buf2), "人机:%02d", aiCounts);
-        Draw::DrawText(buf1, ImVec2(屏幕宽度 / 2.0f - 50.0f, 50.0f), true, Colour_骨骼, true, 22);
-        Draw::DrawText(buf2, ImVec2(屏幕宽度 / 2.0f + 50.0f, 50.0f), true, Colour_人机, true, 22);
-    }
-
-    // GameState 人数：1s 读一次即可，HUD 字不必每帧读
-    static int s全图 = 0, s真人 = 0, s队伍 = 0;
-    static CFAbsoluteTime sGsLast = 0.0;
-    CFAbsoluteTime gsNow = CFAbsoluteTimeGetCurrent();
-    if (gsNow - sGsLast >= 1.0) {
-        sGsLast = gsNow;
-        uint64_t gameStateBase = UNSIGN_PTR(vm_read<uint64_t>(gStatic.gWorld + SDK::GameState));
-        if (IsValidAddr(gameStateBase)) {
-            s全图 = vm_read<int>(gameStateBase + SDK::TotalPlayerNum);
-            s真人 = vm_read<int>(gameStateBase + SDK::PlayerNum);
-            s队伍 = vm_read<int>(gameStateBase + SDK::AliveTeamNum);
-        }
-    }
-    char gameInfo[128];
-    snprintf(gameInfo, sizeof(gameInfo), "全图: %02d | 真人: %02d | 队伍: %02d | CPU: %.1f%%",
-             s全图, s真人, s队伍, gCurrentCPUUsage);
-    Draw::DrawText(gameInfo, ImVec2(屏幕宽度 * 0.14f, 25.0f), false, Colour_白色, true, 16);
+    drawHud(totalEnemies, aiCounts);
 }
 
 @end

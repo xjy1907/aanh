@@ -206,7 +206,7 @@ static inline NSArray<NSString *> *NHDrawExtrasKeys(void) {
     return @[
         @"weaponStyle", @"healthStyle", @"behindStyle", @"behindMode", @"lootMode",
         @"lootSize", @"infoSize", @"drawDist", @"behindDist", @"boneDist",
-        @"boneThick", @"rayThick", @"drawFps",
+        @"boneThick", @"rayThick", @"drawFps", @"hideAi",
     ];
 }
 

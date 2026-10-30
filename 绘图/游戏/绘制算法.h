@@ -147,11 +147,12 @@ static D3DXMATRIX MatrixMultiplication(D3DXMATRIX M1, D3DXMATRIX M2) {
     return ret;
 }
 
+// 对标 wasd：仅排除空指针，避免 IsValidAddr 过严丢掉瞬时合法 Root
 static Vector3 GetRelativeLocation(long actor) {
-    if (!IsValidAddr(actor)) return Vector3();
-    long root = UNSIGN_PTR(vm_read<long>(actor + SDK::RootComponent));
-    if (!IsValidAddr(root)) return Vector3();
-    return vm_read<Vector3>(root + SDK::RelativeLocation);
+    if (!actor) return Vector3();
+    long root = (long)UNSIGN_PTR(vm_read<uint64_t>((uint64_t)actor + SDK::RootComponent));
+    if (!root) return Vector3();
+    return vm_read<Vector3>((uint64_t)root + SDK::RelativeLocation);
 }
 
 static FTransform GetMatrixConversion(long address) {

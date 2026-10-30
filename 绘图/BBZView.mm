@@ -1451,6 +1451,7 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
         @{@"title": @"显示背敌", @"key": @"behind"},
         @{@"title": @"显示物资", @"key": @"loot"},   // 含手雷倒计时
         @{@"title": @"骨骼显示", @"key": @"bone"},
+        @{@"title": @"人机隐藏", @"key": @"hideAi"}, // 对标 wasd：静态扫描跳过人机
         @{@"title": @"过直播模式", @"key": @"overlay"},
         @{@"title": @"调试日志", @"key": @"dbglog"}, // 默认关；开才写 kfd_debug / 终端诊断
         @{@"title": @"配置落盘", @"key": @"persist"}, // 默认关；开才写 cfg/pid 文件，否则仅 notify 同步
