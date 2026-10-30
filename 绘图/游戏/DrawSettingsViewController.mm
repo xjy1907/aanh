@@ -89,6 +89,7 @@
     [self mkSlider:@"骨骼粗细" key:@"boneThick" min:0.5 max:4 step:0.1 kind:0],
     [self mkSlider:@"射线粗细" key:@"rayThick" min:0.5 max:4 step:0.1 kind:0],
     [self mkSlider:@"物资大小" key:@"lootSize" min:6 max:24 step:1 kind:1],
+    [self mkSlider:@"信息大小" key:@"infoSize" min:6 max:24 step:1 kind:1],
   ];
 }
 
@@ -166,6 +167,7 @@
     float defV = 300;
     if ([row.key isEqualToString:@"boneThick"] || [row.key isEqualToString:@"rayThick"]) defV = 1.0f;
     if ([row.key isEqualToString:@"lootSize"]) defV = 12;
+    if ([row.key isEqualToString:@"infoSize"]) defV = 10;
     if ([row.key isEqualToString:@"drawDist"]) defV = 252;
     if ([row.key isEqualToString:@"behindDist"]) defV = 252;
     if ([row.key isEqualToString:@"boneDist"]) defV = 30;

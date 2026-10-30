@@ -51,6 +51,7 @@ static bool 显示骨骼 = false;
 static bool 显示手持 = false, 显示距离 = false, 显示背敌 = false, 显示物资 = false;
 static int 手持样式 = 0; // 0=文字 1=图片（对标 wasd 手持图）
 static int 物资大小 = 12;
+static int 信息大小 = 10; // 名字/队号/距离/手持/背敌距离字号
 static int 背敌样式 = 1; // 0雷达 1箭头 2花祭；默认箭头
 static int 背敌模式 = 1; // 0背后模式 1全景模式；默认全景
 static int 血量样式 = 1; // 0圆弧 1经典 2花祭；默认经典
@@ -340,11 +341,12 @@ static void DrawBehindArrowAtAngle(float angle, float distance, bool withDistanc
     textPos.y = arrowCenterY + textOffsetX * sinf(angle) + textOffsetY * cosf(angle);
     ImFont *font = BBZGUI::GetFont();
     if (font) {
-        ImVec2 textSize = font->CalcTextSizeA(10.0f, MAXFLOAT, 0.0f, distanceText);
+        float fs = (float)信息大小;
+        ImVec2 textSize = font->CalcTextSizeA(fs, MAXFLOAT, 0.0f, distanceText);
         textPos.x -= textSize.x / 2.0f;
         textPos.y -= textSize.y / 2.0f;
     }
-    Draw::DrawText(distanceText, textPos, false, arrowColor, true, 10.0f);
+    Draw::DrawText(distanceText, textPos, false, arrowColor, true, (float)信息大小);
 }
 
 static void DrawBehindRadarAtAngle(float angle, float distance) {
@@ -424,6 +426,7 @@ static void RefreshDrawPrefs(void) {
             restore[@"behind"] = @(显示背敌);
             restore[@"loot"] = @(显示物资);
             restore[@"lootSize"] = @(物资大小);
+            restore[@"infoSize"] = @(信息大小);
             restore[@"behindStyle"] = @(背敌样式);
             restore[@"behindMode"] = @(背敌模式);
             restore[@"behindDist"] = @(背敌距离);
@@ -451,6 +454,8 @@ static void RefreshDrawPrefs(void) {
     显示物资 = [[cfg objectForKey:@"loot"] boolValue];
     if (cfg[@"weaponStyle"] != nil) 手持样式 = [cfg[@"weaponStyle"] intValue];
     if (cfg[@"lootSize"] != nil) 物资大小 = [cfg[@"lootSize"] intValue];
+    if (cfg[@"infoSize"] != nil) 信息大小 = [cfg[@"infoSize"] intValue];
+    else 信息大小 = 10;
     if (cfg[@"behindStyle"] != nil) 背敌样式 = [cfg[@"behindStyle"] intValue];
     else 背敌样式 = 1;
     if (cfg[@"behindMode"] != nil) 背敌模式 = [cfg[@"behindMode"] intValue];
@@ -922,22 +927,22 @@ void Draw::StartBooks() {
             if (!bIsAI) {
                 string name = GetPlayerName((long)actor);
                 if (!name.empty()) {
-                    Draw::DrawText(name, ImVec2(HeadScreen.X, HeadScreen.Y - 20), true, NameColor, false, 10);
+                    Draw::DrawText(name, ImVec2(HeadScreen.X, HeadScreen.Y - 20), true, NameColor, false, (float)信息大小);
                 }
             } else {
                 char buf[32];
                 snprintf(buf, sizeof(buf), "人机%d", aiCounts);
-                Draw::DrawText(buf, ImVec2(HeadScreen.X, HeadScreen.Y - 20), true, NameColor, false, 10);
+                Draw::DrawText(buf, ImVec2(HeadScreen.X, HeadScreen.Y - 20), true, NameColor, false, (float)信息大小);
             }
             char teamBuf[16];
             snprintf(teamBuf, sizeof(teamBuf), "%d", teamID);
-            Draw::DrawText(teamBuf, ImVec2(HeadScreen.X, HeadScreen.Y - 38.0f - 6.0f), true, teamColor, false, 10);
+            Draw::DrawText(teamBuf, ImVec2(HeadScreen.X, HeadScreen.Y - 38.0f - 6.0f), true, teamColor, false, (float)信息大小);
         }
 
         if (显示距离 && onScreen && distance <= 绘制距离上限) {
             char distBuf[16];
             snprintf(distBuf, sizeof(distBuf), "%d", (int)distance);
-            Draw::DrawText(distBuf, ImVec2(HeadScreen.X, HeadScreen.Y - 38.0f + 4.0f), true, distanceColor, false, 10);
+            Draw::DrawText(distBuf, ImVec2(HeadScreen.X, HeadScreen.Y - 38.0f + 4.0f), true, distanceColor, false, (float)信息大小);
         }
 
         // 手持显示或屏内雷计时才读武器，避免关功能仍每帧读
@@ -974,13 +979,13 @@ void Draw::StartBooks() {
                 } else {
                     std::string wname = GetWeaponDisplayName(weapon);
                     if (!wname.empty()) {
-                        Draw::DrawText(wname, ImVec2(HeadScreen.X, HeadScreen.Y - 55.0f), true, Colour_黄色, false, 10);
+                        Draw::DrawText(wname, ImVec2(HeadScreen.X, HeadScreen.Y - 55.0f), true, Colour_黄色, false, (float)信息大小);
                     }
                 }
             } else {
                 std::string wname = GetWeaponDisplayName(weapon);
                 if (!wname.empty()) {
-                    Draw::DrawText(wname, ImVec2(HeadScreen.X, HeadScreen.Y - 55.0f), true, Colour_黄色, false, 10);
+                    Draw::DrawText(wname, ImVec2(HeadScreen.X, HeadScreen.Y - 55.0f), true, Colour_黄色, false, (float)信息大小);
                 }
             }
         }
