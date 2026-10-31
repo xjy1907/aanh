@@ -675,8 +675,9 @@ bool getbbz() {
     });
 }
 
-// 对标 wasd：3s 扫一次 ActorArray；换图强制重扫。禁止每帧全表扫（CPU 爆炸主因）
+// 对标 wasd readStaticData：稳定对局 3s 一扫；换图/大厅→对局/空列表用短间隔，且失败不烧冷却
 static CFAbsoluteTime sStaticLastRead = 0.0;
+static bool sHadNetDriver = false;
 
 static void RefreshStaticPlayers(bool force) {
     CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
@@ -689,19 +690,28 @@ static void RefreshStaticPlayers(bool force) {
     if (模块地址 == 0) {
         gStatic.isGameStart = false;
         gStatic.gWorld = 0;
+        sHadNetDriver = false;
         clearLists();
         return;
     }
 
     uint64_t GWorld = UNSIGN_PTR(vm_read<uint64_t>(模块地址 + SDK::GWorld));
-    // 换图：立即重扫一次，但不要在 FOV/PCM 抖动时每帧 Invalidate
+    uint64_t NetDriverPeek = IsValidAddr(GWorld) ? UNSIGN_PTR(vm_read<uint64_t>(GWorld + SDK::NetDriver)) : 0;
+    // 换图 / 大厅→对局边沿：必须在冷却判断之前 force（否则第二局被 3s 节流卡成真人:00）
     if (IsValidAddr(GWorld) && gStatic.gWorld != 0 && GWorld != gStatic.gWorld) {
         force = true;
         clearLists();
         gStatic.isGameStart = false;
+        sHadNetDriver = false;
     }
-    if (!force && sStaticLastRead > 0.0 && (now - sStaticLastRead) < 3.0) return;
-    sStaticLastRead = now;
+    if (IsValidAddr(NetDriverPeek) && !sHadNetDriver) {
+        force = true;
+    }
+
+    // 自适应间隔：空列表/未开局/强制 → 0.45s；稳定对局 → 3s（对标 wasd 稳态）
+    const bool needFastScan = force || !gStatic.isGameStart || gStatic.players.empty();
+    const double interval = needFastScan ? 0.45 : 3.0;
+    if (!force && sStaticLastRead > 0.0 && (now - sStaticLastRead) < interval) return;
 
     // 仅物资开启时按 mtime 热更新配置，避免每 3s 整文件解析
     if (显示物资) LoadItemConfigsFromFile();
@@ -709,57 +719,72 @@ static void RefreshStaticPlayers(bool force) {
     if (!IsValidAddr(GWorld)) {
         gStatic.isGameStart = false;
         gStatic.gWorld = 0;
+        sHadNetDriver = false;
         clearLists();
+        sStaticLastRead = now;
         return;
     }
 
-    uint64_t NetDriver = UNSIGN_PTR(vm_read<uint64_t>(GWorld + SDK::NetDriver));
+    uint64_t NetDriver = NetDriverPeek ? NetDriverPeek : UNSIGN_PTR(vm_read<uint64_t>(GWorld + SDK::NetDriver));
+    // 对标 wasd：NetDriver==0 → isGameStart=false 并清空
     if (!IsValidAddr(NetDriver)) {
-        // 大厅：清空；对局中短暂读失败则保留上一帧缓存，避免真人:00
-        if (!gStatic.isGameStart) {
-            gStatic.gWorld = GWorld;
-            clearLists();
-        }
+        sHadNetDriver = false;
+        gStatic.isGameStart = false;
+        gStatic.gWorld = GWorld;
+        clearLists();
+        // 失败不烧满冷却：短间隔重试，避免卡在真人:00
+        sStaticLastRead = now - (interval - 0.45);
         return;
     }
+    sHadNetDriver = true;
 
     uint64_t ServerConnection = UNSIGN_PTR(vm_read<uint64_t>(NetDriver + SDK::ServerConnection));
     if (!IsValidAddr(ServerConnection)) {
-        if (!gStatic.isGameStart) clearLists();
+        // 链路上瞬时失败：保留旧缓存；无缓存则短冷却重试
+        if (!gStatic.isGameStart) {
+            clearLists();
+            sStaticLastRead = now - (interval - 0.45);
+        } else {
+            sStaticLastRead = now;
+        }
         return;
     }
 
     uint64_t PlayerController = UNSIGN_PTR(vm_read<uint64_t>(ServerConnection + SDK::PlayerController));
     if (!IsValidAddr(PlayerController)) {
-        if (!gStatic.isGameStart) clearLists();
+        if (!gStatic.isGameStart) {
+            clearLists();
+            sStaticLastRead = now - (interval - 0.45);
+        } else {
+            sStaticLastRead = now;
+        }
         return;
     }
 
+    // 对标 wasd：PCM 无效也继续扫 Actor，不把门控放在扫描之前（旧逻辑 PCM 无效直接 return → 第二局真人:00/不画）
     uint64_t PlayerCameraManager = UNSIGN_PTR(vm_read<uint64_t>(PlayerController + SDK::PlayerCameraManager));
     uint64_t MyCharacter = UNSIGN_PTR(vm_read<uint64_t>(PlayerController + SDK::Character));
     int myTeamID = vm_read<int>(PlayerController + SDK::MyTeamID);
     if (myTeamID <= 0 && IsValidAddr(MyCharacter)) {
         myTeamID = vm_read<int>(MyCharacter + SDK::TeamID);
     }
-
-    // PCM 瞬时无效：保留旧 PCM/列表，勿把 isGameStart 打成 false（否则 HUD 真人:00 且整帧不画）
-    if (!IsValidAddr(PlayerCameraManager)) {
-        gStatic.gWorld = GWorld;
-        gStatic.playerController = PlayerController;
-        gStatic.myCharacter = MyCharacter;
-        gStatic.myTeam = myTeamID;
-        if (!IsValidAddr(gStatic.playerCameraManager)) {
-            gStatic.isGameStart = false;
-        }
-        return;
+    if (!IsValidAddr(PlayerCameraManager) && IsValidAddr(gStatic.playerCameraManager)) {
+        PlayerCameraManager = gStatic.playerCameraManager; // 瞬时抖动沿用旧 PCM
     }
 
     uint64_t PersistentLevel = UNSIGN_PTR(vm_read<uint64_t>(GWorld + SDK::PersistentLevel));
     if (!IsValidAddr(PersistentLevel)) {
         gStatic.gWorld = GWorld;
         gStatic.playerController = PlayerController;
-        gStatic.playerCameraManager = PlayerCameraManager;
-        if (!gStatic.isGameStart) clearLists();
+        if (IsValidAddr(PlayerCameraManager)) gStatic.playerCameraManager = PlayerCameraManager;
+        gStatic.myCharacter = MyCharacter;
+        gStatic.myTeam = myTeamID;
+        if (!gStatic.isGameStart) {
+            clearLists();
+            sStaticLastRead = now - (interval - 0.45);
+        } else {
+            sStaticLastRead = now;
+        }
         return;
     }
 
@@ -767,18 +792,18 @@ static void RefreshStaticPlayers(bool force) {
     int ActorCount = vm_read<int>(PersistentLevel + SDK::ActorCount);
     std::vector<CachedPlayer> tmp;
     std::vector<CachedMaterial> tmpMat;
-    // 严格对标 wasd readStaticData：ActorCount∈(0,50000) 时扫满全表，禁止 20000 截断（截断会漏真人/人机）
+    bool didScanActors = false;
+    // 严格对标 wasd：ActorCount∈(0,50000) 扫满全表
     if (IsValidAddr(ActorArrayPtr) && ActorCount > 0 && ActorCount < 50000) {
+        didScanActors = true;
         tmp.reserve(64);
         tmpMat.reserve(64);
         for (int i = 0; i < ActorCount; ++i) {
             uint64_t actor = UNSIGN_PTR(vm_read<uint64_t>(ActorArrayPtr + i * 8));
             if (!actor) continue;
 
-            // 玩家过滤（DefaultSpeedValue == 479.5）——与 wasd 同序
             if (vm_read<float>(actor + SDK::DefaultSpeedValue) == 479.5f) {
                 if (actor == MyCharacter) continue;
-                // wasd: Read<int>(Read<uintptr_t>(actor + PawnState))，不做 IsValidAddr 门控
                 uint64_t pawnStatePtr = UNSIGN_PTR(vm_read<uint64_t>(actor + SDK::PawnStateRepSyncData));
                 int action = pawnStatePtr ? vm_read<int>(pawnStatePtr) : 0;
                 if (action == 1048592 || action == 1048576) continue;
@@ -793,7 +818,6 @@ static void RefreshStaticPlayers(bool force) {
                 cp.bIsAI = isAI;
                 tmp.push_back(cp);
             } else if (显示物资) {
-                // 物资仅开关开启时解析类名（wasd 每帧都解析；此处保留门控降 CPU，不影响玩家收录）
                 string className = GetClassName(模块地址, actor, 0x18);
                 if (className.find("ojGrenade_BP_C") != std::string::npos) {
                     CachedMaterial sm{};
@@ -838,12 +862,23 @@ static void RefreshStaticPlayers(bool force) {
 
     gStatic.gWorld = GWorld;
     gStatic.playerController = PlayerController;
-    gStatic.playerCameraManager = PlayerCameraManager;
+    if (IsValidAddr(PlayerCameraManager)) gStatic.playerCameraManager = PlayerCameraManager;
     gStatic.myCharacter = MyCharacter;
     gStatic.myTeam = myTeamID;
+    // 对标 wasd：只要 NetDriver 链路走到这里就视为开局（不依赖 PCM）
     gStatic.isGameStart = true;
-    gStatic.players.swap(tmp);
-    gStatic.materials.swap(tmpMat);
+
+    if (didScanActors) {
+        // 对标 wasd：扫完即 swap（含空列表），避免陈旧地址残留
+        gStatic.players.swap(tmp);
+        gStatic.materials.swap(tmpMat);
+        sStaticLastRead = now;
+    } else if (gStatic.players.empty()) {
+        // ActorCount 非法且无缓存：短冷却重试
+        sStaticLastRead = now - (interval - 0.45);
+    } else {
+        sStaticLastRead = now;
+    }
 }
 
 // 主渲染 —— 对标 wasd：静态列表节流 + 每帧轻量更新
@@ -911,8 +946,18 @@ void Draw::StartBooks() {
         Draw::DrawText(gameInfo, ImVec2(屏幕宽度 * 0.14f, 25.0f), false, Colour_白色, true, 16);
     };
 
-    if (!gStatic.isGameStart || !IsValidAddr(gStatic.playerCameraManager)) {
+    // 对标 wasd：开局门控只看 isGameStart；PCM 无效时仍显示缓存人数，避免「全图有真人、中间真人:00」
+    if (!gStatic.isGameStart) {
         drawHud(0, 0);
+        return;
+    }
+    if (!IsValidAddr(gStatic.playerCameraManager)) {
+        int te = 0, ai = 0;
+        for (const CachedPlayer &sp : gStatic.players) {
+            if (sp.bIsAI) ai++;
+            else te++;
+        }
+        drawHud(te, ai);
         return;
     }
 
