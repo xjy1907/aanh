@@ -21,6 +21,7 @@ extern "C" {
 void KernelLoggerSetHandler(void (^handler)(NSString *line));
 void KernelLogLine(const char *line);
 void ResetKernelStatus();
+void ResetKernelStatusHard(void);
 void SetReadingEnabled(bool enabled);
 bool IsReadingEnabled(void);
 void kfd_log(const char *format, ...);
@@ -1183,6 +1184,24 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
     closeHudBtn.label.textColor = JVR_警告色;
     closeHudBtn.borderGrad.colors = @[(id)JVR_警告色.CGColor, (id)[UIColor colorWithRed:0.8f green:0.2f blue:0.2f alpha:1.0f].CGColor];
     [content addSubview:closeHudBtn];
+
+    // ---- 实验：彻底关闭 HUD2（关叠层 + 硬拆主进程 PhysRW/kclose）----
+    JVRKernelButton *closeHudHardBtn = [[JVRKernelButton alloc] init];
+    closeHudHardBtn.translatesAutoresizingMaskIntoConstraints = NO;
+    closeHudHardBtn.label.text = @"实验-彻底关闭HUD2";
+    closeHudHardBtn.label.font = [UIFont systemFontOfSize:13 weight:UIFontWeightSemibold];
+    closeHudHardBtn.label.textColor = JVR_警告色;
+    closeHudHardBtn.borderGrad.colors = @[(id)JVR_警告色.CGColor, (id)[UIColor colorWithRed:0.9f green:0.35f blue:0.1f alpha:1.0f].CGColor];
+    [content addSubview:closeHudHardBtn];
+
+    // ---- 实验：彻底重置内核状态（软重置 + 硬拆除）----
+    JVRKernelButton *resetHardBtn = [[JVRKernelButton alloc] init];
+    resetHardBtn.translatesAutoresizingMaskIntoConstraints = NO;
+    resetHardBtn.label.text = @"实验-彻底重置内核状态";
+    resetHardBtn.label.font = [UIFont systemFontOfSize:13 weight:UIFontWeightSemibold];
+    resetHardBtn.label.textColor = JVR_警告色;
+    resetHardBtn.borderGrad.colors = @[(id)JVR_警告色.CGColor, (id)[UIColor colorWithRed:0.75f green:0.15f blue:0.35f alpha:1.0f].CGColor];
+    [content addSubview:resetHardBtn];
     
     // ---- 终端 ----
     _terminal = [[JVRTerminal alloc] init];
@@ -1223,8 +1242,16 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
         [closeHudBtn.topAnchor constraintEqualToAnchor:readBtn.bottomAnchor constant:8],
         [closeHudBtn.leadingAnchor constraintEqualToAnchor:content.leadingAnchor constant:16],
         [closeHudBtn.trailingAnchor constraintEqualToAnchor:content.trailingAnchor constant:-16],
+
+        [closeHudHardBtn.topAnchor constraintEqualToAnchor:closeHudBtn.bottomAnchor constant:8],
+        [closeHudHardBtn.leadingAnchor constraintEqualToAnchor:content.leadingAnchor constant:16],
+        [closeHudHardBtn.trailingAnchor constraintEqualToAnchor:content.trailingAnchor constant:-16],
+
+        [resetHardBtn.topAnchor constraintEqualToAnchor:closeHudHardBtn.bottomAnchor constant:8],
+        [resetHardBtn.leadingAnchor constraintEqualToAnchor:content.leadingAnchor constant:16],
+        [resetHardBtn.trailingAnchor constraintEqualToAnchor:content.trailingAnchor constant:-16],
         
-        [_terminal.topAnchor constraintEqualToAnchor:closeHudBtn.bottomAnchor constant:12],
+        [_terminal.topAnchor constraintEqualToAnchor:resetHardBtn.bottomAnchor constant:12],
         [_terminal.leadingAnchor constraintEqualToAnchor:content.leadingAnchor constant:16],
         [_terminal.trailingAnchor constraintEqualToAnchor:content.trailingAnchor constant:-16],
         [_terminal.heightAnchor constraintEqualToConstant:150],
@@ -1352,6 +1379,43 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
         [mainCard updateState:YES];
         [strongSelf->_terminal appendLog:@"HUD 已关闭（读取已停）"];
         kfd_log("[UI] 关闭HUD：reading=0 SetHUDEnabled(NO)\n");
+    };
+
+    closeHudHardBtn.onTap = ^{
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        if (!strongSelf) return;
+
+        [strongSelf->_terminal appendLog:@"实验：彻底关闭HUD2（关叠层+硬拆原语）..."];
+        kfd_log("[UI] 实验-彻底关闭HUD2：开始\n");
+        SetReadingEnabled(false);
+        readBtn.label.text = @"开始读取";
+        strongSelf->_isRemoteHUDActive = NO;
+        [strongSelf setHUDEnabled:NO];
+        mainCard.isActive = NO;
+        [mainCard updateState:YES];
+        // 主进程正式拆 PhysRW / kclose / 清空 gPrimitives
+        [[DOJailbreaker sharedInstance] hardTeardownKernelPrimitives];
+        kfd_log("[UI] 实验-彻底关闭HUD2：完成 isSuccess=%d live=%d\n",
+                (int)((DOJailbreaker *)DOJailbreaker.sharedInstance).isSuccess,
+                (int)[((DOJailbreaker *)DOJailbreaker.sharedInstance) hasLivePrimitives]);
+        [strongSelf->_terminal appendLog:@"实验：HUD 已关，主进程内核原语已硬拆除"];
+    };
+
+    resetHardBtn.onTap = ^{
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        if (!strongSelf) return;
+
+        [strongSelf->_terminal appendLog:@"实验：彻底重置内核状态..."];
+        kfd_log("[UI] 实验-彻底重置内核状态：开始\n");
+        strongSelf->_isRemoteHUDActive = NO;
+        mainCard.isActive = NO;
+        [mainCard updateState:YES];
+        ResetKernelStatusHard();
+        readBtn.label.text = @"开始读取";
+        kfd_log("[UI] 实验-彻底重置内核状态：完成 isSuccess=%d live=%d\n",
+                (int)((DOJailbreaker *)DOJailbreaker.sharedInstance).isSuccess,
+                (int)[((DOJailbreaker *)DOJailbreaker.sharedInstance) hasLivePrimitives]);
+        [strongSelf->_terminal appendLog:@"实验：硬重置完成（须重新「初始化内核」）"];
     };
     
     [self reloadMainButtonState];

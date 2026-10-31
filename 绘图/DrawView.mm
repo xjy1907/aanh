@@ -204,6 +204,13 @@ extern "C" void ResetKernelStatus() {
     DrawDbg("[重置] ResetKernelStatus 完成 (软重置: 已关HUD, reading/偏移已清, 主进程原语保留)");
 }
 
+extern "C" void ResetKernelStatusHard(void) {
+    DrawDbg("[硬重置] ResetKernelStatusHard 开始 pid=%d", (int)getpid());
+    ResetKernelStatus();
+    [[DOJailbreaker sharedInstance] hardTeardownKernelPrimitives];
+    DrawDbg("[硬重置] ResetKernelStatusHard 完成（软重置+硬拆除原语）");
+}
+
 bool readMemory(uint64_t address, void *buffer, size_t size) {
     if (!IsValidAddr(address) || size == 0 || gamePid <= 0) return false;
     return exploit_mach_readbuf(gamePid, address, buffer, size);

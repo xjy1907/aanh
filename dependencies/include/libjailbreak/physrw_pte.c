@@ -166,6 +166,32 @@ int libjailbreak_physrw_pte_init(bool receivedHandoff, uint64_t asidPtr)
 	return 0;
 }
 
+void libjailbreak_physrw_pte_deinit(void)
+{
+	bool ours = (gPrimitives.physreadbuf == physrw_pte_physreadbuf) ||
+	            (gPrimitives.physwritebuf == physrw_pte_physwritebuf);
+
+	// gSwAsid 有效时才碰 MAGIC_PT，避免未映射时写挂
+	if (ours && gSwAsid != NULL) {
+		pthread_mutex_lock(&gLock);
+		for (int i = 0; i < (int)L2_BLOCK_COUNT; i++) {
+			gMagicPT[i] = 0;
+		}
+		pthread_mutex_unlock(&gLock);
+		flush_tlb();
+	}
+
+	(void)vm_deallocate(mach_task_self(), (vm_address_t)MAGIC_PT_ADDRESS, (vm_size_t)L2_BLOCK_SIZE);
+
+	if (gPrimitives.physreadbuf == physrw_pte_physreadbuf) {
+		gPrimitives.physreadbuf = NULL;
+	}
+	if (gPrimitives.physwritebuf == physrw_pte_physwritebuf) {
+		gPrimitives.physwritebuf = NULL;
+	}
+	gSwAsid = NULL;
+}
+
 bool device_supports_physrw_pte(void)
 {
 	cpu_subtype_t cpuFamily = 0;
