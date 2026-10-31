@@ -55,13 +55,13 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
     // 应用启动回调
     //log_debug(OS_LOG_DEFAULT, "- [BBZViewController application:%{public}@ didFinishLaunchingWithOptions:%{public}@]", application, launchOptions); // 记录日志
     @autoreleasepool {
-        // HUD 进程：在窗口创建前优先确保内核环境准备好（与原先未拆分时保持一致）
-        KernelLogLine("HUD: 准备内核环境...");
-        [DOJailbreaker.sharedInstance run];
-        BOOL kernelReady = ((DOJailbreaker *)DOJailbreaker.sharedInstance).isSuccess;
-        KernelLogLine(kernelReady ? "HUD: 内核就绪" : "HUD: 内核初始化完成（可能未成功）");
-        // 无论状态如何，启动数据线程（内部会自行重试）
-        //StartDataThreads();
+        // 先建窗口再 exploit：避免二次 kopen 卡死时连 Window ContextID 都没有（无任何水印）
+        KernelLogLine("HUD: 准备叠层窗口...");
+        DOJailbreaker *jbEarly = (DOJailbreaker *)DOJailbreaker.sharedInstance;
+        if (jbEarly.isSuccess && ![jbEarly hasLivePrimitives]) {
+            jbEarly.isSuccess = NO;
+            KernelLogLine("HUD: 忽略无原语的假就绪标记");
+        }
         self.BBZwindow = [[HonyWindow alloc] init];
         self.BBZwindow.frame = [[UIScreen mainScreen] bounds]; // 创建 HUDMainWindow，大小为屏幕大小
         //    sss();
@@ -217,22 +217,26 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
         // 设置屏幕方向变化的监听器
         [self setupOrientationObserver];
         
-        // HUD 进程自检：如未就绪则在后台补跑一次内核初始化，避免跨进程能力缺失
-       
-        BOOL kernel = ((DOJailbreaker *)DOJailbreaker.sharedInstance).isSuccess;
-        if (!kernel) {
-            KernelLogLine("HUD: 检测到内核环境未就绪，开始在 HUD 进程补充初始化...");
-            dispatch_async(dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^{
+        // 窗口与 ContextID 已就绪后再异步 exploit：
+        // 二次拉起若 kopen 卡住，至少叠层在，且不会堵死 didFinishLaunching。
+        DOJailbreaker *jb = (DOJailbreaker *)DOJailbreaker.sharedInstance;
+        if ([jb hasLivePrimitives]) {
+            jb.isSuccess = YES;
+            KernelLogLine("HUD: 内核就绪（本进程原语已可用）");
+        } else {
+            jb.isSuccess = NO;
+            KernelLogLine("HUD: 窗口已就绪，后台初始化本进程内核...");
+            dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
                 [DOJailbreaker.sharedInstance run];
                 BOOL ok = ((DOJailbreaker *)DOJailbreaker.sharedInstance).isSuccess;
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    KernelLogLine(ok ? "HUD: 内核初始化成功" : "HUD: 内核初始化完成（可能未成功）");
-                    //StartDataThreads();
-                });
+                BOOL live = [((DOJailbreaker *)DOJailbreaker.sharedInstance) hasLivePrimitives];
+                if (ok && !live) {
+                    ((DOJailbreaker *)DOJailbreaker.sharedInstance).isSuccess = NO;
+                    ok = NO;
+                }
+                KernelLogLine(ok ? "HUD: 内核就绪" : "HUD: 内核初始化完成（可能未成功）");
             });
         }
-        
-        
         
         return YES; // 启动成功，返回 YES
     }

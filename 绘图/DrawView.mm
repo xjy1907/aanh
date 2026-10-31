@@ -12,6 +12,7 @@
 #include "BBZGui.h"
 
 #import "DOJailbreaker.h"
+#import "HUDHelper.h"
 #include <libjailbreak/info.h>
 #include <libjailbreak/primitives_external.h>
 
@@ -193,10 +194,14 @@ extern "C" void ResetKernelStatus() {
     [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"JB.KernelReadyBootTime"];
     [[NSUserDefaults standardUserDefaults] synchronize];
 
-    // 软重置：只清应用层状态。禁止调用 finalize→rebootUserspace
-    // （非 Dopamine 环境 jbctl 无效，且同进程再跑 physpuppet/kopen 会卡在「即将启动KFD」）。
-    // PhysRW 原语保留；下次初始化会探测到仍可用并直接恢复 isSuccess。
-    DrawDbg("[重置] ResetKernelStatus 完成 (软重置: reading/偏移已清, 原语保留供二次初始化)");
+    // 必须拆掉旧 HUD（persist=0 时 IsHUDEnabled 常误判为关，仍要发 dismiss+kill）：
+    // 残留叠层占 PhysRW 时再 spawn 新 HUD，二次 kopen 会卡死且无水印。
+    DrawDbg("[重置] 强制关闭 HUD 叠层（dismiss+kill）");
+    SetHUDEnabled(NO);
+
+    // 软重置：只清应用层状态。禁止调用 finalize→rebootUserspace。
+    // 主进程 PhysRW 原语保留；下次初始化 probe 恢复 isSuccess。
+    DrawDbg("[重置] ResetKernelStatus 完成 (软重置: 已关HUD, reading/偏移已清, 主进程原语保留)");
 }
 
 bool readMemory(uint64_t address, void *buffer, size_t size) {

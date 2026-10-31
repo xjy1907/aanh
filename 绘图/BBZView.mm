@@ -1284,10 +1284,14 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
         
         [strongSelf->_terminal appendLog:@"正在重置内核状态..."];
         kfd_log("[UI] 重置内核状态：开始\n");
+        // 先停读取并拆叠层，再清主进程就绪标记（ResetKernelStatus 内也会 SetHUDEnabled(NO)）
+        strongSelf->_isRemoteHUDActive = NO;
+        mainCard.isActive = NO;
+        [mainCard updateState:YES];
         ResetKernelStatus();
         readBtn.label.text = @"开始读取";
-        kfd_log("[UI] 重置内核状态：完成，读取已停止\n");
-        [strongSelf->_terminal appendLog:@"内核状态已重置，读取已停止"];
+        kfd_log("[UI] 重置内核状态：完成，读取已停止且 HUD 已关\n");
+        [strongSelf->_terminal appendLog:@"内核状态已重置，读取已停止，HUD 已关闭"];
     };
 
     readBtn.onTap = ^{
