@@ -767,25 +767,23 @@ static void RefreshStaticPlayers(bool force) {
     int ActorCount = vm_read<int>(PersistentLevel + SDK::ActorCount);
     std::vector<CachedPlayer> tmp;
     std::vector<CachedMaterial> tmpMat;
-    // 关键：ActorCount>10000 整表跳过 → GameState 有人数但本地真人:00
-    // 性能：仍 3s 一扫；单次最多扫 20000，避免失败版 1s×50000 的 CPU 爆炸
+    // 严格对标 wasd readStaticData：ActorCount∈(0,50000) 时扫满全表，禁止 20000 截断（截断会漏真人/人机）
     if (IsValidAddr(ActorArrayPtr) && ActorCount > 0 && ActorCount < 50000) {
-        const int scanN = (ActorCount > 20000) ? 20000 : ActorCount;
         tmp.reserve(64);
         tmpMat.reserve(64);
-        for (int i = 0; i < scanN; ++i) {
+        for (int i = 0; i < ActorCount; ++i) {
             uint64_t actor = UNSIGN_PTR(vm_read<uint64_t>(ActorArrayPtr + i * 8));
-            if (!IsValidAddr(actor) || actor == MyCharacter) continue;
+            if (!actor) continue;
 
+            // 玩家过滤（DefaultSpeedValue == 479.5）——与 wasd 同序
             if (vm_read<float>(actor + SDK::DefaultSpeedValue) == 479.5f) {
+                if (actor == MyCharacter) continue;
+                // wasd: Read<int>(Read<uintptr_t>(actor + PawnState))，不做 IsValidAddr 门控
                 uint64_t pawnStatePtr = UNSIGN_PTR(vm_read<uint64_t>(actor + SDK::PawnStateRepSyncData));
-                int action = IsValidAddr(pawnStatePtr) ? vm_read<int>(pawnStatePtr) : 0;
+                int action = pawnStatePtr ? vm_read<int>(pawnStatePtr) : 0;
                 if (action == 1048592 || action == 1048576) continue;
-
                 int teamID = vm_read<int>(actor + SDK::TeamID);
-                if (teamID == -1) continue;
-                if (myTeamID > 0 && teamID == myTeamID) continue;
-
+                if (teamID == myTeamID || teamID == -1) continue;
                 bool isAI = vm_read<bool>(actor + SDK::bIsAI);
                 if (人机隐藏 && isAI) continue;
 
@@ -795,7 +793,7 @@ static void RefreshStaticPlayers(bool force) {
                 cp.bIsAI = isAI;
                 tmp.push_back(cp);
             } else if (显示物资) {
-                // 物资 / 手雷 / 烟雾（关物资时跳过类名解析）
+                // 物资仅开关开启时解析类名（wasd 每帧都解析；此处保留门控降 CPU，不影响玩家收录）
                 string className = GetClassName(模块地址, actor, 0x18);
                 if (className.find("ojGrenade_BP_C") != std::string::npos) {
                     CachedMaterial sm{};
@@ -950,28 +948,24 @@ void Draw::StartBooks() {
 
     for (const CachedPlayer &sp : gStatic.players) {
         uint64_t actor = sp.addr;
-        if (!IsValidAddr(actor)) continue;
+        if (!actor) continue;
 
+        // 对标 wasd readFrameData：PawnState 直读，不做 IsValidAddr 门控
         uint64_t pawnStatePtr = UNSIGN_PTR(vm_read<uint64_t>(actor + SDK::PawnStateRepSyncData));
-        int action = IsValidAddr(pawnStatePtr) ? vm_read<int>(pawnStatePtr) : 0;
+        int action = pawnStatePtr ? vm_read<int>(pawnStatePtr) : 0;
         if (action == 1048592 || action == 1048576) continue;
 
-        // 不因 HealthMax<=0 丢弃（训练岛未就绪 Pawn）；仅剔除异常百分比
+        // 对标 wasd：hp = Health/HealthMax*100；仅 hp>100 丢弃（不因零坐标丢弃——wasd 无此过滤）
         float healthMax = vm_read<float>(actor + SDK::HealthMax);
         float healthRaw = vm_read<float>(actor + SDK::Health);
-        float Health = (healthMax > 1e-3f) ? ((healthRaw / healthMax) * 100.0f) : healthRaw;
+        float Health = (healthMax != 0.f) ? ((healthRaw / healthMax) * 100.0f) : 0.f;
         if (Health > 100.0f) continue;
 
         Vector3 loc = GetRelativeLocation((long)actor);
-        if (loc.X == 0.f && loc.Y == 0.f && loc.Z == 0.f) {
-            loc = GetRelativeLocation((long)actor);
-        }
 
         bool bIsAI = sp.bIsAI;
         if (!bIsAI) totalEnemies++;
         else aiCounts++;
-
-        if (loc.X == 0.f && loc.Y == 0.f && loc.Z == 0.f) continue;
 
         float distance = GetDistance(loc, POV.Location) / 100.0f;
         Vector2 LocationScreen = WorldToScreen(loc, POV, sw, sh);
