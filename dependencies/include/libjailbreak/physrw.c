@@ -96,13 +96,3 @@ int libjailbreak_physrw_init(bool receivedHandoff)
 
 	return 0;
 }
-
-void libjailbreak_physrw_deinit(void)
-{
-	if (gPrimitives.physreadbuf == physrw_physreadbuf) {
-		gPrimitives.physreadbuf = NULL;
-	}
-	if (gPrimitives.physwritebuf == physrw_physwritebuf) {
-		gPrimitives.physwritebuf = NULL;
-	}
-}
