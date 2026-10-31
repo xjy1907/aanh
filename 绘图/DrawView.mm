@@ -184,17 +184,19 @@ extern "C" void ResetKernelStatus() {
     gStatic.players.clear();
     gStatic.materials.clear();
     exploit_v2p_cache_clear();
+    exploit_mach_cleanup();
 
     DOJailbreaker *jb = [DOJailbreaker sharedInstance];
     jb.isSuccess = NO;
 
+    // 清掉「同开机周期自动恢复」标记，下次需再点「初始化内核」
     [[NSUserDefaults standardUserDefaults] removeObjectForKey:@"JB.KernelReadyBootTime"];
     [[NSUserDefaults standardUserDefaults] synchronize];
 
-    if ([jb respondsToSelector:@selector(finalize)]) {
-        [jb finalize];
-    }
-    DrawDbg("[重置] ResetKernelStatus 完成 (krkw/偏移已清, reading=0)");
+    // 软重置：只清应用层状态。禁止调用 finalize→rebootUserspace
+    // （非 Dopamine 环境 jbctl 无效，且同进程再跑 physpuppet/kopen 会卡在「即将启动KFD」）。
+    // PhysRW 原语保留；下次初始化会探测到仍可用并直接恢复 isSuccess。
+    DrawDbg("[重置] ResetKernelStatus 完成 (软重置: reading/偏移已清, 原语保留供二次初始化)");
 }
 
 bool readMemory(uint64_t address, void *buffer, size_t size) {
