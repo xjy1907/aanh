@@ -8,6 +8,7 @@
 #import <objc/runtime.h>
 #import <objc/message.h>
 #import <QuartzCore/CADisplayLink.h>
+#import <notify.h>
 #import "BBZViewController.h"
 #import "HonyWindow.h"
 #import "SBSAccessibilityWindowHostingController.h"
@@ -235,6 +236,23 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
                     ok = NO;
                 }
                 KernelLogLine(ok ? "HUD: 内核就绪" : "HUD: 内核初始化完成（可能未成功）");
+            });
+        }
+
+        // 主进程「实验-彻底关闭HUD1」：先硬拆本 HUD 进程原语，再由主进程 kill（不拆主进程）
+        {
+            static int sHudTeardownToken = 0;
+            notify_register_dispatch(NOTIFY_HARD_TEARDOWN_HUD, &sHudTeardownToken,
+                                     dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0),
+                                     ^(int token) {
+                (void)token;
+                KernelLogLine("HUD: 收到硬拆除通知，开始拆本进程 PhysRW/kclose...");
+                [[DOJailbreaker sharedInstance] hardTeardownKernelPrimitives];
+                int ack = 0;
+                if (notify_register_check(NOTIFY_HARD_TEARDOWN_HUD, &ack) == NOTIFY_STATUS_OK) {
+                    notify_set_state(ack, 1);
+                }
+                KernelLogLine("HUD: 本进程内核原语已硬拆除（等待主进程关叠层）");
             });
         }
         

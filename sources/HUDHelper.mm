@@ -8,6 +8,7 @@
 #import <spawn.h>
 #import <notify.h>
 #import <signal.h>
+#import <unistd.h>
 #import <mach-o/dyld.h>
 
 #import "HUDHelper.h"
@@ -115,6 +116,44 @@ void SetHUDEnabled(BOOL isEnabled)
         NHClearPid();
         unlink([NHPidPath() UTF8String]);
     }
+}
+
+void HardTeardownHUDOverlayThenDisable(void)
+{
+    // 无叠层：直接走关路径（仍不碰主进程原语）
+    if (!IsHUDEnabled()) {
+        SetHUDEnabled(NO);
+        return;
+    }
+
+    int token = 0;
+    if (notify_register_check(NOTIFY_HARD_TEARDOWN_HUD, &token) != NOTIFY_STATUS_OK) {
+        // 握手不可用时仍尽量通知后关叠层
+        notify_post(NOTIFY_HARD_TEARDOWN_HUD);
+        [NSThread sleepForTimeInterval:1.0];
+        SetHUDEnabled(NO);
+        return;
+    }
+
+    // state=0 等待 HUD 硬拆完成写回 1
+    notify_set_state(token, 0);
+    notify_post(NOTIFY_HARD_TEARDOWN_HUD);
+
+    const int maxWaitMs = 2000;
+    const int stepMs = 50;
+    for (int waited = 0; waited < maxWaitMs; waited += stepMs) {
+        uint64_t st = 0;
+        notify_get_state(token, &st);
+        if (st == 1) {
+            break;
+        }
+        if (!IsHUDEnabled()) {
+            break;
+        }
+        usleep((useconds_t)(stepMs * 1000));
+    }
+
+    SetHUDEnabled(NO);
 }
 
 #if DEBUG

@@ -18,6 +18,8 @@
     #define NOTIFY_DISMISSAL_HUD NHNotifyName("dismissal")
     #define NOTIFY_RELOAD_HUD    NHNotifyName("reload")
     #define NOTIFY_RELOAD_APP    NHNotifyName("appreload")
+    /// 主进程通知 HUD 叠层：先硬拆本进程 PhysRW/kclose，再由主进程关叠层（不拆主进程原语）
+    #define NOTIFY_HARD_TEARDOWN_HUD NHNotifyName("hudteardown")
 #endif
 
 #if DEBUG

@@ -1185,6 +1185,15 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
     closeHudBtn.borderGrad.colors = @[(id)JVR_警告色.CGColor, (id)[UIColor colorWithRed:0.8f green:0.2f blue:0.2f alpha:1.0f].CGColor];
     [content addSubview:closeHudBtn];
 
+    // ---- 实验：彻底关闭 HUD1（先硬拆叠层进程 PhysRW/kclose，再关叠层；主进程原语保留）----
+    JVRKernelButton *closeHudHard1Btn = [[JVRKernelButton alloc] init];
+    closeHudHard1Btn.translatesAutoresizingMaskIntoConstraints = NO;
+    closeHudHard1Btn.label.text = @"实验-彻底关闭HUD1";
+    closeHudHard1Btn.label.font = [UIFont systemFontOfSize:13 weight:UIFontWeightSemibold];
+    closeHudHard1Btn.label.textColor = JVR_警告色;
+    closeHudHard1Btn.borderGrad.colors = @[(id)JVR_警告色.CGColor, (id)[UIColor colorWithRed:0.85f green:0.45f blue:0.15f alpha:1.0f].CGColor];
+    [content addSubview:closeHudHard1Btn];
+
     // ---- 实验：彻底关闭 HUD2（关叠层 + 硬拆主进程 PhysRW/kclose）----
     JVRKernelButton *closeHudHardBtn = [[JVRKernelButton alloc] init];
     closeHudHardBtn.translatesAutoresizingMaskIntoConstraints = NO;
@@ -1243,7 +1252,11 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
         [closeHudBtn.leadingAnchor constraintEqualToAnchor:content.leadingAnchor constant:16],
         [closeHudBtn.trailingAnchor constraintEqualToAnchor:content.trailingAnchor constant:-16],
 
-        [closeHudHardBtn.topAnchor constraintEqualToAnchor:closeHudBtn.bottomAnchor constant:8],
+        [closeHudHard1Btn.topAnchor constraintEqualToAnchor:closeHudBtn.bottomAnchor constant:8],
+        [closeHudHard1Btn.leadingAnchor constraintEqualToAnchor:content.leadingAnchor constant:16],
+        [closeHudHard1Btn.trailingAnchor constraintEqualToAnchor:content.trailingAnchor constant:-16],
+
+        [closeHudHardBtn.topAnchor constraintEqualToAnchor:closeHudHard1Btn.bottomAnchor constant:8],
         [closeHudHardBtn.leadingAnchor constraintEqualToAnchor:content.leadingAnchor constant:16],
         [closeHudHardBtn.trailingAnchor constraintEqualToAnchor:content.trailingAnchor constant:-16],
 
@@ -1379,6 +1392,31 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
         [mainCard updateState:YES];
         [strongSelf->_terminal appendLog:@"HUD 已关闭（读取已停）"];
         kfd_log("[UI] 关闭HUD：reading=0 SetHUDEnabled(NO)\n");
+    };
+
+    closeHudHard1Btn.onTap = ^{
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        if (!strongSelf) return;
+
+        [strongSelf->_terminal appendLog:@"实验：彻底关闭HUD1（叠层硬拆后再关，主进程保留）..."];
+        kfd_log("[UI] 实验-彻底关闭HUD1：开始\n");
+        SetReadingEnabled(false);
+        readBtn.label.text = @"开始读取";
+        strongSelf->_isRemoteHUDActive = NO;
+        mainCard.isActive = NO;
+        [mainCard updateState:YES];
+        // 后台：通知 HUD 硬拆 → 握手 → SetHUDEnabled(NO)；绝不拆主进程原语
+        dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+            HardTeardownHUDOverlayThenDisable();
+            BOOL mainLive = [((DOJailbreaker *)DOJailbreaker.sharedInstance) hasLivePrimitives];
+            BOOL mainOk = ((DOJailbreaker *)DOJailbreaker.sharedInstance).isSuccess;
+            kfd_log("[UI] 实验-彻底关闭HUD1：完成 main.isSuccess=%d main.live=%d\n",
+                    (int)mainOk, (int)mainLive);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [strongSelf->_terminal appendLog:
+                 [NSString stringWithFormat:@"实验：HUD1 已关（叠层已硬拆）；主进程原语保留 live=%d", (int)mainLive]];
+            });
+        });
     };
 
     closeHudHardBtn.onTap = ^{

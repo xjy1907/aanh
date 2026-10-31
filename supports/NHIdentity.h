@@ -107,6 +107,7 @@ static inline const char *NHNotifyName(const char *kind) {
     static char appreload[96];
     static char state[96];
     static char pidch[96];
+    static char hudteardown[96];
     static dispatch_once_t once;
     dispatch_once(&once, ^{
         const char *t = NHDeviceToken().UTF8String;
@@ -116,6 +117,7 @@ static inline const char *NHNotifyName(const char *kind) {
         snprintf(appreload, sizeof(appreload), "com.%s.n.A", t);
         snprintf(state, sizeof(state), "com.%s.n.S", t);
         snprintf(pidch, sizeof(pidch), "com.%s.n.P", t);
+        snprintf(hudteardown, sizeof(hudteardown), "com.%s.n.T", t);
     });
     if (kind && strcmp(kind, "launched") == 0) return launched;
     if (kind && strcmp(kind, "dismissal") == 0) return dismissal;
@@ -123,6 +125,7 @@ static inline const char *NHNotifyName(const char *kind) {
     if (kind && strcmp(kind, "appreload") == 0) return appreload;
     if (kind && strcmp(kind, "state") == 0) return state;
     if (kind && strcmp(kind, "pid") == 0) return pidch;
+    if (kind && strcmp(kind, "hudteardown") == 0) return hudteardown;
     return dismissal;
 }
 
