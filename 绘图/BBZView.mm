@@ -10,6 +10,7 @@
 #import "BBZView.h"
 #import "UIApplication+Private.h"
 #import "DOJailbreaker.h"
+#import "DOPreferenceManager.h"
 #import "LFSenderIDViewController.h"
 #import "游戏/MaterialConfigViewController.h"
 #import "游戏/DrawSettingsViewController.h"
@@ -285,6 +286,114 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
 - (void)onSegment:(UISegmentedControl *)sender {
     NSInteger fps = JVR_SegmentIndexToDrawFps(sender.selectedSegmentIndex);
     if (self.onChange) self.onChange(fps);
+}
+
+@end
+
+// ========================================
+// 内核选择选项卡（样式对标「绘制帧率」）
+// landa / smith / physpuppet，默认 physpuppet
+// ========================================
+static NSString * const kJVRKernelExploitLanda = @"com.nh.nhkit.landa";
+static NSString * const kJVRKernelExploitSmith = @"com.nh.nhkit.smith";
+static NSString * const kJVRKernelExploitPhyspuppet = @"com.nh.nhkit.physpuppet";
+
+static NSInteger JVR_KernelExploitToSegmentIndex(NSString *ident) {
+    if ([ident isEqualToString:kJVRKernelExploitLanda]) return 0;
+    if ([ident isEqualToString:kJVRKernelExploitSmith]) return 1;
+    return 2; // physpuppet 默认
+}
+
+static NSString *JVR_SegmentIndexToKernelExploit(NSInteger idx) {
+    if (idx == 0) return kJVRKernelExploitLanda;
+    if (idx == 1) return kJVRKernelExploitSmith;
+    return kJVRKernelExploitPhyspuppet;
+}
+
+static NSString *JVR_读取KernelExploit(void) {
+    id v = [[DOPreferenceManager sharedManager] preferenceValueForKey:@"selectedKernelExploit"];
+    if ([v isKindOfClass:[NSString class]]) {
+        NSString *s = (NSString *)v;
+        if ([s isEqualToString:kJVRKernelExploitLanda] ||
+            [s isEqualToString:kJVRKernelExploitSmith] ||
+            [s isEqualToString:kJVRKernelExploitPhyspuppet]) {
+            return s;
+        }
+    }
+    return kJVRKernelExploitPhyspuppet;
+}
+
+static void JVR_保存KernelExploit(NSString *ident) {
+    if (![ident isEqualToString:kJVRKernelExploitLanda] &&
+        ![ident isEqualToString:kJVRKernelExploitSmith] &&
+        ![ident isEqualToString:kJVRKernelExploitPhyspuppet]) {
+        ident = kJVRKernelExploitPhyspuppet;
+    }
+    [[DOPreferenceManager sharedManager] setPreferenceValue:ident forKey:@"selectedKernelExploit"];
+}
+
+@interface JVRKernelExploitSegmentRow : UIView
+@property (nonatomic, strong) UILabel *titleLabel;
+@property (nonatomic, strong) UISegmentedControl *segment;
+@property (nonatomic, copy) void (^onChange)(NSString *exploitId);
+@end
+
+@implementation JVRKernelExploitSegmentRow
+
+- (instancetype)init {
+    self = [super initWithFrame:CGRectZero];
+    if (self) {
+        self.backgroundColor = [JVR_卡片色 colorWithAlphaComponent:0.6f];
+        self.layer.cornerRadius = 8.0f;
+        self.layer.borderWidth = 1.0f;
+        self.layer.borderColor = JVR_边框色.CGColor;
+        self.accessibilityIdentifier = @"KERNEL_EXP_SEG_V1";
+        kfd_log("KERNEL_EXP_SEG_V1 init\n");
+
+        UIView *accent = [[UIView alloc] init];
+        accent.translatesAutoresizingMaskIntoConstraints = NO;
+        accent.backgroundColor = JVR_主色;
+        accent.layer.cornerRadius = 1.5f;
+        [self addSubview:accent];
+
+        self.titleLabel = [[UILabel alloc] init];
+        self.titleLabel.translatesAutoresizingMaskIntoConstraints = NO;
+        self.titleLabel.text = @"内核选择";
+        self.titleLabel.font = [UIFont systemFontOfSize:14.0f weight:UIFontWeightMedium];
+        self.titleLabel.textColor = JVR_文字色;
+        [self addSubview:self.titleLabel];
+
+        self.segment = [[UISegmentedControl alloc] initWithItems:@[ @"landa", @"smith", @"physpuppet" ]];
+        self.segment.translatesAutoresizingMaskIntoConstraints = NO;
+        self.segment.selectedSegmentIndex = JVR_KernelExploitToSegmentIndex(JVR_读取KernelExploit());
+        if (@available(iOS 13.0, *)) {
+            self.segment.selectedSegmentTintColor = [JVR_主色 colorWithAlphaComponent:0.55f];
+            [self.segment setTitleTextAttributes:@{ NSForegroundColorAttributeName: JVR_文字色 } forState:UIControlStateNormal];
+            [self.segment setTitleTextAttributes:@{ NSForegroundColorAttributeName: [UIColor whiteColor] } forState:UIControlStateSelected];
+        }
+        [self.segment addTarget:self action:@selector(onSegment:) forControlEvents:UIControlEventValueChanged];
+        [self addSubview:self.segment];
+
+        [NSLayoutConstraint activateConstraints:@[
+            [accent.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:10],
+            [accent.topAnchor constraintEqualToAnchor:self.topAnchor constant:12],
+            [accent.widthAnchor constraintEqualToConstant:3],
+            [accent.heightAnchor constraintEqualToConstant:18],
+            [self.titleLabel.leadingAnchor constraintEqualToAnchor:accent.trailingAnchor constant:10],
+            [self.titleLabel.centerYAnchor constraintEqualToAnchor:accent.centerYAnchor],
+            [self.segment.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:12],
+            [self.segment.trailingAnchor constraintEqualToAnchor:self.trailingAnchor constant:-12],
+            [self.segment.topAnchor constraintEqualToAnchor:self.titleLabel.bottomAnchor constant:10],
+            [self.segment.heightAnchor constraintEqualToConstant:30],
+            [self.heightAnchor constraintEqualToConstant:72],
+        ]];
+    }
+    return self;
+}
+
+- (void)onSegment:(UISegmentedControl *)sender {
+    NSString *ident = JVR_SegmentIndexToKernelExploit(sender.selectedSegmentIndex);
+    if (self.onChange) self.onChange(ident);
 }
 
 @end
@@ -1156,6 +1265,19 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
     [mainCard updateState:NO];
     [content addSubview:mainCard];
     
+    // ---- 内核选择（对标绘制帧率分段样式）----
+    JVRKernelExploitSegmentRow *kernelExpRow = [[JVRKernelExploitSegmentRow alloc] init];
+    kernelExpRow.translatesAutoresizingMaskIntoConstraints = NO;
+    // 首次进入若无偏好，落盘默认 physpuppet
+    JVR_保存KernelExploit(JVR_读取KernelExploit());
+    kernelExpRow.onChange = ^(NSString *exploitId) {
+        JVR_保存KernelExploit(exploitId);
+        NSString *shortName = [[exploitId componentsSeparatedByString:@"."] lastObject] ?: exploitId;
+        KernelLogLine([[NSString stringWithFormat:@"内核选择 = %@", shortName] UTF8String]);
+        kfd_log("[UI] selectedKernelExploit=%s KERNEL_EXP_SEG_V1\n", exploitId.UTF8String);
+    };
+    [content addSubview:kernelExpRow];
+
     // ---- 内核按钮 ----
     JVRKernelButton *kernelBtn = [[JVRKernelButton alloc] init];
     kernelBtn.translatesAutoresizingMaskIntoConstraints = NO;
@@ -1235,8 +1357,12 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
         [mainCard.topAnchor constraintEqualToAnchor:header.bottomAnchor constant:20],
         [mainCard.leadingAnchor constraintEqualToAnchor:content.leadingAnchor constant:16],
         [mainCard.trailingAnchor constraintEqualToAnchor:content.trailingAnchor constant:-16],
+
+        [kernelExpRow.topAnchor constraintEqualToAnchor:mainCard.bottomAnchor constant:12],
+        [kernelExpRow.leadingAnchor constraintEqualToAnchor:content.leadingAnchor constant:16],
+        [kernelExpRow.trailingAnchor constraintEqualToAnchor:content.trailingAnchor constant:-16],
         
-        [kernelBtn.topAnchor constraintEqualToAnchor:mainCard.bottomAnchor constant:12],
+        [kernelBtn.topAnchor constraintEqualToAnchor:kernelExpRow.bottomAnchor constant:8],
         [kernelBtn.leadingAnchor constraintEqualToAnchor:content.leadingAnchor constant:16],
         [kernelBtn.trailingAnchor constraintEqualToAnchor:content.trailingAnchor constant:-16],
         
