@@ -315,6 +315,17 @@ static inline uint64_t LoadSIDFromICloud(void) {
     NSUbiquitousKeyValueStore *store = NSUbiquitousKeyValueStore.defaultStore;
     return (uint64_t)[store longLongForKey:@"TouchSenderID"];
 }
+void initTouchGetScreenSize(float width, float height)
+{
+    device_screen_width = width;
+    device_screen_height = height;
+}
+
+void huoqu(uint64_t aaa)
+{
+    (void)aaa;
+}
+
 void initSenderId()
 {
 
