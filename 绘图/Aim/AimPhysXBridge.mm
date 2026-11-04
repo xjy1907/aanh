@@ -1,6 +1,7 @@
 #import "AimPhysXBridge.h"
 
 #include <atomic>
+#include <cstdio>
 #include <mutex>
 #include <thread>
 
@@ -8,10 +9,19 @@
 #include "PhysXRemote.h"
 #include "PhysX.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+void KernelLogLine(const char *line);
+#ifdef __cplusplus
+}
+#endif
+
 uint64_t gAimModuleBase = 0;
 
 static std::atomic<bool> gPhysXReady{false};
-static std::once_flag gPhysXInitOnce;
+static std::atomic<bool> gPhysXThreadsStarted{false};
+static std::once_flag gPhysXFetchOnce;
 static Vector3 gAimCameraLoc{};
 
 void AimPhysX_SetModuleBase(uint64_t base) {
@@ -21,7 +31,7 @@ void AimPhysX_SetModuleBase(uint64_t base) {
 
 void AimPhysX_TickCamera(const Vector3 &camLoc) {
     gAimCameraLoc = camLoc;
-    (void)gAimCameraLoc; // range filter currently commented out in PhysX.h LoadShapeByRange
+    (void)gAimCameraLoc;
 }
 
 bool AimPhysX_IsReady() {
@@ -32,8 +42,25 @@ bool AimPhysX_IsOccluded(const Vector3 &cam, const Vector3 &bone) {
     if (!gPhysXReady.load(std::memory_order_acquire)) {
         return false;
     }
-    // Real LineTrace via Embree VisibleScene (wasd/qwer 漏打 path).
+    // 对标 qwer：LineTrace 命中 = 被掩体遮挡
     return LineTrace::LineTraceSingle(cam, bone);
+}
+
+static bool AimPhysX_ValidateInstance() {
+    if (gAimModuleBase == 0 || kPhysXPtr == 0) return false;
+    uint64_t physInst = KFD::Read<uint64_t>(gAimModuleBase + kPhysXPtr);
+    // 游戏内堆指针，过小视为错偏移/未进对局
+    if (physInst < 0x100000000ULL) return false;
+    uint64_t sceneArr = KFD::Read<uint64_t>(physInst + 0x8);
+    return sceneArr > 0x100000000ULL;
+}
+
+static void AimPhysX_StartThreadsOnce() {
+    bool expected = false;
+    if (!gPhysXThreadsStarted.compare_exchange_strong(expected, true)) return;
+    std::thread([]() { VisibleCheck::UpdateSceneByRange(); }).detach();
+    std::thread([]() { VisibleCheck::UpdateDynamicHeightField(); }).detach();
+    std::thread([]() { VisibleCheck::UpdateDynamicRigid(); }).detach();
 }
 
 static void AimPhysX_InitUnlocked() {
@@ -43,32 +70,42 @@ static void AimPhysX_InitUnlocked() {
     if (gAimModuleBase == 0) {
         return;
     }
-    if (kPhysXPtr == 0) {
-        PhysXRemote::fetch();
-    }
-    if (kPhysXPtr == 0) {
-        return;
-    }
-    if (!LineTrace::initPhysX()) {
-        return;
-    }
-    gPhysXReady.store(true, std::memory_order_release);
 
-    // Mirror qwer ImGuiDraw::InitPhysXSystem — three detached scene updaters.
-    std::thread([]() { VisibleCheck::UpdateSceneByRange(); }).detach();
-    std::thread([]() { VisibleCheck::UpdateDynamicHeightField(); }).detach();
-    std::thread([]() { VisibleCheck::UpdateDynamicRigid(); }).detach();
+    // 对标 qwer：先尝试远程刷新偏移；失败保留本地默认 0x110ADBA0
+    std::call_once(gPhysXFetchOnce, []() {
+        if (!PhysXRemote::fetch()) {
+            // 保持 PhysXRemote.mm 默认值
+        }
+        if (kPhysXPtr == 0) {
+            kPhysXPtr = 0x110ADBA0;
+        }
+        char buf[96];
+        snprintf(buf, sizeof(buf), "[PhysX] kPhysXPtr=0x%llx", (unsigned long long)kPhysXPtr);
+        KernelLogLine(buf);
+    });
+
+    if (!AimPhysX_ValidateInstance()) {
+        // 对局未就绪或偏移仍不对：不置 ready，下帧重试
+        return;
+    }
+
+    if (!LineTrace::initPhysX()) {
+        KernelLogLine("[PhysX] LineTrace::initPhysX 失败");
+        return;
+    }
+
+    gPhysXReady.store(true, std::memory_order_release);
+    AimPhysX_StartThreadsOnce();
+    KernelLogLine("[PhysX] 漏打场景已初始化（掩体遮挡生效）");
 }
 
 void AimPhysX_InitIfNeeded() {
-    std::call_once(gPhysXInitOnce, []() { AimPhysX_InitUnlocked(); });
-    // Allow retry if first call happened before module base / kPhysXPtr was ready.
-    if (!gPhysXReady.load(std::memory_order_acquire)) {
-        static std::mutex retryMu;
-        std::lock_guard<std::mutex> lock(retryMu);
-        if (!gPhysXReady.load(std::memory_order_relaxed)) {
-            // Reset once_flag is not possible; call unlocked path directly for retries.
-            AimPhysX_InitUnlocked();
-        }
+    if (gPhysXReady.load(std::memory_order_acquire)) {
+        return;
+    }
+    static std::mutex retryMu;
+    std::lock_guard<std::mutex> lock(retryMu);
+    if (!gPhysXReady.load(std::memory_order_relaxed)) {
+        AimPhysX_InitUnlocked();
     }
 }

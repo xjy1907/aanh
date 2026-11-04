@@ -1118,18 +1118,25 @@ void Draw::StartBooks() {
                 }
             }
 
-            // 骨骼可见性（供自瞄漏打）
+            // 骨骼可见性（对标 qwer 掩体漏打）
+            // doOcclusion：模型渲染 + PhysX 就绪 + 距离≤漏打距离
+            // 遮挡骨骼段→掩体红；至少一节可见才进入自瞄选敌
             bool hasVisibleBone = false;
             Vector3 firstVisibleBoneWorld = {};
             bool doOcclusion = AimAssist::模型渲染 && AimPhysX_IsReady() && distance <= AimAssist::漏打距离;
             Vector3 cachedBoneWorld = {};
             bool boneCalculatedForOcclusion = false;
-            if (doOcclusion && IsValidAddr(staticMesh)) {
+            if ((doOcclusion || (AimAssist::模型渲染 && AimAssist::开启自瞄)) && IsValidAddr(staticMesh)) {
                 cachedBoneWorld = GetBoneWithRotation((long)staticMesh, 5, RelativeScale3D);
                 boneCalculatedForOcclusion = true;
             }
 
-            if (显示骨骼 && distance <= 骨骼距离 && IsValidAddr(mesh) && IsValidAddr(staticMesh)) {
+            // 模型渲染时放宽骨骼绘制距离到漏打距离，便于观察红/绿遮挡
+            float boneDrawLimit = 骨骼距离;
+            if (AimAssist::模型渲染 && AimAssist::漏打距离 > boneDrawLimit) {
+                boneDrawLimit = AimAssist::漏打距离;
+            }
+            if (显示骨骼 && distance <= boneDrawLimit && IsValidAddr(mesh) && IsValidAddr(staticMesh)) {
                 int boneCount = vm_read<int>(mesh + SDK::StaticMesh + 0x8);
                 const int(*skeletonList)[2] = GetSkeletonList(boneCount);
                 static constexpr int kMaxBoneIdx = 128;
@@ -1250,6 +1257,14 @@ void Draw::StartBooks() {
 
     AimAssist::ExecuteAim(gStatic.myCharacter, POV, dl, 屏幕宽度, 屏幕高度);
     AimAssist::DrawOverlays(dl, 屏幕宽度, 屏幕高度);
+
+    // 模型漏打状态（对标 qwer：遮挡段骨骼=掩体红；仅可见骨骼可被自瞄）
+    if (AimAssist::模型渲染) {
+        const char *st = AimPhysX_IsReady() ? "漏打:就绪(遮挡=红/可见才瞄)" : "漏打:加载中…";
+        Draw::DrawText(st, ImVec2(屏幕宽度 * 0.5f, 72.0f), true,
+                       AimPhysX_IsReady() ? IM_COL32(0, 255, 128, 255) : IM_COL32(255, 200, 0, 255),
+                       true, 14);
+    }
 
     drawHud(totalEnemies, aiCounts);
 }

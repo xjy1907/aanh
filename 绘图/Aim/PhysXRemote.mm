@@ -1,4 +1,4 @@
 #import "PhysXRemote.h"
 
-// Hardcoded like wasd MainApplicationDelegate; DrawView / bridge may overwrite.
-volatile uint64_t kPhysXPtr = 0x1086DBA0;
+// 对齐 qwer MainApplicationDelegate：当前版本 PhysX 全局偏移
+volatile uint64_t kPhysXPtr = 0x110ADBA0;
