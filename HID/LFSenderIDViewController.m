@@ -1,5 +1,6 @@
 #import "LFSenderIDViewController.h"
 #import "LFSenderIDMonitor.h"
+#import "NHIdentity.h"
 #import "HUDHelper.h"
 #import "LFVirtualDigitizer.h"
 #import "MBProgressHUD.h" // 用于轻提示
@@ -61,6 +62,11 @@ static inline void SaveSIDToICloud(uint64_t sid) {
     // 仅用于“其他模块读取”：保存 16 进制字符串；UI 不显示
     [store setString:HexString(sid) forKey:@"TouchSenderIDHex"];
     [store synchronize];
+    // 同步写入 NHPrefs/drx，供 HUD 绘制进程跨进程读取（对标 qwer settings.plist）
+    NSMutableDictionary *cfg = [NSMutableDictionary dictionaryWithDictionary:NHPrefsRead() ?: @{}];
+    cfg[@"TouchSenderID"] = @((unsigned long long)sid);
+    cfg[@"TouchSenderIDHex"] = HexString(sid);
+    NHPrefsWrite(cfg);
 }
 
 static inline uint64_t LoadSIDFromICloud(void) {

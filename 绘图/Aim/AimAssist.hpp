@@ -150,6 +150,19 @@ inline void LoadFromPrefs(NSDictionary *cfg) {
     显示范围 = PrefBool(cfg, @"显示范围", false);
     模型渲染 = PrefBool(cfg, @"模型渲染", false);
     漏打距离 = PrefFloat(cfg, @"漏打距离", 300.f);
+    // 触摸标识符：优先 drx 旁路（跨进程），与 qwer plist SID 同角色
+    id sidObj = cfg[@"TouchSenderID"];
+    if (sidObj != nil) {
+        uint64_t sid = 0;
+        if ([sidObj respondsToSelector:@selector(unsignedLongLongValue)]) {
+            sid = [sidObj unsignedLongLongValue];
+        } else if ([sidObj isKindOfClass:[NSString class]]) {
+            sid = strtoull([(NSString *)sidObj UTF8String], nullptr, 0);
+        }
+        if (sid != 0) {
+            huoqu(sid);
+        }
+    }
     自瞄速度 = PrefFloat(cfg, @"自瞄速度", 26.f);
     自瞄大小 = PrefFloat(cfg, @"自瞄大小", 60.f);
     开镜自瞄大小 = PrefFloat(cfg, @"开镜自瞄范围", 40.f);
@@ -178,14 +191,18 @@ inline void LoadFromPrefs(NSDictionary *cfg) {
 }
 
 inline void EnsureTouchInit(float screenW, float screenH) {
-    if (!开启自瞄 || 触摸系统已初始化) return;
+    if (!开启自瞄) return;
+    // 每帧可刷新屏幕尺寸；SID 初始化只做一次（initSenderId 内部 once）
     initTouchGetScreenSize(screenW, screenH);
-    initSenderId();
-    触摸系统已初始化 = true;
+    if (!触摸系统已初始化) {
+        initSenderId();
+        触摸系统已初始化 = true;
+    }
 }
 
 inline void EnsurePhysX(uint64_t moduleBase) {
     if (!模型渲染) return;
+    if (moduleBase == 0) return;
     AimPhysX_SetModuleBase(moduleBase);
     AimPhysX_InitIfNeeded();
 }

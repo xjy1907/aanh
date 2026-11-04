@@ -293,9 +293,10 @@ static void postIOHIDEvent(IOHIDEventRef event)
     if (!ioSystemClient){
         ioSystemClient = IOHIDEventSystemClientCreate(kCFAllocatorDefault);
     }
- 
+    // 仅在已配置标识符时覆盖；否则保留 performTouchFromRawData 里的 digitizer 默认 SID
+    if (senderID != 0) {
         IOHIDEventSetSenderID(event, senderID);
-  
+    }
     IOHIDEventSystemClientDispatchEvent(ioSystemClient, event);
 }
 
@@ -323,20 +324,30 @@ void initTouchGetScreenSize(float width, float height)
 
 void huoqu(uint64_t aaa)
 {
-    (void)aaa;
+    if (aaa != 0) {
+        senderID = aaa;
+    }
 }
 
 void initSenderId()
 {
+    // 同步先读一次，避免首帧触摸 SenderID 仍为 0（对标 qwer 立即加载 SID）
+    uint64_t sid = LoadSIDFromICloud();
+    if (sid != 0) {
+        senderID = sid;
+    }
 
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        // I know the code here is bad here, change this later.
-        while (true)
-        {
-            [NSThread sleepForTimeInterval:2.0f];
-            senderID = LoadSIDFromICloud();
-          
-        }
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            while (true) {
+                [NSThread sleepForTimeInterval:2.0f];
+                uint64_t live = LoadSIDFromICloud();
+                if (live != 0) {
+                    senderID = live;
+                }
+            }
+        });
     });
 }
 

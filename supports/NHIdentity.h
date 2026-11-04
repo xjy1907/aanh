@@ -206,10 +206,26 @@ static inline NSString *NHDrawExtrasPath(void) {
 }
 
 static inline NSArray<NSString *> *NHDrawExtrasKeys(void) {
+    // 始终写 drx 旁路：默认不落盘时 HUD 仍能读到（对标 hideAi / drawDist）
+    // 自瞄 / 模型漏打键必须在此，否则开关在 UI 显示开、绘制进程仍读到关
     return @[
         @"weaponStyle", @"healthStyle", @"behindStyle", @"behindMode", @"lootMode",
         @"lootSize", @"infoSize", @"drawDist", @"behindDist", @"boneDist",
         @"boneThick", @"rayThick", @"drawFps", @"hideAi",
+        // —— 模型漏打（对标 qwer 绘制功能/绘制设置）——
+        @"模型渲染", @"漏打距离",
+        // —— 自瞄功能（对标 qwer 自瞄页全部项）——
+        @"开启自瞄", @"自瞄连线", @"显示范围",
+        @"悬浮球大小", @"自瞄速度",
+        @"抖动幅度", @"抖动频率", @"抖动波动",
+        @"显示触摸区域", @"触摸区域宽度", @"触摸区域高度", @"触摸区域X", @"触摸区域Y",
+        @"自瞄大小", @"动态圈", @"动态圈最小", @"动态圈速度",
+        @"开镜自瞄范围", @"开镜动态圈", @"显示开镜自瞄范围",
+        @"内圈大小", @"显示内圈",
+        @"烟雾不瞄", @"烟雾范围",
+        @"自瞄距离", @"腰射距离", @"压枪力度",
+        @"自瞄血量", @"满血距离",
+        @"TouchSenderID", @"TouchSenderIDHex",
     ];
 }
 
