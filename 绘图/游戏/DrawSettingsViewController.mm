@@ -1,5 +1,5 @@
 //
-//  DrawSettingsViewController.mm — 绘制设置（对标 wasd，不含掩体色/漏打距离）
+//  DrawSettingsViewController.mm — 绘制设置（对标 wasd/qwer，含漏打距离）
 //
 
 #import "DrawSettingsViewController.h"
@@ -90,6 +90,8 @@
     [self mkSlider:@"射线粗细" key:@"rayThick" min:0.5 max:4 step:0.1 kind:0],
     [self mkSlider:@"物资大小" key:@"lootSize" min:6 max:24 step:1 kind:1],
     [self mkSlider:@"信息大小" key:@"infoSize" min:6 max:24 step:1 kind:1],
+    // 对标 qwer：模型漏打独立距离（与「模型渲染」联动，供自瞄不打墙）
+    [self mkSlider:@"漏打距离" key:@"漏打距离" min:0 max:500 step:1 kind:1],
   ];
 }
 
@@ -171,6 +173,7 @@
     if ([row.key isEqualToString:@"drawDist"]) defV = 252;
     if ([row.key isEqualToString:@"behindDist"]) defV = 252;
     if ([row.key isEqualToString:@"boneDist"]) defV = 30;
+    if ([row.key isEqualToString:@"漏打距离"]) defV = 300;
     float cur = [self floatForKey:row.key def:defV];
 
     UILabel *val = [[UILabel alloc] init];

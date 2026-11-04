@@ -16,6 +16,10 @@ struct Vector2 {
     float X, Y;
     Vector2() : X(0), Y(0) {}
     Vector2(float x, float y) : X(x), Y(y) {}
+    Vector2 operator+(const Vector2 &v) const { return Vector2(X + v.X, Y + v.Y); }
+    Vector2 operator-(const Vector2 &v) const { return Vector2(X - v.X, Y - v.Y); }
+    Vector2 operator/(float s) const { return Vector2(X / s, Y / s); }
+    Vector2 &operator+=(const Vector2 &v) { X += v.X; Y += v.Y; return *this; }
 };
 
 struct Vector3 {
@@ -23,6 +27,7 @@ struct Vector3 {
     Vector3() : X(0), Y(0), Z(0) {}
     Vector3(float x, float y, float z) : X(x), Y(y), Z(z) {}
     Vector3 operator-(const Vector3 &v) const { return Vector3(X - v.X, Y - v.Y, Z - v.Z); }
+    Vector3 operator+(const Vector3 &v) const { return Vector3(X + v.X, Y + v.Y, Z + v.Z); }
 };
 
 struct Vector4 { float x, y, z, w; };

@@ -14,6 +14,7 @@
 #import "LFSenderIDViewController.h"
 #import "游戏/MaterialConfigViewController.h"
 #import "游戏/DrawSettingsViewController.h"
+#import "游戏/AimConfigViewController.h"
 //#import "pp.h"
 
 #ifdef __cplusplus
@@ -1684,6 +1685,7 @@ static void JVR_保存KernelExploit(NSString *ident) {
         @{@"title": @"显示物资", @"key": @"loot"},   // 含手雷倒计时
         @{@"title": @"骨骼显示", @"key": @"bone"},
         @{@"title": @"人机隐藏", @"key": @"hideAi"}, // 对标 wasd：静态扫描跳过人机
+        @{@"title": @"模型渲染", @"key": @"模型渲染"}, // 对标 qwer：PhysX 漏打，供自瞄不打墙
         @{@"title": @"过直播模式", @"key": @"overlay"},
         @{@"title": @"调试日志", @"key": @"dbglog"}, // 默认关；开才写 kfd_debug / 终端诊断
         @{@"title": @"配置落盘", @"key": @"persist"}, // 默认关；开才写 cfg/pid 文件，否则仅 notify 同步
@@ -1749,6 +1751,27 @@ static void JVR_保存KernelExploit(NSString *ident) {
     };
     [lootBtn.heightAnchor constraintEqualToConstant:44].active = YES;
     [stack addArrangedSubview:lootBtn];
+
+    // 自瞄功能（对标 qwer 自瞄功能分类；实验性触摸自瞄）
+    JVRKernelButton *aimBtn = [[JVRKernelButton alloc] init];
+    aimBtn.translatesAutoresizingMaskIntoConstraints = NO;
+    aimBtn.label.text = @"自瞄功能";
+    aimBtn.label.textColor = JVR_主色;
+    aimBtn.borderGrad.colors = @[(id)JVR_主色.CGColor, (id)JVR_副色.CGColor];
+    aimBtn.onTap = ^{
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        if (!strongSelf) return;
+        AimConfigViewController *vc = [[AimConfigViewController alloc] init];
+        UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:vc];
+        nav.modalPresentationStyle = UIModalPresentationFullScreen;
+        nav.navigationBar.barStyle = UIBarStyleBlack;
+        nav.navigationBar.tintColor = JVR_主色;
+        nav.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName: JVR_文字色};
+        [strongSelf presentViewController:nav animated:YES completion:nil];
+        KernelLogLine("打开自瞄功能界面");
+    };
+    [aimBtn.heightAnchor constraintEqualToConstant:44].active = YES;
+    [stack addArrangedSubview:aimBtn];
     
     return stack;
 }

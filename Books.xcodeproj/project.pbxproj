@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A1M001CFG000000000000003 /* AimConfigViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = A1M001CFG000000000000002 /* AimConfigViewController.mm */; };
+		A1M001PHY000000000000002 /* AimPhysXBridge.mm in Sources */ = {isa = PBXBuildFile; fileRef = A1M001PHY000000000000001 /* AimPhysXBridge.mm */; };
+		A1M001PHY000000000000004 /* PhysXRemote.mm in Sources */ = {isa = PBXBuildFile; fileRef = A1M001PHY000000000000003 /* PhysXRemote.mm */; };
+		A1M001EMB000000000000002 /* libembree4.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A1M001EMB000000000000001 /* libembree4.a */; };
 		2F50CA52FF96439999D47905 /* stb_image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7E9ECD8FB8C641AFAC9327E1 /* stb_image.cpp */; };
 		48FAF1654B4F4B44B1423CC9 /* DrawSettingsViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = EB75F96552FF49C5B5543956 /* DrawSettingsViewController.mm */; };
 		3BC5ADD429D34DD689FC0109 /* WeaponTextures.mm in Sources */ = {isa = PBXBuildFile; fileRef = 54D381EE9E2145908F6B1B4E /* WeaponTextures.mm */; };
@@ -260,6 +264,11 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		A1M001CFG000000000000001 /* AimConfigViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AimConfigViewController.h; sourceTree = "<group>"; };
+		A1M001CFG000000000000002 /* AimConfigViewController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = AimConfigViewController.mm; sourceTree = "<group>"; };
+		A1M001PHY000000000000001 /* AimPhysXBridge.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = AimPhysXBridge.mm; path = "绘图/Aim/AimPhysXBridge.mm"; sourceTree = SOURCE_ROOT; };
+		A1M001PHY000000000000003 /* PhysXRemote.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = PhysXRemote.mm; path = "绘图/Aim/PhysXRemote.mm"; sourceTree = SOURCE_ROOT; };
+		A1M001EMB000000000000001 /* libembree4.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libembree4.a; path = Embree/libembree4.a; sourceTree = "<group>"; };
 		45098A121F4F429DA0D24586 /* stb_image.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "stb/stb_image.h"; sourceTree = "<group>"; };
 		7E9ECD8FB8C641AFAC9327E1 /* stb_image.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "stb/stb_image.cpp"; sourceTree = "<group>"; };
 		EB75F96552FF49C5B5543956 /* DrawSettingsViewController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = "DrawSettingsViewController.mm"; sourceTree = "<group>"; };
@@ -589,6 +598,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A1M001EMB000000000000002 /* libembree4.a in Frameworks */,
 				0FE5D6AC2F508F1500FD4AFC /* CoreHaptics.framework in Frameworks */,
 				06D4D8A42E18DDE5008B33B6 /* libMobileGestalt.tbd in Frameworks */,
 				06D4D8A22E18DDCF008B33B6 /* libcompression.tbd in Frameworks */,
@@ -703,6 +713,8 @@
 				7E9ECD8FB8C641AFAC9327E1 /* stb_image.cpp */,
 				EB75F96552FF49C5B5543956 /* DrawSettingsViewController.mm */,
 				EDF4DA4E82ED4BD1B0AC2D30 /* DrawSettingsViewController.h */,
+				A1M001CFG000000000000001 /* AimConfigViewController.h */,
+				A1M001CFG000000000000002 /* AimConfigViewController.mm */,
 				5486369C49784FF3808FD160 /* WeaponTextures.h */,
 				54D381EE9E2145908F6B1B4E /* WeaponTextures.mm */,
 				233F0963537B4745B0582A43 /* ItemConfig.h */,
@@ -733,6 +745,9 @@
 				CC711D1F2B5BF5C6007235A6 /* BBZView.mm */,
 				1F0BD9392D6ED703008151DA /* DrawView.hpp */,
 				1F0BD93A2D6ED703008151DA /* DrawView.mm */,
+				A1M001PHY000000000000001 /* AimPhysXBridge.mm */,
+				A1M001PHY000000000000003 /* PhysXRemote.mm */,
+				A1M001EMB000000000000001 /* libembree4.a */,
 				0FE5D65D2F50679B00FD4AFC /* 绘图.h */,
 			);
 			path = "绘图";
@@ -1667,6 +1682,9 @@
 				1F0BD93B2D6ED703008151DA /* DrawView.mm in Sources */,
 				2F50CA52FF96439999D47905 /* stb_image.cpp in Sources */,
 				48FAF1654B4F4B44B1423CC9 /* DrawSettingsViewController.mm in Sources */,
+				A1M001CFG000000000000003 /* AimConfigViewController.mm in Sources */,
+				A1M001PHY000000000000002 /* AimPhysXBridge.mm in Sources */,
+				A1M001PHY000000000000004 /* PhysXRemote.mm in Sources */,
 				3BC5ADD429D34DD689FC0109 /* WeaponTextures.mm in Sources */,
 				1EB561C880AF4623B86304D8 /* MaterialConfigViewController.mm in Sources */,
 				E3A40925550F4B9F8723608C /* ItemConfig.mm in Sources */,
@@ -1755,6 +1773,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/supports",
+					"$(PROJECT_DIR)/Embree/include",
+					"$(PROJECT_DIR)/绘图/Aim",
 					"$(PROJECT_DIR)/dependencies/include",
 					"$(PROJECT_DIR)/zstd/lib",
 					"$(PROJECT_DIR)/_external/include",
@@ -1803,6 +1823,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/supports",
+					"$(PROJECT_DIR)/Embree/include",
+					"$(PROJECT_DIR)/绘图/Aim",
 					"$(PROJECT_DIR)/dependencies/include",
 					"$(PROJECT_DIR)/zstd/lib",
 					"$(PROJECT_DIR)/_external/include",
@@ -2431,6 +2453,8 @@
 				GCC_WARN_CHECK_SWITCH_STATEMENTS = NO;
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/supports",
+					"$(PROJECT_DIR)/Embree/include",
+					"$(PROJECT_DIR)/绘图/Aim",
 					"$(PROJECT_DIR)/dependencies/include",
 					"$(PROJECT_DIR)/zstd/lib",
 					"$(PROJECT_DIR)/_external/include",
@@ -2448,6 +2472,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/libraries",
+					"$(PROJECT_DIR)/Embree",
 					"$(PROJECT_DIR)/dependencies/build",
 					"$(PROJECT_DIR)/_external/lib",
 					"$(PROJECT_DIR)/fuck",
@@ -2459,6 +2484,13 @@
 					"-Wl,-U,___swift_FORCE_LOAD_$_swiftCompatibility51",
 					"-Wl,-U,___swift_FORCE_LOAD_$_swiftCompatibility56",
 					"-Wl,-U,___swift_FORCE_LOAD_$_swiftCompatibilityConcurrency",
+					"$(PROJECT_DIR)/Embree/libembree4.a",
+					"$(PROJECT_DIR)/Embree/libsys.a",
+					"$(PROJECT_DIR)/Embree/libtasking.a",
+					"$(PROJECT_DIR)/Embree/liblexers.a",
+					"$(PROJECT_DIR)/Embree/libmath.a",
+					"$(PROJECT_DIR)/Embree/libsimd.a",
+					"-lc++",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.DH.sss;
 				PRODUCT_MODULE_NAME = Books;
@@ -2503,6 +2535,8 @@
 				GCC_WARN_CHECK_SWITCH_STATEMENTS = NO;
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/supports",
+					"$(PROJECT_DIR)/Embree/include",
+					"$(PROJECT_DIR)/绘图/Aim",
 					"$(PROJECT_DIR)/dependencies/include",
 					"$(PROJECT_DIR)/zstd/lib",
 					"$(PROJECT_DIR)/_external/include",
@@ -2520,6 +2554,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/libraries",
+					"$(PROJECT_DIR)/Embree",
 					"$(PROJECT_DIR)/dependencies/build",
 					"$(PROJECT_DIR)/_external/lib",
 					"$(PROJECT_DIR)/fuck",
@@ -2531,6 +2566,13 @@
 					"-Wl,-U,___swift_FORCE_LOAD_$_swiftCompatibility51",
 					"-Wl,-U,___swift_FORCE_LOAD_$_swiftCompatibility56",
 					"-Wl,-U,___swift_FORCE_LOAD_$_swiftCompatibilityConcurrency",
+					"$(PROJECT_DIR)/Embree/libembree4.a",
+					"$(PROJECT_DIR)/Embree/libsys.a",
+					"$(PROJECT_DIR)/Embree/libtasking.a",
+					"$(PROJECT_DIR)/Embree/liblexers.a",
+					"$(PROJECT_DIR)/Embree/libmath.a",
+					"$(PROJECT_DIR)/Embree/libsimd.a",
+					"-lc++",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.DH.iBooksss;
 				PRODUCT_MODULE_NAME = Books;

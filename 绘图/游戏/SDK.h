@@ -44,6 +44,19 @@ namespace SDK {
     uint64_t TotalPlayerNum = 0xD98;
     uint64_t PlayerNum = 0xD9C;
     uint64_t AliveTeamNum = 0x148C;
+
+    // —— 自瞄 / 压枪（对标 wasd OffsetsTool.hpp）——
+    uint64_t bIsWeaponFiring = 0x2750;
+    uint64_t bIsGunADS = 0x1848;
+    uint64_t VelocitySafety = 0x1164;
+    uint64_t WeaponOwnerProxy = 0x1350;
+    uint64_t BindedWeapon = 0x50;
+    uint64_t CachedBulletTrackComponent = 0x2038;
+    uint64_t ShootWeaponEntityComp = 0x2048;
+    uint64_t BulletFireSpeed = 0x15D4;
+    uint64_t VerticalRecoilTarget = 0x20C;
+    uint64_t WeaponEntity = 0x3A30;
+    uint64_t WeaponComponent = 0x20;
 };
 
 #endif

@@ -225,6 +225,7 @@ template<typename T> T vm_read(uint64_t address) {
 #include "游戏/绘制算法.h"
 #include "游戏/武器名称.h"
 #include "游戏/WeaponTextures.h"
+#include "Aim/AimAssist.hpp"
 #include <sstream>
 #include <map>
 #include <unordered_map>
@@ -490,6 +491,7 @@ static void RefreshDrawPrefs(void) {
     else 骨骼距离 = 30.f;
     if (cfg[@"boneThick"] != nil) 骨骼粗细 = [cfg[@"boneThick"] floatValue];
     if (cfg[@"rayThick"] != nil) 射线粗细 = [cfg[@"rayThick"] floatValue];
+    AimAssist::LoadFromPrefs(cfg);
 }
 
 // 不依赖绘制循环：每 7 秒把整条读取链写进 kfd_debug.log
@@ -916,14 +918,30 @@ void Draw::StartBooks() {
         }
     }
 
-    const bool needHeadESP = 显示信息 || 显示距离 || 显示射线 || 显示血量 || 显示手持 || 显示方框;
-    const bool needBoneMesh = 显示骨骼;
+    const bool needHeadESP = 显示信息 || 显示距离 || 显示射线 || 显示血量 || 显示手持 || 显示方框 || AimAssist::开启自瞄;
+    const bool needBoneMesh = 显示骨骼 || AimAssist::开启自瞄 || AimAssist::模型渲染;
+
+    AimAssist::EnsureTouchInit(屏幕宽度, 屏幕高度);
+    AimAssist::EnsurePhysX(模块地址);
+    AimPhysX_TickCamera(POV.Location);
+    AimAssist::BeginFrameSelect();
+    AimAssist::UpdateAimMode(gStatic.myCharacter, 1.f / 60.f);
+    AimAssist::烟雾数组.clear();
+    if (AimAssist::烟雾不瞄) {
+        for (const CachedMaterial &m : gStatic.materials) {
+            if (!m.isSmoke || !IsValidAddr(m.addr)) continue;
+            Vector3 sp = GetRelativeLocation((long)m.addr);
+            if (sp.X == 0 && sp.Y == 0 && sp.Z == 0) continue;
+            AimAssist::烟雾数组.push_back({sp});
+        }
+    }
 
     int totalEnemies = 0;
     int aiCounts = 0;
     Vector2 canvasVec(屏幕宽度, 屏幕高度);
     const int sw = (int)屏幕宽度;
     const int sh = (int)屏幕高度;
+    const ImU32 掩体颜色 = IM_COL32(255, 0, 0, 255);
 
     for (const CachedPlayer &sp : gStatic.players) {
         uint64_t actor = sp.addr;
@@ -1100,13 +1118,27 @@ void Draw::StartBooks() {
                 }
             }
 
+            // 骨骼可见性（供自瞄漏打）
+            bool hasVisibleBone = false;
+            Vector3 firstVisibleBoneWorld = {};
+            bool doOcclusion = AimAssist::模型渲染 && AimPhysX_IsReady() && distance <= AimAssist::漏打距离;
+            Vector3 cachedBoneWorld = {};
+            bool boneCalculatedForOcclusion = false;
+            if (doOcclusion && IsValidAddr(staticMesh)) {
+                cachedBoneWorld = GetBoneWithRotation((long)staticMesh, 5, RelativeScale3D);
+                boneCalculatedForOcclusion = true;
+            }
+
             if (显示骨骼 && distance <= 骨骼距离 && IsValidAddr(mesh) && IsValidAddr(staticMesh)) {
                 int boneCount = vm_read<int>(mesh + SDK::StaticMesh + 0x8);
                 const int(*skeletonList)[2] = GetSkeletonList(boneCount);
                 static constexpr int kMaxBoneIdx = 128;
                 Vector2 boneScreenPos[kMaxBoneIdx];
+                Vector3 boneWorldPos[kMaxBoneIdx];
+                bool boneOccluded[kMaxBoneIdx];
                 bool boneCalculated[kMaxBoneIdx];
                 memset(boneCalculated, 0, sizeof(boneCalculated));
+                memset(boneOccluded, 0, sizeof(boneOccluded));
 
                 for (int bi = 0; bi < 14; bi++) {
                     for (int j = 0; j < 2; j++) {
@@ -1114,18 +1146,48 @@ void Draw::StartBooks() {
                         if (boneIdx < 0 || boneIdx >= kMaxBoneIdx) continue;
                         if (!boneCalculated[boneIdx]) {
                             Vector3 worldPos = GetBoneWithRotation((long)staticMesh, boneIdx, RelativeScale3D);
+                            boneWorldPos[boneIdx] = worldPos;
                             boneScreenPos[boneIdx] = WorldToScreen(worldPos, POV, sw, sh);
+                            boneOccluded[boneIdx] = doOcclusion && AimAssist::IsPointOccluded(POV.Location, worldPos);
                             boneCalculated[boneIdx] = true;
+                            if (!hasVisibleBone && !boneOccluded[boneIdx]) {
+                                hasVisibleBone = true;
+                                firstVisibleBoneWorld = worldPos;
+                            }
                         }
                     }
                     int idxSta = skeletonList[bi][0];
                     int idxEnd = skeletonList[bi][1];
                     if (idxSta < 0 || idxSta >= kMaxBoneIdx || idxEnd < 0 || idxEnd >= kMaxBoneIdx) continue;
                     if (!boneCalculated[idxSta] || !boneCalculated[idxEnd]) continue;
+                    ImU32 segColor = (boneOccluded[idxSta] || boneOccluded[idxEnd]) ? 掩体颜色 : boneColor;
                     Draw::DrawLine(ImVec2(boneScreenPos[idxSta].X, boneScreenPos[idxSta].Y),
                                    ImVec2(boneScreenPos[idxEnd].X, boneScreenPos[idxEnd].Y),
-                                   boneColor, 骨骼粗细);
+                                   segColor, 骨骼粗细);
                 }
+                if (!doOcclusion) {
+                    hasVisibleBone = true;
+                    firstVisibleBoneWorld = GetBoneWithRotation((long)staticMesh, 5, RelativeScale3D);
+                }
+            } else if (AimAssist::开启自瞄) {
+                if (doOcclusion && boneCalculatedForOcclusion) {
+                    bool occluded = AimAssist::IsPointOccluded(POV.Location, cachedBoneWorld);
+                    hasVisibleBone = !occluded;
+                    firstVisibleBoneWorld = cachedBoneWorld;
+                } else if (IsValidAddr(staticMesh)) {
+                    hasVisibleBone = true;
+                    firstVisibleBoneWorld = GetBoneWithRotation((long)staticMesh, 5, RelativeScale3D);
+                } else {
+                    hasVisibleBone = true;
+                    firstVisibleBoneWorld = loc;
+                    firstVisibleBoneWorld.Z += 85.f;
+                }
+            }
+
+            if (AimAssist::开启自瞄 && onScreen) {
+                AimAssist::ConsiderTarget(actor, distance, Health, bIsAI, hasVisibleBone,
+                                          firstVisibleBoneWorld, HeadScreen, loc,
+                                          屏幕宽度, 屏幕高度);
             }
 
             if (显示方框) {
@@ -1185,6 +1247,9 @@ void Draw::StartBooks() {
             }
         }
     }
+
+    AimAssist::ExecuteAim(gStatic.myCharacter, POV, dl, 屏幕宽度, 屏幕高度);
+    AimAssist::DrawOverlays(dl, 屏幕宽度, 屏幕高度);
 
     drawHud(totalEnemies, aiCounts);
 }
