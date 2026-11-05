@@ -22,6 +22,9 @@ bool AimPhysX_IsOccluded(const Vector3 &cam, const Vector3 &bone);
 /// Store camera location for future range-filtered scene loaders.
 void AimPhysX_TickCamera(const Vector3 &camLoc);
 
+/// 模型渲染开关：false 时 VisibleCheck 三线程只 sleep 不扫网格（降 CPU）。
+void AimPhysX_SetSceneActive(bool active);
+
 #ifdef __cplusplus
 }
 #endif

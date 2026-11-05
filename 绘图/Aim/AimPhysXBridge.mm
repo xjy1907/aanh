@@ -34,6 +34,10 @@ void AimPhysX_TickCamera(const Vector3 &camLoc) {
     (void)gAimCameraLoc;
 }
 
+void AimPhysX_SetSceneActive(bool active) {
+    VisibleCheck::gPhysXSceneActive.store(active, std::memory_order_release);
+}
+
 bool AimPhysX_IsReady() {
     return gPhysXReady.load(std::memory_order_acquire);
 }
@@ -95,6 +99,7 @@ static void AimPhysX_InitUnlocked() {
     }
 
     gPhysXReady.store(true, std::memory_order_release);
+    VisibleCheck::gPhysXSceneActive.store(true, std::memory_order_release);
     AimPhysX_StartThreadsOnce();
     KernelLogLine("[PhysX] 漏打场景已初始化（掩体遮挡生效）");
 }

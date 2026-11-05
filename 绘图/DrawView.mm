@@ -924,6 +924,10 @@ void Draw::StartBooks() {
     AimAssist::EnsureTouchInit(屏幕宽度, 屏幕高度);
     AimAssist::EnsurePhysX(模块地址);
     AimPhysX_TickCamera(POV.Location);
+    // 遮挡隔帧采样用帧号（每进一次 StartBooks +1）
+    static int sAimOccFrame = 0;
+    sAimOccFrame++;
+    const int aimOccFrame = sAimOccFrame;
     AimAssist::BeginFrameSelect();
     AimAssist::UpdateAimMode(gStatic.myCharacter, 1.f / 60.f);
     AimAssist::烟雾数组.clear();
@@ -1120,32 +1124,41 @@ void Draw::StartBooks() {
 
             // 骨骼可见性（对标 qwer 掩体漏打）
             // doOcclusion：模型渲染 + PhysX 就绪 + 距离≤漏打距离
-            // 遮挡骨骼段→掩体红；至少一节可见才进入自瞄选敌
+            // 降 CPU：只测头骨(index 5)；隔帧复用缓存；骨骼绘制距离不再跟漏打距离绑死
             bool hasVisibleBone = false;
             Vector3 firstVisibleBoneWorld = {};
             bool doOcclusion = AimAssist::模型渲染 && AimPhysX_IsReady() && distance <= AimAssist::漏打距离;
             Vector3 cachedBoneWorld = {};
             bool boneCalculatedForOcclusion = false;
-            if ((doOcclusion || (AimAssist::模型渲染 && AimAssist::开启自瞄)) && IsValidAddr(staticMesh)) {
+            if ((doOcclusion || AimAssist::开启自瞄) && IsValidAddr(staticMesh)) {
                 cachedBoneWorld = GetBoneWithRotation((long)staticMesh, 5, RelativeScale3D);
                 boneCalculatedForOcclusion = true;
             }
 
-            // 模型渲染时放宽骨骼绘制距离到漏打距离，便于观察红/绿遮挡
-            float boneDrawLimit = 骨骼距离;
-            if (AimAssist::模型渲染 && AimAssist::漏打距离 > boneDrawLimit) {
-                boneDrawLimit = AimAssist::漏打距离;
+            // 头骨遮挡：隔帧采样，奇数帧复用上次结果（自瞄+骨骼着色共用）
+            static std::unordered_map<uint64_t, bool> sHeadOccCache;
+            if ((aimOccFrame & 1) != 0 && sHeadOccCache.size() > 256) sHeadOccCache.clear();
+            const bool sampleOccThisFrame = (aimOccFrame & 1) != 0;
+            bool headOccluded = false;
+            if (doOcclusion && boneCalculatedForOcclusion) {
+                if (sampleOccThisFrame) {
+                    headOccluded = AimAssist::IsPointOccluded(POV.Location, cachedBoneWorld);
+                    sHeadOccCache[actor] = headOccluded;
+                } else {
+                    auto it = sHeadOccCache.find(actor);
+                    headOccluded = (it != sHeadOccCache.end()) ? it->second : false;
+                }
             }
+
+            // 骨骼绘制严格用「骨骼距离」，不再被漏打距离拉长
+            float boneDrawLimit = 骨骼距离;
             if (显示骨骼 && distance <= boneDrawLimit && IsValidAddr(mesh) && IsValidAddr(staticMesh)) {
                 int boneCount = vm_read<int>(mesh + SDK::StaticMesh + 0x8);
                 const int(*skeletonList)[2] = GetSkeletonList(boneCount);
                 static constexpr int kMaxBoneIdx = 128;
                 Vector2 boneScreenPos[kMaxBoneIdx];
-                Vector3 boneWorldPos[kMaxBoneIdx];
-                bool boneOccluded[kMaxBoneIdx];
                 bool boneCalculated[kMaxBoneIdx];
                 memset(boneCalculated, 0, sizeof(boneCalculated));
-                memset(boneOccluded, 0, sizeof(boneOccluded));
 
                 for (int bi = 0; bi < 14; bi++) {
                     for (int j = 0; j < 2; j++) {
@@ -1153,33 +1166,28 @@ void Draw::StartBooks() {
                         if (boneIdx < 0 || boneIdx >= kMaxBoneIdx) continue;
                         if (!boneCalculated[boneIdx]) {
                             Vector3 worldPos = GetBoneWithRotation((long)staticMesh, boneIdx, RelativeScale3D);
-                            boneWorldPos[boneIdx] = worldPos;
                             boneScreenPos[boneIdx] = WorldToScreen(worldPos, POV, sw, sh);
-                            boneOccluded[boneIdx] = doOcclusion && AimAssist::IsPointOccluded(POV.Location, worldPos);
                             boneCalculated[boneIdx] = true;
-                            if (!hasVisibleBone && !boneOccluded[boneIdx]) {
-                                hasVisibleBone = true;
-                                firstVisibleBoneWorld = worldPos;
-                            }
                         }
                     }
                     int idxSta = skeletonList[bi][0];
                     int idxEnd = skeletonList[bi][1];
                     if (idxSta < 0 || idxSta >= kMaxBoneIdx || idxEnd < 0 || idxEnd >= kMaxBoneIdx) continue;
                     if (!boneCalculated[idxSta] || !boneCalculated[idxEnd]) continue;
-                    ImU32 segColor = (boneOccluded[idxSta] || boneOccluded[idxEnd]) ? 掩体颜色 : boneColor;
+                    // 整副骨架用头骨一次遮挡结果着色，不再对每节骨头 LineTrace
+                    ImU32 segColor = (doOcclusion && headOccluded) ? 掩体颜色 : boneColor;
                     Draw::DrawLine(ImVec2(boneScreenPos[idxSta].X, boneScreenPos[idxSta].Y),
                                    ImVec2(boneScreenPos[idxEnd].X, boneScreenPos[idxEnd].Y),
                                    segColor, 骨骼粗细);
                 }
-                if (!doOcclusion) {
-                    hasVisibleBone = true;
-                    firstVisibleBoneWorld = GetBoneWithRotation((long)staticMesh, 5, RelativeScale3D);
-                }
-            } else if (AimAssist::开启自瞄) {
+            }
+
+            if (AimAssist::开启自瞄) {
                 if (doOcclusion && boneCalculatedForOcclusion) {
-                    bool occluded = AimAssist::IsPointOccluded(POV.Location, cachedBoneWorld);
-                    hasVisibleBone = !occluded;
+                    hasVisibleBone = !headOccluded;
+                    firstVisibleBoneWorld = cachedBoneWorld;
+                } else if (boneCalculatedForOcclusion) {
+                    hasVisibleBone = true;
                     firstVisibleBoneWorld = cachedBoneWorld;
                 } else if (IsValidAddr(staticMesh)) {
                     hasVisibleBone = true;

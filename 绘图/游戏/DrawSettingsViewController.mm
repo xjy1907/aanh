@@ -173,7 +173,7 @@
     if ([row.key isEqualToString:@"drawDist"]) defV = 252;
     if ([row.key isEqualToString:@"behindDist"]) defV = 252;
     if ([row.key isEqualToString:@"boneDist"]) defV = 30;
-    if ([row.key isEqualToString:@"漏打距离"]) defV = 300;
+    if ([row.key isEqualToString:@"漏打距离"]) defV = 120;
     float cur = [self floatForKey:row.key def:defV];
 
     UILabel *val = [[UILabel alloc] init];

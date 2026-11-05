@@ -14,6 +14,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <thread>
+#include <atomic>
 #include <set>
 #include <numeric>
 #include <sstream>
@@ -1858,6 +1859,9 @@ inline void Throttler::executeTaskWithSleep(const std::string& taskName,std::chr
 }
 
 namespace VisibleCheck {
+    // 由 AimPhysX_SetSceneActive 控制；关模型渲染时线程只 sleep
+    inline std::atomic<bool> gPhysXSceneActive{false};
+
     //按范围更新场景
     inline void UpdateSceneByRange() {
         std::unordered_map<PrunerPayload, physx::PxTransform, PrunerPayloadHash> cache{};
@@ -1866,6 +1870,10 @@ namespace VisibleCheck {
         uint32_t lastUpdateTimestamp = 0;
         Throttler Throttlered;
         while (true) {
+            if (!gPhysXSceneActive.load(std::memory_order_acquire)) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+                continue;
+            }
             Throttlered.executeTaskWithSleep("UpdateSceneByRangeSleep", std::chrono::milliseconds(2000), [&cache, &currentSceneObjects, &lastUpdateTimestamp, &alwaysCheckShape] {
                 std::set<PrunerPayload> willRemoveObjects{};
                 auto Meshs = LoadShapeByRange(lastUpdateTimestamp,cache,currentSceneObjects,willRemoveObjects,alwaysCheckShape);
@@ -1881,6 +1889,10 @@ namespace VisibleCheck {
         uint32_t lastUpdateTimestamp = 0;
         Throttler Throttlered;
         while (true) {
+            if (!gPhysXSceneActive.load(std::memory_order_acquire)) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+                continue;
+            }
             Throttlered.executeTaskWithSleep("HeightFieldUpdateSleep", std::chrono::milliseconds(3000), [&UniqueSet, &HeightFieldSet, &HeightFieldSamplePtrSet, &lastUpdateTimestamp] {
                 std::set<uint64_t> RemoveHeightFieldKey{};
                 auto Meshs = RefreshDynamicLoadHeightField(lastUpdateTimestamp, UniqueSet,HeightFieldSet,HeightFieldSamplePtrSet,RemoveHeightFieldKey);
@@ -1895,7 +1907,12 @@ namespace VisibleCheck {
         std::unordered_map<PrunerPayload, uint64_t, PrunerPayloadHash> ptrCache{};
         std::set<PrunerPayload> currentSceneObjects{};
         while (true) {
-            Throttlered.executeTaskWithSleep("DynamicRigidUpdateSleep", std::chrono::milliseconds(300), [&currentSceneObjects, &cache, &ptrCache] {
+            if (!gPhysXSceneActive.load(std::memory_order_acquire)) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+                continue;
+            }
+            // 原 300ms 过密，真实网格下易顶满 CPU；降到 1000ms
+            Throttlered.executeTaskWithSleep("DynamicRigidUpdateSleep", std::chrono::milliseconds(1000), [&currentSceneObjects, &cache, &ptrCache] {
                 std::set<PrunerPayload> willRemoveShape{};
                 auto Meshs = LoadDynamicRigidShape(currentSceneObjects,cache,ptrCache,willRemoveShape);
                 if (!Meshs.empty() || !willRemoveShape.empty()) DynamicRigidScene->UpdateMesh(Meshs, willRemoveShape);

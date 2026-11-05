@@ -120,8 +120,12 @@ static NSInteger JVR_读取DrawFps(void) {
     id cached = JVR_开关缓存()[@"drawFps"];
     if (cached != nil) return JVR_规范化DrawFps([cached integerValue]);
     NSDictionary *cfg = NHPrefsRead();
-    NSInteger fps = (cfg && cfg[@"drawFps"] != nil) ? [cfg[@"drawFps"] integerValue] : 60;
-    fps = JVR_规范化DrawFps(fps);
+    // 未配置时默认 60 并落盘，避免跟屏刷把 CPU 顶满
+    if (!cfg || cfg[@"drawFps"] == nil) {
+        JVR_保存DrawFps(60);
+        return 60;
+    }
+    NSInteger fps = JVR_规范化DrawFps([cfg[@"drawFps"] integerValue]);
     JVR_开关缓存()[@"drawFps"] = @(fps);
     return fps;
 }

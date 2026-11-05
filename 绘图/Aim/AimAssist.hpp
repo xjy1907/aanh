@@ -19,7 +19,7 @@ inline bool 开启自瞄 = false;
 inline bool 自瞄连线 = false;
 inline bool 显示范围 = false;
 inline bool 模型渲染 = false;
-inline float 漏打距离 = 300.f;
+inline float 漏打距离 = 120.f; // 默认 120（过大则 PhysX 射线/网格负载暴涨）
 inline float 自瞄速度 = 26.f;
 inline float 自瞄大小 = 60.f;
 inline float 开镜自瞄大小 = 40.f;
@@ -151,7 +151,7 @@ inline void LoadFromPrefs(NSDictionary *cfg) {
     自瞄连线 = PrefBool(cfg, @"自瞄连线", false);
     显示范围 = PrefBool(cfg, @"显示范围", false);
     模型渲染 = PrefBool(cfg, @"模型渲染", false);
-    漏打距离 = PrefFloat(cfg, @"漏打距离", 300.f);
+    漏打距离 = PrefFloat(cfg, @"漏打距离", 120.f);
     // 触摸标识符：优先 drx 旁路（跨进程），与 qwer plist SID 同角色
     id sidObj = cfg[@"TouchSenderID"];
     if (sidObj != nil) {
@@ -205,6 +205,8 @@ inline void EnsureTouchInit(float screenW, float screenH) {
 }
 
 inline void EnsurePhysX(uint64_t moduleBase) {
+    // 关模型渲染：后台场景线程进入闲置 sleep，避免空转占满 CPU
+    AimPhysX_SetSceneActive(模型渲染);
     if (!模型渲染) return;
     if (moduleBase == 0) return;
     AimPhysX_SetModuleBase(moduleBase);
