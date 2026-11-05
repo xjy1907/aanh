@@ -115,6 +115,7 @@
     [self mkSwitch:@"开启自瞄" key:@"开启自瞄" subtitle:nil],
     [self mkSwitch:@"自瞄连线" key:@"自瞄连线" subtitle:nil],
     [self mkSwitch:@"显示范围" key:@"显示范围" subtitle:nil],
+    [self mkSwitch:@"悬浮球" key:@"悬浮球" subtitle:@"HUD 自瞄快捷悬浮球显示（默认开）"],
     [self mkSlider:@"悬浮球大小" key:@"悬浮球大小" subtitle:@"自瞄快捷悬浮球直径（长按切换开关）"
                min:28 max:96 step:1 scale:0],
     [self mkSlider:@"自瞄速度" key:@"自瞄速度" subtitle:@"数值越大速度越慢"
@@ -173,6 +174,7 @@
   dispatch_once(&once, ^{
     defs = @{
       @"开启自瞄": @0, @"自瞄连线": @0, @"显示范围": @0,
+      @"悬浮球": @1,
       @"悬浮球大小": @48, @"自瞄速度": @26,
       @"抖动幅度": @5, @"抖动频率": @10, @"抖动波动": @1,
       @"显示触摸区域": @0,

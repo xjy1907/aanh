@@ -13,6 +13,7 @@
 static NSString * const kAimFloatSideKey = @"aanh.aimfloat.side"; // 1=左 2=右
 static NSString * const kAimFloatRelYKey = @"aanh.aimfloat.relY";
 static NSString * const kAimFloatSizeKey = @"悬浮球大小";
+static NSString * const kAimFloatEnableKey = @"悬浮球";
 
 @interface AimPassThroughView : UIView
 @end
@@ -158,6 +159,7 @@ static NSString * const kAimFloatSizeKey = @"悬浮球大小";
 
     [self.overlayView addSubview:self.aimButton];
     [self refreshAimButtonAppearance];
+    [self applyFloatBallVisibility];
 }
 
 - (void)setupOrientationObserver {
@@ -263,7 +265,34 @@ static NSString * const kAimFloatSizeKey = @"悬浮球大小";
     [self applyAppearanceForEnabled:on];
 }
 
+- (BOOL)isFloatBallEnabled {
+    NSDictionary *settings = NHPrefsRead();
+    if (settings[kAimFloatEnableKey] != nil) {
+        return [settings[kAimFloatEnableKey] boolValue];
+    }
+    if ([[NSUserDefaults standardUserDefaults] objectForKey:kAimFloatEnableKey]) {
+        return [[NSUserDefaults standardUserDefaults] boolForKey:kAimFloatEnableKey];
+    }
+    return YES; // 默认开
+}
+
+- (void)applyFloatBallVisibility {
+    BOOL on = [self isFloatBallEnabled];
+    self.aimButton.hidden = !on;
+    self.aimButton.userInteractionEnabled = on;
+    UIWindow *win = self.view.window;
+    if (!win) return;
+    BOOL wantHidden = !on;
+    if (win.hidden == wantHidden) return;
+    win.hidden = wantHidden;
+    if (on) {
+        [win makeKeyAndVisible];
+    }
+}
+
 - (void)onSyncTick {
+    [self applyFloatBallVisibility];
+    if (![self isFloatBallEnabled]) return;
     [self applyButtonSize:[self loadButtonSize]];
     [self refreshAimButtonAppearance];
 }
