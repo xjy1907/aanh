@@ -227,10 +227,12 @@ static inline NSArray<NSString *> *NHDrawExtrasKeys(void) {
         @"内圈大小", @"显示内圈",
         @"烟雾不瞄", @"烟雾范围",
         @"自瞄距离", @"腰射距离", @"压枪力度",
-        @"自瞄血量", @"满血距离",
+        @"自瞄血量", @"满血距离", @"自瞄曲线",
         // —— 实验-拟人自瞄（外强内柔 / 距离衰减）——
         @"吸附曲线", @"外圈速度", @"内圈速度", @"变速过渡宽",
         @"距离衰减", @"衰减起点", @"衰减终点", @"远端拉力",
+        // —— ESP 默认开关迁移标记 ——
+        @"espDefaultsV1",
         @"TouchSenderID", @"TouchSenderIDHex",
     ];
 }
@@ -418,8 +420,25 @@ static inline void NHPrefsWrite(NSDictionary *cfg) {
     [merged writeToFile:path atomically:YES];
 }
 
+/// 人数/血量/信息/距离/手持/背敌/骨骼默认开（一次性迁移，UI 与绘制进程共用）
+static inline void NHEnsureEspDefaultsOnce(void) {
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        NSDictionary *extras = NHDrawExtrasRead();
+        if (extras[@"espDefaultsV1"] != nil) return;
+        NSMutableDictionary *patch = [NSMutableDictionary dictionaryWithDictionary:@{
+            @"count": @YES, @"health": @YES, @"info": @YES,
+            @"dist": @YES, @"weapon": @YES, @"behind": @YES, @"bone": @YES,
+            @"espDefaultsV1": @1,
+        }];
+        // 写入 drx + 发布 notify 位，保证开关 UI 与绘制读到一致
+        NHPrefsWrite(patch);
+    });
+}
+
 /// 读配置：notify/磁盘开关 + 始终合并 drx 扩展项（样式/距离/fps）
 static inline NSDictionary *NHPrefsRead(void) {
+    NHEnsureEspDefaultsOnce();
     NSMutableDictionary *out = nil;
     if (NHPersistFilesEnabled()) {
         NSDictionary *disk = [NSDictionary dictionaryWithContentsOfFile:NHPrefsPath()];

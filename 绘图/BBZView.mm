@@ -80,7 +80,19 @@ static void JVR_保存开关(NSString* key, BOOL val) {
     NHPrefsWrite(cfg);
 }
 
+static BOOL JVR_开关默认开(NSString *key) {
+    // 默认开启：人数/血量/信息/距离/手持/背敌/骨骼（与 NHEnsureEspDefaultsOnce 一致）
+    return [key isEqualToString:@"count"] ||
+           [key isEqualToString:@"health"] ||
+           [key isEqualToString:@"info"] ||
+           [key isEqualToString:@"dist"] ||
+           [key isEqualToString:@"weapon"] ||
+           [key isEqualToString:@"behind"] ||
+           [key isEqualToString:@"bone"];
+}
+
 static BOOL JVR_读取开关(NSString* key) {
+    // NHPrefsRead 内会一次性把 ESP 默认开写入 notify/drx，开关 UI 随之显示开
     NSDictionary *cfg = NHPrefsRead();
     if (!cfg) {
         NSMutableDictionary *cached = JVR_开关缓存();
@@ -88,11 +100,15 @@ static BOOL JVR_读取开关(NSString* key) {
             NHPrefsWrite(cached);
         }
         if ([key isEqualToString:@"persist"]) return NO; // 默认关
-        return [[cached objectForKey:key] boolValue];
+        id cachedVal = [cached objectForKey:key];
+        if (cachedVal != nil) return [cachedVal boolValue];
+        return JVR_开关默认开(key);
     }
     BOOL v;
     if ([key isEqualToString:@"persist"]) {
         v = cfg[@"persist"] != nil ? [cfg[@"persist"] boolValue] : NO;
+    } else if (cfg[key] == nil) {
+        v = JVR_开关默认开(key);
     } else {
         v = [[cfg objectForKey:key] boolValue];
     }

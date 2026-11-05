@@ -29,6 +29,8 @@ inline float 腰射距离 = 30.f;
 inline float 压枪力度 = 0.5f;   // 存储 UI/10
 inline float 自瞄血量 = 100.f;
 inline float 满血距离 = 50.f;
+// 0=初始曲线（线性拉枪），1=贝塞尔主路径（缓动+惯性+目标冻结+轻微弧线）
+inline int 自瞄曲线 = 0;
 inline bool 烟雾不瞄 = false;
 inline float 烟雾范围 = 15.f;
 inline bool 开启动态圈 = false;
@@ -69,6 +71,22 @@ inline float 动态圈上一帧偏移 = 0.f;
 inline bool kaishchumo = false;
 inline Vector2 nextPoint;
 inline bool 触摸系统已初始化 = false;
+
+// 贝塞尔主拉枪运行态（与微抖贝塞尔独立）
+struct PullCurveState {
+    float t;
+    float step;
+    int duration;
+    Vector2 frozenRel;   // 冻结的屏幕误差（目标相对准心）
+    Vector2 vel;         // 惯性速度（像素/帧）
+    uint64_t frozenActor;
+    bool active;
+};
+inline PullCurveState _pullCurve = {};
+
+inline void ResetPullCurveState() {
+    memset(&_pullCurve, 0, sizeof(_pullCurve));
+}
 
 inline uint64_t 选中敌人Actor = 0;
 inline Vector3 选中敌人瞄准点;
@@ -184,6 +202,8 @@ inline void LoadFromPrefs(NSDictionary *cfg) {
     压枪力度 = PrefFloat(cfg, @"压枪力度", 5.f) / 10.f;
     自瞄血量 = PrefFloat(cfg, @"自瞄血量", 100.f);
     满血距离 = PrefFloat(cfg, @"满血距离", 50.f);
+    自瞄曲线 = (int)PrefFloat(cfg, @"自瞄曲线", 0.f);
+    if (自瞄曲线 < 0 || 自瞄曲线 > 1) 自瞄曲线 = 0;
     烟雾不瞄 = PrefBool(cfg, @"烟雾不瞄", false);
     烟雾范围 = PrefFloat(cfg, @"烟雾范围", 15.f);
     开启动态圈 = PrefBool(cfg, @"动态圈", false);
@@ -372,8 +392,63 @@ inline void ConsiderTarget(uint64_t actor, float distance, float Health, bool bI
 inline void EndTouchIfNeeded(float sw, float sh) {
     if (!kaishchumo) return;
     kaishchumo = false;
+    ResetPullCurveState();
     Vector2 hha = 标准化坐标(sw, sh, nextPoint);
     touchEnd(10, hha.X, hha.Y);
+}
+
+// 贝塞尔主路径：短时冻结目标误差，按段缓动推进，叠惯性与轻微弧线
+inline Vector2 ComputeBezierPullOffset(Vector2 liveRel, uint64_t actor, float effectiveDiv) {
+    float errLen = sqrtf(liveRel.X * liveRel.X + liveRel.Y * liveRel.Y);
+    float fdx = liveRel.X - _pullCurve.frozenRel.X;
+    float fdy = liveRel.Y - _pullCurve.frozenRel.Y;
+    float frozenDrift = sqrtf(fdx * fdx + fdy * fdy);
+    bool actorChanged = (_pullCurve.frozenActor != 0 && actor != 0 && _pullCurve.frozenActor != actor);
+    bool driftTooFar = (errLen > 1.f && frozenDrift > fmaxf(28.f, errLen * 0.45f));
+    bool needReplan = !_pullCurve.active ||
+                      _pullCurve.t >= 1.f ||
+                      _pullCurve.duration <= 0 ||
+                      actorChanged ||
+                      driftTooFar;
+    if (needReplan) {
+        _pullCurve.frozenRel = liveRel;
+        _pullCurve.frozenActor = actor;
+        _pullCurve.duration = 10 + (int)(arc4random() % 9); // 10~18 帧一段
+        _pullCurve.t = 0.f;
+        _pullCurve.step = 1.f / (float)_pullCurve.duration;
+        _pullCurve.active = true;
+    }
+
+    float t0 = _pullCurve.t;
+    float t1 = fminf(t0 + _pullCurve.step, 1.f);
+    // 缓出：段内已消化误差比例（0→1），P1/P2 固定成 ease-out 形状
+    float e0 = _evalBezier(t0, 0.35f, 0.85f, 1.f);
+    float e1 = _evalBezier(t1, 0.35f, 0.85f, 1.f);
+    float de = e1 - e0;
+    Vector2 base( _pullCurve.frozenRel.X * de, _pullCurve.frozenRel.Y * de );
+
+    // 按自瞄速度量级缩放：effectiveDiv 越大步进越慢
+    float scale = 1.f / fmaxf(effectiveDiv * 0.08f, 0.35f);
+    base.X *= scale;
+    base.Y *= scale;
+
+    // 轻微弧线：误差法向，中段最大
+    float fl = sqrtf(_pullCurve.frozenRel.X * _pullCurve.frozenRel.X +
+                     _pullCurve.frozenRel.Y * _pullCurve.frozenRel.Y);
+    if (fl > 1.f) {
+        Vector2 perp(-_pullCurve.frozenRel.Y / fl, _pullCurve.frozenRel.X / fl);
+        float arcAmp = fminf(7.f, fl * 0.07f);
+        float arc = sinf(t0 * 3.14159265f) * arcAmp * _pullCurve.step;
+        base.X += perp.X * arc;
+        base.Y += perp.Y * arc;
+    }
+
+    // 惯性：速度平滑跟踪本段期望位移
+    _pullCurve.vel.X = _pullCurve.vel.X * 0.72f + base.X * 0.38f;
+    _pullCurve.vel.Y = _pullCurve.vel.Y * 0.72f + base.Y * 0.38f;
+
+    _pullCurve.t = t1;
+    return _pullCurve.vel;
 }
 
 inline void zimiao(Vector3 aimpos, uint64_t player, uint64_t Character, const CoViewInfo &POV,
@@ -408,6 +483,7 @@ inline void zimiao(Vector3 aimpos, uint64_t player, uint64_t Character, const Co
 
         if (!kaishchumo) {
             kaishchumo = true;
+            ResetPullCurveState();
             float 区域中心X = sw / 2.f + 触摸区域X;
             float 区域中心Y = sh / 2.f + 触摸区域Y;
             float 随机X偏移 = ((float)rand() / RAND_MAX - 0.5f) * 触摸区域宽度;
@@ -432,7 +508,12 @@ inline void zimiao(Vector3 aimpos, uint64_t player, uint64_t Character, const Co
             }
             // Vector2 仅有 operator/(float)，无 operator*(float)
             float effectiveDiv = (pullScale > 1e-6f) ? (speedDiv / pullScale) : 1e6f;
-            Vector2 offset = relativePoint / effectiveDiv;
+            Vector2 offset;
+            if (自瞄曲线 == 1) {
+                offset = ComputeBezierPullOffset(relativePoint, player, effectiveDiv);
+            } else {
+                offset = relativePoint / effectiveDiv;
+            }
             Vector2 targetPoint = nextPoint + offset;
             nextPoint.X = fminf(fmaxf(nextPoint.X + (targetPoint.X - nextPoint.X), 0.f), sw);
             nextPoint.Y = fminf(fmaxf(nextPoint.Y + (targetPoint.Y - nextPoint.Y), 0.f), sh);
