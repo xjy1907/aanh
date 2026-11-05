@@ -3,7 +3,6 @@
 //
 
 #import "AimConfigViewController.h"
-#import "AimHumanizeConfigViewController.h"
 #import "NHIdentity.h"
 #import "LFSenderIDViewController.h"
 
@@ -113,7 +112,6 @@
   // 对标 qwer MainRootViewController 自瞄功能分类全部项
   self.rows = @[
     [self mkAction:@"标识符管理" key:@"__open_sender_id__" subtitle:@"点击进入标识符获取界面"],
-    [self mkAction:@"实验-拟人自瞄" key:@"__open_humanize__" subtitle:@"外强内柔变速拉力与距离衰减（默认关，可与旧算法对比）"],
     [self mkSwitch:@"开启自瞄" key:@"开启自瞄" subtitle:nil],
     [self mkSwitch:@"自瞄连线" key:@"自瞄连线" subtitle:nil],
     [self mkSwitch:@"显示范围" key:@"显示范围" subtitle:nil],
@@ -248,25 +246,21 @@
   }
 
   if (row.kind == 2) {
+    // 标识符管理
+    long long sid = 0;
+    id sidVal = self.prefs[@"TouchSenderID"];
+    if ([sidVal respondsToSelector:@selector(longLongValue)]) sid = [sidVal longLongValue];
+    if (sid == 0) {
+      NSNumber *icloud = [[NSUbiquitousKeyValueStore defaultStore] objectForKey:@"TouchSenderID"];
+      if (icloud) sid = [icloud longLongValue];
+    }
     UILabel *detail = [[UILabel alloc] init];
     detail.translatesAutoresizingMaskIntoConstraints = NO;
     detail.textColor = [UIColor colorWithWhite:0.7 alpha:1];
     detail.font = [UIFont monospacedDigitSystemFontOfSize:11 weight:UIFontWeightRegular];
+    detail.text = sid ? [NSString stringWithFormat:@"已设置: 0x%llX", (unsigned long long)sid]
+                      : @"点击进入标识符获取界面";
     detail.tag = 4000 + indexPath.row;
-    if ([row.key isEqualToString:@"__open_humanize__"]) {
-      detail.text = row.subtitle.length ? row.subtitle : @"点击进入实验页";
-    } else {
-      // 标识符管理
-      long long sid = 0;
-      id sidVal = self.prefs[@"TouchSenderID"];
-      if ([sidVal respondsToSelector:@selector(longLongValue)]) sid = [sidVal longLongValue];
-      if (sid == 0) {
-        NSNumber *icloud = [[NSUbiquitousKeyValueStore defaultStore] objectForKey:@"TouchSenderID"];
-        if (icloud) sid = [icloud longLongValue];
-      }
-      detail.text = sid ? [NSString stringWithFormat:@"已设置: 0x%llX", (unsigned long long)sid]
-                        : @"点击进入标识符获取界面";
-    }
     [cell.contentView addSubview:detail];
     cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     cell.selectionStyle = UITableViewCellSelectionStyleGray;
@@ -378,11 +372,6 @@
   [tableView deselectRowAtIndexPath:indexPath animated:YES];
   AimRow *row = self.rows[indexPath.row];
   if (row.kind != 2) return;
-  if ([row.key isEqualToString:@"__open_humanize__"]) {
-    AimHumanizeConfigViewController *vc = [AimHumanizeConfigViewController new];
-    [self.navigationController pushViewController:vc animated:YES];
-    return;
-  }
   LFSenderIDViewController *vc = [LFSenderIDViewController new];
   [self.navigationController pushViewController:vc animated:YES];
 }
