@@ -48,6 +48,16 @@ inline float 抖动幅度 = 0.5f;  // UI/10
 inline float 抖动频率 = 0.1f;  // UI/100（保留字段）
 inline float 抖动波动 = 0.01f; // UI/100（保留字段）
 
+// --- 实验：拟人自瞄（外强内柔 + 距离衰减；默认关=旧线性）---
+inline bool 吸附曲线 = false;
+inline float 外圈速度 = 26.f;   // 偏心大时除数，越小越快
+inline float 内圈速度 = 40.f;   // 靠近内圈时除数，越大越柔
+inline float 变速过渡宽 = 15.f; // 外→内平滑过渡像素宽
+inline bool 距离衰减 = false;
+inline float 衰减起点 = 30.f;   // 米；<此距离拉力≈1
+inline float 衰减终点 = 100.f;  // 米；≥此距离拉力降到远端拉力
+inline float 远端拉力 = 0.35f;  // 存储 UI/100
+
 inline float 当前自瞄大小 = 60.f;
 inline float 当前自瞄距离 = 100.f;
 inline bool 当前开镜中 = false;
@@ -192,6 +202,48 @@ inline void LoadFromPrefs(NSDictionary *cfg) {
     抖动幅度 = PrefFloat(cfg, @"抖动幅度", 5.f) / 10.f;
     抖动频率 = PrefFloat(cfg, @"抖动频率", 10.f) / 100.f;
     抖动波动 = PrefFloat(cfg, @"抖动波动", 1.f) / 100.f;
+    吸附曲线 = PrefBool(cfg, @"吸附曲线", false);
+    外圈速度 = PrefFloat(cfg, @"外圈速度", 26.f);
+    内圈速度 = PrefFloat(cfg, @"内圈速度", 40.f);
+    变速过渡宽 = PrefFloat(cfg, @"变速过渡宽", 15.f);
+    距离衰减 = PrefBool(cfg, @"距离衰减", false);
+    衰减起点 = PrefFloat(cfg, @"衰减起点", 30.f);
+    衰减终点 = PrefFloat(cfg, @"衰减终点", 100.f);
+    远端拉力 = PrefFloat(cfg, @"远端拉力", 35.f) / 100.f;
+}
+
+// 外强内柔除数：屏幕偏心大→外圈速度；靠近内圈→内圈速度
+inline float ComputeAdsorbSpeedDiv(float screenOff) {
+    float outerR = fmaxf(当前自瞄大小, 1.f);
+    float innerR = fminf(fmaxf(内圈大小, 0.f), outerR);
+    // 内圈关闭时用外圈 25% 作软区起点，避免变速失效
+    float softStart = (innerR > 0.f) ? innerR : (outerR * 0.25f);
+    float softEnd = softStart + fmaxf(变速过渡宽, 0.f);
+    if (softEnd > outerR) softEnd = outerR;
+    float span = softEnd - softStart;
+    float u;
+    if (span <= 0.5f) {
+        u = (screenOff > softStart) ? 1.f : 0.f;
+    } else {
+        u = (screenOff - softStart) / span;
+        if (u < 0.f) u = 0.f;
+        else if (u > 1.f) u = 1.f;
+    }
+    // u=0 贴内圈→内圈速度；u=1 靠外→外圈速度
+    float outSp = fmaxf(外圈速度, 1.f);
+    float inSp = fmaxf(内圈速度, 1.f);
+    return inSp + (outSp - inSp) * u;
+}
+
+// 距离衰减倍率（选中敌人距离单位：米）
+inline float ComputeDistancePullScale(float distMeters) {
+    float start = fmaxf(衰减起点, 0.f);
+    float end = fmaxf(衰减终点, start + 0.1f);
+    float farK = fminf(fmaxf(远端拉力, 0.f), 1.f);
+    if (distMeters <= start) return 1.f;
+    if (distMeters >= end) return farK;
+    float t = (distMeters - start) / (end - start);
+    return 1.f + (farK - 1.f) * t;
 }
 
 inline void EnsureTouchInit(float screenW, float screenH) {
@@ -368,7 +420,17 @@ inline void zimiao(Vector3 aimpos, uint64_t player, uint64_t Character, const Co
             _jitterState.by_t = 1.f;
         } else {
             Vector2 prevPoint = nextPoint;
-            Vector2 offset = relativePoint / 自瞄速度;
+            float speedDiv = fmaxf(自瞄速度, 1.f);
+            float pullScale = 1.f;
+            if (吸附曲线) {
+                float screenOff = sqrtf(relativePoint.X * relativePoint.X +
+                                        relativePoint.Y * relativePoint.Y);
+                speedDiv = ComputeAdsorbSpeedDiv(screenOff);
+                if (距离衰减) {
+                    pullScale = ComputeDistancePullScale(选中敌人距离);
+                }
+            }
+            Vector2 offset = relativePoint / speedDiv * pullScale;
             Vector2 targetPoint = nextPoint + offset;
             nextPoint.X = fminf(fmaxf(nextPoint.X + (targetPoint.X - nextPoint.X), 0.f), sw);
             nextPoint.Y = fminf(fmaxf(nextPoint.Y + (targetPoint.Y - nextPoint.Y), 0.f), sh);
