@@ -35,6 +35,8 @@ inline bool 开启动态圈 = false;
 inline bool 开启开镜动态圈 = false;
 inline float 动态圈最小 = 20.f;
 inline float 动态圈速度 = 12.f;
+// 0=固定步长（对标 qwer acf6bef），1=指数平滑（当前默认）
+inline int 动态圈插值方式 = 1;
 inline float 内圈大小 = 0.f;
 inline bool 显示内圈 = false;
 inline bool 显示触摸区域 = false;
@@ -178,6 +180,8 @@ inline void LoadFromPrefs(NSDictionary *cfg) {
     开启开镜动态圈 = PrefBool(cfg, @"开镜动态圈", false);
     动态圈最小 = PrefFloat(cfg, @"动态圈最小", 20.f);
     动态圈速度 = PrefFloat(cfg, @"动态圈速度", 12.f);
+    动态圈插值方式 = (int)PrefFloat(cfg, @"动态圈插值方式", 1.f);
+    if (动态圈插值方式 < 0 || 动态圈插值方式 > 1) 动态圈插值方式 = 1;
     内圈大小 = PrefFloat(cfg, @"内圈大小", 0.f);
     显示内圈 = PrefBool(cfg, @"显示内圈", false);
     显示触摸区域 = PrefBool(cfg, @"显示触摸区域", false);
@@ -260,14 +264,28 @@ inline void UpdateAimMode(uint64_t character, float dt) {
     if (本模式动态圈) {
         float 目标半径 = 最大圈;
         if (动态圈上一帧有锁) {
+            // t=1 在最大圈边沿，t=0 在准心；半径 = 最小 + t*(最大-最小)
             float t = 最大圈 > 0.f ? fminf(fmaxf(动态圈上一帧偏移 / 最大圈, 0.f), 1.f) : 1.f;
             目标半径 = 最小圈 + t * (最大圈 - 最小圈);
+        } else {
+            目标半径 = 最大圈; // 无锁人：扩回最大，方便从边沿捞人
         }
-        if (dt <= 0.f || dt > 0.1f) dt = 1.f / 60.f;
-        float rate = fmaxf(动态圈速度, 0.5f);
-        float alpha = 1.f - expf(-rate * dt);
-        alpha = fminf(fmaxf(alpha, 0.f), 1.f);
-        动态圈当前半径 = 动态圈当前半径 + (目标半径 - 动态圈当前半径) * alpha;
+        if (动态圈插值方式 == 0) {
+            // 固定步长（对标 qwer acf6bef）：每帧按像素硬步进
+            float step = fmaxf(动态圈速度, 0.1f);
+            if (动态圈当前半径 < 目标半径) {
+                动态圈当前半径 = fminf(动态圈当前半径 + step, 目标半径);
+            } else {
+                动态圈当前半径 = fmaxf(动态圈当前半径 - step, 目标半径);
+            }
+        } else {
+            // 指数平滑：跟帧时间，避免固定步长造成一顿一顿
+            if (dt <= 0.f || dt > 0.1f) dt = 1.f / 60.f;
+            float rate = fmaxf(动态圈速度, 0.5f);
+            float alpha = 1.f - expf(-rate * dt);
+            alpha = fminf(fmaxf(alpha, 0.f), 1.f);
+            动态圈当前半径 = 动态圈当前半径 + (目标半径 - 动态圈当前半径) * alpha;
+        }
         动态圈当前半径 = fminf(fmaxf(动态圈当前半径, 最小圈), 最大圈);
         当前自瞄大小 = 动态圈当前半径;
     } else {

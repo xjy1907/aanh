@@ -10,9 +10,10 @@
 @property (nonatomic, copy) NSString *title;
 @property (nonatomic, copy) NSString *subtitle;
 @property (nonatomic, copy) NSString *key;
-@property (nonatomic, assign) NSInteger kind; // 0 switch 1 slider int 2 action
+@property (nonatomic, assign) NSInteger kind; // 0 switch 1 slider int 2 action 3 segment
 @property (nonatomic, assign) float minV, maxV, step;
 @property (nonatomic, assign) float scale; // UI 值 → 存储：实际 = UI / scale（0 表示原样）
+@property (nonatomic, copy) NSArray<NSString *> *options;
 @end
 @implementation AimRow
 @end
@@ -101,6 +102,12 @@
   return r;
 }
 
+- (AimRow *)mkSeg:(NSString *)title key:(NSString *)key subtitle:(NSString *)sub options:(NSArray<NSString *> *)opts {
+  AimRow *r = [AimRow new];
+  r.title = title; r.key = key; r.subtitle = sub; r.options = opts; r.kind = 3;
+  return r;
+}
+
 - (void)buildRows {
   // 对标 qwer MainRootViewController 自瞄功能分类全部项
   self.rows = @[
@@ -132,8 +139,11 @@
     [self mkSwitch:@"动态圈" key:@"动态圈" subtitle:@"腰射：按准心距离线性缩扩，边沿最大、贴脸最小"],
     [self mkSlider:@"动态圈最小" key:@"动态圈最小" subtitle:@"准心对准敌人时圆圈缩到的最小值（可为0，腰射开镜共用）"
                min:0 max:150 step:1 scale:0],
-    [self mkSlider:@"动态圈速度" key:@"动态圈速度" subtitle:@"指数平滑响应，越大跟得越快（更丝滑）"
+    [self mkSlider:@"动态圈速度" key:@"动态圈速度" subtitle:@"固定步长=每帧像素；指数平滑=响应快慢，越大越快"
                min:1 max:30 step:1 scale:0],
+    [self mkSeg:@"动态圈插值方式" key:@"动态圈插值方式"
+       subtitle:@"固定步长对标旧版硬步进；指数平滑更丝滑（默认）"
+        options:@[@"固定步长", @"指数平滑"]],
     [self mkSlider:@"开镜自瞄范围" key:@"开镜自瞄范围" subtitle:@"开镜时自瞄圆圈的最大半径"
                min:10 max:250 step:1 scale:0],
     [self mkSwitch:@"开镜动态圈" key:@"开镜动态圈" subtitle:@"开镜时同样按准心距离动态缩扩（共用最小/速度）"],
@@ -169,6 +179,7 @@
       @"触摸区域宽度": @120, @"触摸区域高度": @60,
       @"触摸区域X": @0, @"触摸区域Y": @0,
       @"自瞄大小": @60, @"动态圈": @0, @"动态圈最小": @20, @"动态圈速度": @12,
+      @"动态圈插值方式": @1,
       @"开镜自瞄范围": @40, @"开镜动态圈": @0, @"显示开镜自瞄范围": @0,
       @"内圈大小": @0, @"显示内圈": @0,
       @"烟雾不瞄": @0, @"烟雾范围": @15,
@@ -258,6 +269,38 @@
       [detail.topAnchor constraintEqualToAnchor:title.bottomAnchor constant:6],
       [detail.trailingAnchor constraintEqualToAnchor:cell.contentView.trailingAnchor constant:-36],
     ]];
+  } else if (row.kind == 3) {
+    UISegmentedControl *seg = [[UISegmentedControl alloc] initWithItems:row.options];
+    seg.translatesAutoresizingMaskIntoConstraints = NO;
+    NSInteger cur = (NSInteger)lroundf([self floatForKey:row.key]);
+    if (cur < 0 || cur >= (NSInteger)row.options.count) cur = (NSInteger)lroundf([self defaultForKey:row.key]);
+    if (cur < 0 || cur >= (NSInteger)row.options.count) cur = 0;
+    seg.selectedSegmentIndex = cur;
+    if (@available(iOS 13.0, *)) {
+      seg.selectedSegmentTintColor = [cyan colorWithAlphaComponent:0.45];
+      [seg setTitleTextAttributes:@{NSForegroundColorAttributeName:[UIColor whiteColor]} forState:UIControlStateNormal];
+    }
+    seg.tag = 5000 + indexPath.row;
+    [seg addTarget:self action:@selector(onSeg:) forControlEvents:UIControlEventValueChanged];
+    [cell.contentView addSubview:seg];
+    NSMutableArray *cs = [NSMutableArray arrayWithArray:@[
+      [title.leadingAnchor constraintEqualToAnchor:cell.contentView.leadingAnchor constant:14],
+      [title.topAnchor constraintEqualToAnchor:cell.contentView.topAnchor constant:6],
+      [title.trailingAnchor constraintEqualToAnchor:cell.contentView.trailingAnchor constant:-14],
+      [seg.leadingAnchor constraintEqualToAnchor:cell.contentView.leadingAnchor constant:14],
+      [seg.trailingAnchor constraintEqualToAnchor:cell.contentView.trailingAnchor constant:-14],
+      [seg.bottomAnchor constraintEqualToAnchor:cell.contentView.bottomAnchor constant:-6],
+      [seg.heightAnchor constraintEqualToConstant:28],
+    ]];
+    if (sub) {
+      [cs addObject:[sub.leadingAnchor constraintEqualToAnchor:title.leadingAnchor]];
+      [cs addObject:[sub.topAnchor constraintEqualToAnchor:title.bottomAnchor constant:1]];
+      [cs addObject:[sub.trailingAnchor constraintEqualToAnchor:cell.contentView.trailingAnchor constant:-14]];
+      [cs addObject:[seg.topAnchor constraintGreaterThanOrEqualToAnchor:sub.bottomAnchor constant:4]];
+    } else {
+      [cs addObject:[seg.topAnchor constraintGreaterThanOrEqualToAnchor:title.bottomAnchor constant:6]];
+    }
+    [NSLayoutConstraint activateConstraints:cs];
   } else if (row.kind == 0) {
     UISwitch *sw = [[UISwitch alloc] init];
     sw.translatesAutoresizingMaskIntoConstraints = NO;
@@ -336,6 +379,13 @@
   if (row < 0 || row >= (NSInteger)self.rows.count) return;
   AimRow *r = self.rows[row];
   [self saveKey:r.key value:@(sw.on)];
+}
+
+- (void)onSeg:(UISegmentedControl *)seg {
+  NSInteger row = seg.tag - 5000;
+  if (row < 0 || row >= (NSInteger)self.rows.count) return;
+  AimRow *r = self.rows[row];
+  [self saveKey:r.key value:@(seg.selectedSegmentIndex)];
 }
 
 - (void)onSlider:(UISlider *)sl {
