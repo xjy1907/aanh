@@ -430,7 +430,9 @@ inline void zimiao(Vector3 aimpos, uint64_t player, uint64_t Character, const Co
                     pullScale = ComputeDistancePullScale(选中敌人距离);
                 }
             }
-            Vector2 offset = relativePoint / speedDiv * pullScale;
+            // Vector2 仅有 operator/(float)，无 operator*(float)
+            float effectiveDiv = (pullScale > 1e-6f) ? (speedDiv / pullScale) : 1e6f;
+            Vector2 offset = relativePoint / effectiveDiv;
             Vector2 targetPoint = nextPoint + offset;
             nextPoint.X = fminf(fmaxf(nextPoint.X + (targetPoint.X - nextPoint.X), 0.f), sw);
             nextPoint.Y = fminf(fmaxf(nextPoint.Y + (targetPoint.Y - nextPoint.Y), 0.f), sh);
