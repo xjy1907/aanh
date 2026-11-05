@@ -1,21 +1,23 @@
 //
-//  DrawSettingsViewController.mm — 绘制设置（对标 wasd/qwer，含漏打距离）
+//  DrawSettingsViewController.mm — 绘制设置（对标 wasd/qwer，含颜色与漏打距离）
 //
 
 #import "DrawSettingsViewController.h"
 #import "NHIdentity.h"
+#import <objc/runtime.h>
 
 @interface DSRow : NSObject
 @property (nonatomic, copy) NSString *title;
 @property (nonatomic, copy) NSString *key;
-@property (nonatomic, assign) NSInteger kind; // 0 slider float 1 slider int 2 segment
+@property (nonatomic, assign) NSInteger kind; // 0 slider float 1 slider int 2 segment 3 color
 @property (nonatomic, assign) float minV, maxV, step;
 @property (nonatomic, strong) NSArray<NSString *> *options;
+@property (nonatomic, copy) NSString *defaultHex;
 @end
 @implementation DSRow
 @end
 
-@interface DrawSettingsViewController () <UITableViewDataSource, UITableViewDelegate>
+@interface DrawSettingsViewController () <UITableViewDataSource, UITableViewDelegate, UIColorPickerViewControllerDelegate>
 @property (nonatomic, strong) UITableView *tableView;
 @property (nonatomic, strong) NSArray<DSRow *> *rows;
 @property (nonatomic, strong) NSMutableDictionary *prefs;
@@ -77,8 +79,22 @@
   return r;
 }
 
+- (DSRow *)mkColor:(NSString *)title key:(NSString *)key defaultHex:(NSString *)hex {
+  DSRow *r = [DSRow new];
+  r.title = title; r.key = key; r.defaultHex = hex; r.kind = 3;
+  return r;
+}
+
 - (void)buildRows {
+  // 颜色项置于「物资显示模式」之上（对标 qwer 绘制设置同名项）
   self.rows = @[
+    [self mkColor:@"人机颜色" key:@"人机颜色" defaultHex:@"C8FF0000"],
+    [self mkColor:@"名字颜色" key:@"名字颜色" defaultHex:@"FFFFFF"],
+    [self mkColor:@"射线颜色" key:@"射线颜色" defaultHex:@"F0F000"],
+    [self mkColor:@"掩体颜色" key:@"掩体颜色" defaultHex:@"FF0000"],
+    [self mkColor:@"距离颜色" key:@"距离颜色" defaultHex:@"F0F0F0"],
+    [self mkColor:@"队伍颜色" key:@"队伍颜色" defaultHex:@"FFDF00"],
+    [self mkColor:@"骨骼颜色" key:@"骨骼颜色" defaultHex:@"00C800"],
     [self mkSeg:@"物资显示模式" key:@"lootMode" options:@[@"正常显示", @"空手显示"]],
     [self mkSeg:@"血量样式" key:@"healthStyle" options:@[@"圆弧", @"经典", @"花祭"]],
     [self mkSeg:@"背敌样式" key:@"behindStyle" options:@[@"雷达", @"箭头", @"花祭"]],
@@ -105,12 +121,41 @@
   return v ? [v integerValue] : def;
 }
 
+- (NSString *)hexForKey:(NSString *)key def:(NSString *)def {
+  id v = self.prefs[key];
+  if ([v isKindOfClass:[NSString class]] && [(NSString *)v length] > 0) return v;
+  return def ?: @"FFFFFF";
+}
+
 - (void)saveKey:(NSString *)key value:(id)value {
   self.prefs[key] = value;
   NSMutableDictionary *cur = [NSMutableDictionary dictionaryWithDictionary:NHPrefsRead() ?: @{}];
   [cur addEntriesFromDictionary:self.prefs];
   cur[key] = value;
   NHPrefsWrite(cur);
+}
+
+- (UIColor *)colorFromHex:(NSString *)hexString {
+  if (!hexString.length) return [UIColor whiteColor];
+  NSString *clean = [[hexString stringByReplacingOccurrencesOfString:@"#" withString:@""] uppercaseString];
+  unsigned int r = 255, g = 255, b = 255, a = 255;
+  if (clean.length == 8) {
+    [[NSScanner scannerWithString:[clean substringWithRange:NSMakeRange(0, 2)]] scanHexInt:&r];
+    [[NSScanner scannerWithString:[clean substringWithRange:NSMakeRange(2, 2)]] scanHexInt:&g];
+    [[NSScanner scannerWithString:[clean substringWithRange:NSMakeRange(4, 2)]] scanHexInt:&b];
+    [[NSScanner scannerWithString:[clean substringWithRange:NSMakeRange(6, 2)]] scanHexInt:&a];
+  } else if (clean.length >= 6) {
+    [[NSScanner scannerWithString:[clean substringWithRange:NSMakeRange(0, 2)]] scanHexInt:&r];
+    [[NSScanner scannerWithString:[clean substringWithRange:NSMakeRange(2, 2)]] scanHexInt:&g];
+    [[NSScanner scannerWithString:[clean substringWithRange:NSMakeRange(4, 2)]] scanHexInt:&b];
+  }
+  return [UIColor colorWithRed:r / 255.0 green:g / 255.0 blue:b / 255.0 alpha:a / 255.0];
+}
+
+- (NSString *)hexFromColor:(UIColor *)color {
+  CIColor *ci = [[CIColor alloc] initWithColor:color];
+  return [NSString stringWithFormat:@"%02X%02X%02X",
+          (int)(ci.red * 255), (int)(ci.green * 255), (int)(ci.blue * 255)];
 }
 
 #pragma mark - Table
@@ -125,6 +170,7 @@
   cell.selectionStyle = UITableViewCellSelectionStyleNone;
   cell.backgroundColor = [UIColor colorWithWhite:0.07 alpha:1];
   cell.contentView.backgroundColor = cell.backgroundColor;
+  cell.accessoryView = nil;
 
   DSRow *row = self.rows[indexPath.row];
   UIColor *cyan = [UIColor cyanColor];
@@ -136,7 +182,21 @@
   title.font = [UIFont systemFontOfSize:14 weight:UIFontWeightMedium];
   [cell.contentView addSubview:title];
 
-  if (row.kind == 2) {
+  if (row.kind == 3) {
+    cell.selectionStyle = UITableViewCellSelectionStyleGray;
+    NSString *hex = [self hexForKey:row.key def:row.defaultHex];
+    UIView *preview = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 30, 30)];
+    preview.backgroundColor = [self colorFromHex:hex];
+    preview.layer.cornerRadius = 15;
+    preview.layer.borderWidth = 1;
+    preview.layer.borderColor = [UIColor colorWithWhite:0.45 alpha:1].CGColor;
+    cell.accessoryView = preview;
+    [NSLayoutConstraint activateConstraints:@[
+      [title.leadingAnchor constraintEqualToAnchor:cell.contentView.leadingAnchor constant:14],
+      [title.centerYAnchor constraintEqualToAnchor:cell.contentView.centerYAnchor],
+      [title.trailingAnchor constraintLessThanOrEqualToAnchor:cell.contentView.trailingAnchor constant:-56],
+    ]];
+  } else if (row.kind == 2) {
     UISegmentedControl *seg = [[UISegmentedControl alloc] initWithItems:row.options];
     seg.translatesAutoresizingMaskIntoConstraints = NO;
     NSInteger cur = [self intForKey:row.key def:0];
@@ -208,6 +268,39 @@
     ]];
   }
   return cell;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+  [tableView deselectRowAtIndexPath:indexPath animated:YES];
+  DSRow *row = self.rows[indexPath.row];
+  if (row.kind != 3) return;
+  if (@available(iOS 14.0, *)) {
+    UIColorPickerViewController *picker = [[UIColorPickerViewController alloc] init];
+    picker.delegate = self;
+    picker.title = row.title;
+    picker.selectedColor = [self colorFromHex:[self hexForKey:row.key def:row.defaultHex]];
+    objc_setAssociatedObject(picker, "dsColorKey", row.key, OBJC_ASSOCIATION_COPY_NONATOMIC);
+    objc_setAssociatedObject(picker, "dsColorIndexPath", indexPath, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    [self presentViewController:picker animated:YES completion:nil];
+  }
+}
+
+- (void)colorPickerViewControllerDidFinish:(UIColorPickerViewController *)viewController API_AVAILABLE(ios(14.0)) {
+  NSString *key = objc_getAssociatedObject(viewController, "dsColorKey");
+  NSIndexPath *indexPath = objc_getAssociatedObject(viewController, "dsColorIndexPath");
+  if (!key.length) return;
+  NSString *hex = [self hexFromColor:viewController.selectedColor];
+  [self saveKey:key value:hex];
+  if (indexPath) {
+    [self.tableView reloadRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationNone];
+  }
+}
+
+- (void)colorPickerViewController:(UIColorPickerViewController *)viewController
+                   didSelectColor:(UIColor *)color API_AVAILABLE(ios(14.0)) {
+  NSString *key = objc_getAssociatedObject(viewController, "dsColorKey");
+  if (!key.length) return;
+  [self saveKey:key value:[self hexFromColor:color]];
 }
 
 - (void)onSeg:(UISegmentedControl *)seg {

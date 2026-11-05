@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		A1M001CFG000000000000003 /* AimConfigViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = A1M001CFG000000000000002 /* AimConfigViewController.mm */; };
+		A1M001FLT000000000000003 /* AimFloatWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = A1M001FLT000000000000002 /* AimFloatWindow.mm */; };
+		A1M001FLT000000000000006 /* AimFloatRootViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = A1M001FLT000000000000005 /* AimFloatRootViewController.mm */; };
 		A1M001PHY000000000000002 /* AimPhysXBridge.mm in Sources */ = {isa = PBXBuildFile; fileRef = A1M001PHY000000000000001 /* AimPhysXBridge.mm */; };
 		A1M001PHY000000000000004 /* PhysXRemote.mm in Sources */ = {isa = PBXBuildFile; fileRef = A1M001PHY000000000000003 /* PhysXRemote.mm */; };
 		A1M001EMB000000000000002 /* libembree4.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A1M001EMB000000000000001 /* libembree4.a */; };
@@ -266,6 +268,11 @@
 /* Begin PBXFileReference section */
 		A1M001CFG000000000000001 /* AimConfigViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AimConfigViewController.h; sourceTree = "<group>"; };
 		A1M001CFG000000000000002 /* AimConfigViewController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = AimConfigViewController.mm; sourceTree = "<group>"; };
+		A1M001FLT000000000000001 /* AimFloatWindow.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AimFloatWindow.h; sourceTree = "<group>"; };
+		A1M001FLT000000000000002 /* AimFloatWindow.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = AimFloatWindow.mm; sourceTree = "<group>"; };
+		A1M001FLT000000000000004 /* AimFloatRootViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AimFloatRootViewController.h; sourceTree = "<group>"; };
+		A1M001FLT000000000000005 /* AimFloatRootViewController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = AimFloatRootViewController.mm; sourceTree = "<group>"; };
+		A1M001FLT000000000000007 /* AimFloatBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AimFloatBridge.h; path = "绘图/Aim/AimFloatBridge.h"; sourceTree = SOURCE_ROOT; };
 		A1M001PHY000000000000001 /* AimPhysXBridge.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = AimPhysXBridge.mm; path = "绘图/Aim/AimPhysXBridge.mm"; sourceTree = SOURCE_ROOT; };
 		A1M001PHY000000000000003 /* PhysXRemote.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = PhysXRemote.mm; path = "绘图/Aim/PhysXRemote.mm"; sourceTree = SOURCE_ROOT; };
 		A1M001EMB000000000000001 /* libembree4.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libembree4.a; path = Embree/libembree4.a; sourceTree = "<group>"; };
@@ -741,6 +748,11 @@
 				0F177A7E2F586AAC005AB832 /* 过直播窗口.mm */,
 				CC711D412B5BF5C6007235A6 /* HonyWindow.h */,
 				CC711D202B5BF5C6007235A6 /* HonyWindow.mm */,
+				A1M001FLT000000000000001 /* AimFloatWindow.h */,
+				A1M001FLT000000000000002 /* AimFloatWindow.mm */,
+				A1M001FLT000000000000004 /* AimFloatRootViewController.h */,
+				A1M001FLT000000000000005 /* AimFloatRootViewController.mm */,
+				A1M001FLT000000000000007 /* AimFloatBridge.h */,
 				CC711D3E2B5BF5C6007235A6 /* BBZView.h */,
 				CC711D1F2B5BF5C6007235A6 /* BBZView.mm */,
 				1F0BD9392D6ED703008151DA /* DrawView.hpp */,
@@ -1683,6 +1695,8 @@
 				2F50CA52FF96439999D47905 /* stb_image.cpp in Sources */,
 				48FAF1654B4F4B44B1423CC9 /* DrawSettingsViewController.mm in Sources */,
 				A1M001CFG000000000000003 /* AimConfigViewController.mm in Sources */,
+				A1M001FLT000000000000003 /* AimFloatWindow.mm in Sources */,
+				A1M001FLT000000000000006 /* AimFloatRootViewController.mm in Sources */,
 				A1M001PHY000000000000002 /* AimPhysXBridge.mm in Sources */,
 				A1M001PHY000000000000004 /* PhysXRemote.mm in Sources */,
 				3BC5ADD429D34DD689FC0109 /* WeaponTextures.mm in Sources */,

@@ -11,6 +11,8 @@
 #import <notify.h>
 #import "BBZViewController.h"
 #import "HonyWindow.h"
+#import "AimFloatWindow.h"
+#import "AimFloatRootViewController.h"
 #import "SBSAccessibilityWindowHostingController.h"
 #import "UIWindow+Private.h"
 #import "DOJailbreaker.h"
@@ -39,6 +41,8 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
     id<MTLCommandQueue> _mtlCommandQueue; // Metal 命令队列
     // CDController *_cdViewController; // 主菜单视图控制器
     SBSAccessibilityWindowHostingController *BBZMenuHostingController; // 另一个无障碍窗口托管控制器
+    SBSAccessibilityWindowHostingController *_aimFloatHostingController;
+    AimFloatRootViewController *_aimFloatRootViewController;
     过直播窗口 *_过直播容器; // 对标 wasd CoverView+CoverView1
     BOOL _liveHiddenApplied; // 当前 secure 状态
     NSInteger _overlayPollTick;
@@ -63,6 +67,30 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
             jbEarly.isSuccess = NO;
             KernelLogLine("HUD: 忽略无原语的假就绪标记");
         }
+
+        // ========== 1) 自瞄悬浮球交互窗（对标 qwer：先创建、可点、层级更低）==========
+        _aimFloatRootViewController = [[AimFloatRootViewController alloc] init];
+        self.aimFloatWindow = [[AimFloatWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+        [AimFloatWindow setActiveWindow:(AimFloatWindow *)self.aimFloatWindow];
+        self.aimFloatWindow.rootViewController = _aimFloatRootViewController;
+        self.aimFloatWindow.windowLevel = UIWindowLevelStatusBar - 20;
+        self.aimFloatWindow.backgroundColor = [UIColor clearColor];
+        self.aimFloatWindow.opaque = NO;
+        self.aimFloatWindow.userInteractionEnabled = YES;
+        self.aimFloatWindow.hidden = NO;
+        [self.aimFloatWindow makeKeyAndVisible];
+        _aimFloatHostingController = [[objc_getClass("SBSAccessibilityWindowHostingController") alloc] init];
+        {
+            unsigned int aimCtx = [self.aimFloatWindow _contextId];
+            double aimLevel = [self.aimFloatWindow windowLevel];
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+            ((void (*)(id, SEL, unsigned int, double))objc_msgSend)(_aimFloatHostingController,
+                                                                    NSSelectorFromString(@"registerWindowWithContextID:atLevel:"),
+                                                                    aimCtx, aimLevel);
+#pragma clang diagnostic pop
+        }
+
         self.BBZwindow = [[HonyWindow alloc] init];
         self.BBZwindow.frame = [[UIScreen mainScreen] bounds]; // 创建 HUDMainWindow，大小为屏幕大小
         //    sss();
@@ -217,6 +245,12 @@ CGFloat BBZHeight = 0; // 存储屏幕高度
         
         // 设置屏幕方向变化的监听器
         [self setupOrientationObserver];
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self->_aimFloatRootViewController attachOverlayToWindow:self.aimFloatWindow];
+            [self.aimFloatWindow makeKeyAndVisible];
+            KernelLogLine("HUD: 自瞄悬浮球已就绪（长按切换开关）");
+        });
         
         // 窗口与 ContextID 已就绪后再异步 exploit：
         // 二次拉起若 kopen 卡住，至少叠层在，且不会堵死 didFinishLaunching。

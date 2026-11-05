@@ -8,6 +8,7 @@
 #import <mach-o/dyld.h>
 #import <notify.h>
 #import <objc/runtime.h>
+#import <objc/message.h>
 #import <sys/utsname.h>
 
 #if !NO_TROLL
@@ -22,6 +23,7 @@
 #import <libjailbreak/info.h>
 #import <libjailbreak/jbclient_xpc.h>
 #import "LFVirtualDigitizer.h"
+#import "AimFloatWindow.h"
 // PID 文件改为每机派生路径，见 NHIdentity.h → NHPidPath()
 
 static __used NSString *mDeviceModel(void) {
@@ -72,13 +74,27 @@ static __used void _HUDEventCallback(void *target, void *refcon, IOHIDServiceRef
     /* I don't like this. It's too hacky, but it works. */
     {
       dispatch_async(dispatch_get_main_queue(), ^(void) {
-        static UIWindow *keyWindow = nil;
-        static dispatch_once_t onceToken;
-        dispatch_once(&onceToken, ^{
-          keyWindow = [[app windows] firstObject];
-        });
-        
-        UIView *keyView = [keyWindow hitTest:[rep location] withEvent:nil];
+        // 对标 qwer：优先投递到自瞄悬浮球交互窗，否则点不到
+        UIWindow *hitWindow = [AimFloatWindow activeWindow];
+        if (!hitWindow) {
+          for (UIWindow *w in [app windows]) {
+            if ([w respondsToSelector:@selector(_ignoresHitTest)] &&
+                ((BOOL (*)(id, SEL))objc_msgSend)(w, @selector(_ignoresHitTest))) {
+              continue;
+            }
+            hitWindow = w;
+            break;
+          }
+        }
+        if (!hitWindow) {
+          hitWindow = [[app windows] firstObject];
+        }
+        if (!hitWindow) return;
+
+        CGPoint loc = [rep location];
+        UIView *keyView = [hitWindow hitTest:loc withEvent:nil];
+        // 空白穿透：不合成触摸，避免抢走游戏操作
+        if (!keyView) return;
         
         UITouchPhase phase = UITouchPhaseEnded;
         if ([rep isTouchDown])
@@ -91,12 +107,12 @@ static __used void _HUDEventCallback(void *target, void *refcon, IOHIDServiceRef
           phase = UITouchPhaseEnded;
         
         NSInteger pointerId = [[[[rep handInfo] paths] firstObject] pathIdentity];
-        if (pointerId > 0)
-          [TSEventFetcher receiveAXEventID:MIN(MAX(pointerId, 1), 98)
-                        atGlobalCoordinate:[rep location]
-                            withTouchPhase:phase
-                                  inWindow:keyWindow
-                                    onView:keyView];
+        if (pointerId <= 0) pointerId = 1;
+        [TSEventFetcher receiveAXEventID:MIN(MAX(pointerId, 1), 98)
+                      atGlobalCoordinate:loc
+                          withTouchPhase:phase
+                                inWindow:hitWindow
+                                  onView:keyView];
       });
     }
   }

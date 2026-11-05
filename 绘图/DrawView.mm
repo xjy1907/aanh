@@ -10,6 +10,7 @@
 #include <mach/thread_act.h>
 #include <mach/thread_info.h>
 #include "BBZGui.h"
+#import "Aim/AimFloatBridge.h"
 
 #import "DOJailbreaker.h"
 #import "HUDHelper.h"
@@ -93,15 +94,49 @@ static struct {
     std::vector<CachedMaterial> materials;
 } gStatic;
 
-// 对标 wasd IM_COL32 默认色
-#define Colour_红色 IM_COL32(255, 0, 0, 255)
-#define Colour_绿色 IM_COL32(0, 200, 0, 255)
-#define Colour_白色 IM_COL32(255, 255, 255, 255)
-#define Colour_黄色 IM_COL32(255, 255, 0, 255)
-#define Colour_射线 IM_COL32(240, 240, 0, 255)
-#define Colour_骨骼 IM_COL32(0, 200, 0, 255)
-#define Colour_人机 IM_COL32(200, 0, 0, 200)
-#define Colour_名字 IM_COL32(255, 255, 255, 255)
+// 对标 wasd/qwer IM_COL32 默认色（可被绘制设置覆盖）
+static ImU32 Colour_白色 = IM_COL32(255, 255, 255, 255);
+static ImU32 Colour_黄色 = IM_COL32(255, 255, 0, 255);
+static ImU32 Colour_绿色 = IM_COL32(0, 200, 0, 255);
+static ImU32 Colour_射线 = IM_COL32(240, 240, 0, 255);
+static ImU32 Colour_骨骼 = IM_COL32(0, 200, 0, 255);
+static ImU32 Colour_人机 = IM_COL32(200, 0, 0, 200);
+static ImU32 Colour_名字 = IM_COL32(255, 255, 255, 255);
+static ImU32 Colour_距离 = IM_COL32(240, 240, 240, 255);
+static ImU32 Colour_队伍 = IM_COL32(255, 223, 0, 255);
+static ImU32 Colour_掩体 = IM_COL32(255, 0, 0, 255);
+
+static ImU32 ParseHexColorString(NSString *hexString) {
+    if (!hexString || hexString.length == 0) {
+        return IM_COL32(255, 255, 255, 255);
+    }
+    NSString *cleanHex = [hexString stringByReplacingOccurrencesOfString:@"#" withString:@""];
+    unsigned int r = 255, g = 255, b = 255, a = 255;
+    if (cleanHex.length == 8) {
+        // 对标 qwer：8 位按 RRGGBBAA；人机默认 C8FF0000 实际为兼容存储，回落用固定默认
+        [[NSScanner scannerWithString:[cleanHex substringWithRange:NSMakeRange(0, 2)]] scanHexInt:&r];
+        [[NSScanner scannerWithString:[cleanHex substringWithRange:NSMakeRange(2, 2)]] scanHexInt:&g];
+        [[NSScanner scannerWithString:[cleanHex substringWithRange:NSMakeRange(4, 2)]] scanHexInt:&b];
+        [[NSScanner scannerWithString:[cleanHex substringWithRange:NSMakeRange(6, 2)]] scanHexInt:&a];
+    } else if (cleanHex.length == 6) {
+        [[NSScanner scannerWithString:[cleanHex substringWithRange:NSMakeRange(0, 2)]] scanHexInt:&r];
+        [[NSScanner scannerWithString:[cleanHex substringWithRange:NSMakeRange(2, 2)]] scanHexInt:&g];
+        [[NSScanner scannerWithString:[cleanHex substringWithRange:NSMakeRange(4, 2)]] scanHexInt:&b];
+    }
+    return IM_COL32(r, g, b, a);
+}
+
+static ImU32 PrefColor(NSDictionary *cfg, NSString *key, ImU32 fallback) {
+    id v = cfg[key];
+    if ([v isKindOfClass:[NSString class]] && [(NSString *)v length] > 0) {
+        // qwer 人机默认串 C8FF0000 按 RGBA 会变成透明绿，保持历史视觉
+        if ([key isEqualToString:@"人机颜色"] && [v isEqualToString:@"C8FF0000"]) {
+            return IM_COL32(200, 0, 0, 200);
+        }
+        return ParseHexColorString((NSString *)v);
+    }
+    return fallback;
+}
 
 static float GetCurrentProcessCPUUsage(void) {
     kern_return_t kr;
@@ -491,6 +526,13 @@ static void RefreshDrawPrefs(void) {
     else 骨骼距离 = 30.f;
     if (cfg[@"boneThick"] != nil) 骨骼粗细 = [cfg[@"boneThick"] floatValue];
     if (cfg[@"rayThick"] != nil) 射线粗细 = [cfg[@"rayThick"] floatValue];
+    Colour_名字 = PrefColor(cfg, @"名字颜色", IM_COL32(255, 255, 255, 255));
+    Colour_射线 = PrefColor(cfg, @"射线颜色", IM_COL32(240, 240, 0, 255));
+    Colour_距离 = PrefColor(cfg, @"距离颜色", IM_COL32(240, 240, 240, 255));
+    Colour_骨骼 = PrefColor(cfg, @"骨骼颜色", IM_COL32(0, 200, 0, 255));
+    Colour_队伍 = PrefColor(cfg, @"队伍颜色", IM_COL32(255, 223, 0, 255));
+    Colour_人机 = PrefColor(cfg, @"人机颜色", IM_COL32(200, 0, 0, 200));
+    Colour_掩体 = PrefColor(cfg, @"掩体颜色", IM_COL32(255, 0, 0, 255));
     AimAssist::LoadFromPrefs(cfg);
 }
 
@@ -945,7 +987,7 @@ void Draw::StartBooks() {
     Vector2 canvasVec(屏幕宽度, 屏幕高度);
     const int sw = (int)屏幕宽度;
     const int sh = (int)屏幕高度;
-    const ImU32 掩体颜色 = IM_COL32(255, 0, 0, 255);
+    const ImU32 掩体颜色 = Colour_掩体;
 
     for (const CachedPlayer &sp : gStatic.players) {
         uint64_t actor = sp.addr;
@@ -997,8 +1039,8 @@ void Draw::StartBooks() {
         ImU32 NameColor = bIsAI ? Colour_人机 : Colour_名字;
         ImU32 lineColor = bIsAI ? Colour_人机 : Colour_射线;
         ImU32 boneColor = bIsAI ? Colour_人机 : Colour_骨骼;
-        ImU32 teamColor = bIsAI ? Colour_人机 : Colour_白色;
-        ImU32 distanceColor = bIsAI ? Colour_人机 : Colour_白色;
+        ImU32 teamColor = bIsAI ? Colour_人机 : Colour_队伍;
+        ImU32 distanceColor = bIsAI ? Colour_人机 : Colour_距离;
         int teamID = sp.team;
 
         if (显示信息 && onScreen && distance <= 绘制距离上限) {
@@ -1275,6 +1317,22 @@ void Draw::StartBooks() {
     }
 
     drawHud(totalEnemies, aiCounts);
+}
+
+@end
+
+@implementation AimFloatBridge
+
++ (BOOL)isAimEnabled {
+    return AimAssist::开启自瞄 ? YES : NO;
+}
+
++ (BOOL)toggleAimEnabled {
+    AimAssist::开启自瞄 = !AimAssist::开启自瞄;
+    NSMutableDictionary *cfg = [NSMutableDictionary dictionaryWithDictionary:NHPrefsRead() ?: @{}];
+    cfg[@"开启自瞄"] = @(AimAssist::开启自瞄);
+    NHPrefsWrite(cfg);
+    return AimAssist::开启自瞄 ? YES : NO;
 }
 
 @end

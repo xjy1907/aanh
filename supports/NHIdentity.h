@@ -212,6 +212,9 @@ static inline NSArray<NSString *> *NHDrawExtrasKeys(void) {
         @"weaponStyle", @"healthStyle", @"behindStyle", @"behindMode", @"lootMode",
         @"lootSize", @"infoSize", @"drawDist", @"behindDist", @"boneDist",
         @"boneThick", @"rayThick", @"drawFps", @"hideAi",
+        // —— 绘制颜色（对标 qwer 绘制设置）——
+        @"人机颜色", @"名字颜色", @"射线颜色", @"掩体颜色",
+        @"距离颜色", @"队伍颜色", @"骨骼颜色",
         // —— 模型漏打（对标 qwer 绘制功能/绘制设置）——
         @"模型渲染", @"漏打距离",
         // —— 自瞄功能（对标 qwer 自瞄页全部项）——
