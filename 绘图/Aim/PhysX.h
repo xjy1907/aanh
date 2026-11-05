@@ -146,6 +146,40 @@ struct PxTransform {
 
 } // namespace physx
 
+// 按相机半径过滤加载（对标 SceneLoader LoadRadius；避免全图灌 Embree）
+namespace PhysXLoadFilter {
+    inline std::atomic<bool> camValid{false};
+    inline std::atomic<float> camX{0.f};
+    inline std::atomic<float> camY{0.f};
+    inline std::atomic<float> camZ{0.f};
+    // 默认 200m（UE cm）；漏打距离会经 AimPhysX_SetLoadRadiusMeters 覆盖
+    inline std::atomic<float> radiusUU{20000.f};
+
+    inline void SetCamera(float x, float y, float z) {
+        camX.store(x, std::memory_order_relaxed);
+        camY.store(y, std::memory_order_relaxed);
+        camZ.store(z, std::memory_order_relaxed);
+        camValid.store(true, std::memory_order_release);
+    }
+
+    /// meters：米；内部转 UE 单位并加 15% 余量，保证漏打边缘仍有网格
+    inline void SetRadiusMeters(float meters) {
+        if (!(meters > 0.f)) meters = 120.f;
+        if (meters < 50.f) meters = 50.f;
+        if (meters > 500.f) meters = 500.f;
+        radiusUU.store(meters * 100.f * 1.15f, std::memory_order_relaxed);
+    }
+
+    inline bool InRange(const physx::PxVec3 &p) {
+        if (!camValid.load(std::memory_order_acquire)) return false;
+        const float dx = p.x - camX.load(std::memory_order_relaxed);
+        const float dy = p.y - camY.load(std::memory_order_relaxed);
+        const float dz = p.z - camZ.load(std::memory_order_relaxed);
+        const float r = radiusUU.load(std::memory_order_relaxed);
+        return (dx * dx + dy * dy + dz * dz) <= (r * r);
+    }
+}
+
 // PhysX 偏移量 - 根据游戏版本调整
 #define RigidActors 0x2568
 #define SQManager 0x2430
@@ -1355,12 +1389,12 @@ inline std::vector<TriangleMeshData> LoadDynamicRigidShape(
         }
     }
 
-// 根据缓存筛选出在指定范围内的 Shape
+// 根据缓存筛选出在指定范围内的 Shape（相机半径，见 PhysXLoadFilter）
     std::set<PrunerPayload> result;
     for (const auto& [obj, pos] : cache) {
-//if(currentPosition.Distance(pos.mPosition) < radius){
-        result.insert(obj);
-// }
+        if (PhysXLoadFilter::InRange(pos.p)) {
+            result.insert(obj);
+        }
     }
 // 判断移除或新增的 Shape 是否已经在场景列表中
     std::copy_if(currentSceneObjects.begin(), currentSceneObjects.end(), std::inserter(removeObjects, removeObjects.begin()),[&result](const PrunerPayload& obj) {
@@ -1524,12 +1558,12 @@ inline std::vector<TriangleMeshData> LoadShapeByRange(
     }
 
 
-// 根据位置过滤在指定范围内的 Shape
+// 根据位置过滤在指定范围内的 Shape（相机半径，见 PhysXLoadFilter）
     std::set<PrunerPayload> result;
     for (const auto& [obj, pos] : cache) {
-//if(currentPosition.Distance(pos.mPosition) < radius){
-        result.insert(obj);
-//  }
+        if (PhysXLoadFilter::InRange(pos.p)) {
+            result.insert(obj);
+        }
     }
 // 判断原有的 Shape 是否已不在当前结果中，如果是则需要移除（适用于静态）
     std::copy_if(currentSceneObjects.begin(), currentSceneObjects.end(), std::inserter(removeObjects, removeObjects.begin()),

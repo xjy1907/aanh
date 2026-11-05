@@ -19,8 +19,11 @@ bool AimPhysX_IsReady();
 /// True if a wall/mesh is between cam and bone (LineTrace hit).
 bool AimPhysX_IsOccluded(const Vector3 &cam, const Vector3 &bone);
 
-/// Store camera location for future range-filtered scene loaders.
+/// 写入相机世界坐标，供 PhysX 按半径过滤加载网格。
 void AimPhysX_TickCamera(const Vector3 &camLoc);
+
+/// 加载半径（米）；内部转 UE cm 并加余量。建议传漏打距离。
+void AimPhysX_SetLoadRadiusMeters(float meters);
 
 /// 模型渲染开关：false 时 VisibleCheck 三线程只 sleep 不扫网格（降 CPU）。
 void AimPhysX_SetSceneActive(bool active);

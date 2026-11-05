@@ -207,6 +207,8 @@ inline void EnsureTouchInit(float screenW, float screenH) {
 inline void EnsurePhysX(uint64_t moduleBase) {
     // 关模型渲染：后台场景线程进入闲置 sleep，避免空转占满 CPU
     AimPhysX_SetSceneActive(模型渲染);
+    // 按漏打距离加载附近网格（内部转 UE 单位并加 15% 余量）
+    AimPhysX_SetLoadRadiusMeters(漏打距离 > 0.f ? 漏打距离 : 120.f);
     if (!模型渲染) return;
     if (moduleBase == 0) return;
     AimPhysX_SetModuleBase(moduleBase);

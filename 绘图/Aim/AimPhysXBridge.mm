@@ -22,16 +22,17 @@ uint64_t gAimModuleBase = 0;
 static std::atomic<bool> gPhysXReady{false};
 static std::atomic<bool> gPhysXThreadsStarted{false};
 static std::once_flag gPhysXFetchOnce;
-static Vector3 gAimCameraLoc{};
-
 void AimPhysX_SetModuleBase(uint64_t base) {
     gAimModuleBase = base;
     KFD::SetBase(base);
 }
 
 void AimPhysX_TickCamera(const Vector3 &camLoc) {
-    gAimCameraLoc = camLoc;
-    (void)gAimCameraLoc;
+    PhysXLoadFilter::SetCamera(camLoc.X, camLoc.Y, camLoc.Z);
+}
+
+void AimPhysX_SetLoadRadiusMeters(float meters) {
+    PhysXLoadFilter::SetRadiusMeters(meters);
 }
 
 void AimPhysX_SetSceneActive(bool active) {
