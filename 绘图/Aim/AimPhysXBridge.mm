@@ -39,6 +39,10 @@ void AimPhysX_SetSceneActive(bool active) {
     VisibleCheck::gPhysXSceneActive.store(active, std::memory_order_release);
 }
 
+void AimPhysX_SetOcclusionDemand(bool demand) {
+    VisibleCheck::gPhysXOcclusionDemand.store(demand, std::memory_order_release);
+}
+
 bool AimPhysX_IsReady() {
     return gPhysXReady.load(std::memory_order_acquire);
 }

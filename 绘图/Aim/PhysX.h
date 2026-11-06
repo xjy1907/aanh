@@ -1927,6 +1927,13 @@ inline void Throttler::executeTaskWithSleep(const std::string& taskName,std::chr
 namespace VisibleCheck {
     // 由 AimPhysX_SetSceneActive 控制；关模型渲染时线程只 sleep
     inline std::atomic<bool> gPhysXSceneActive{false};
+    // 由 AimPhysX_SetOcclusionDemand 控制：半径内无人/无需头骨遮挡时不扫网格
+    inline std::atomic<bool> gPhysXOcclusionDemand{false};
+
+    inline bool ShouldRefreshScene() {
+        return gPhysXSceneActive.load(std::memory_order_acquire) &&
+               gPhysXOcclusionDemand.load(std::memory_order_acquire);
+    }
 
     //按范围更新场景
     inline void UpdateSceneByRange() {
@@ -1936,7 +1943,7 @@ namespace VisibleCheck {
         uint32_t lastUpdateTimestamp = 0;
         Throttler Throttlered;
         while (true) {
-            if (!gPhysXSceneActive.load(std::memory_order_acquire)) {
+            if (!ShouldRefreshScene()) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(1500));
                 continue;
             }
@@ -1957,7 +1964,7 @@ namespace VisibleCheck {
         uint32_t lastUpdateTimestamp = 0;
         Throttler Throttlered;
         while (true) {
-            if (!gPhysXSceneActive.load(std::memory_order_acquire)) {
+            if (!ShouldRefreshScene()) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(1500));
                 continue;
             }
@@ -1977,7 +1984,7 @@ namespace VisibleCheck {
         std::unordered_map<PrunerPayload, uint64_t, PrunerPayloadHash> ptrCache{};
         std::set<PrunerPayload> currentSceneObjects{};
         while (true) {
-            if (!gPhysXSceneActive.load(std::memory_order_acquire)) {
+            if (!ShouldRefreshScene()) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(1500));
                 continue;
             }

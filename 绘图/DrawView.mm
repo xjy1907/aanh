@@ -966,6 +966,10 @@ void Draw::StartBooks() {
     AimAssist::EnsureTouchInit(屏幕宽度, 屏幕高度);
     AimAssist::EnsurePhysX(模块地址);
     AimPhysX_TickCamera(POV.Location);
+    // 默认无遮挡需求；半径内出现需漏打/头骨遮挡的目标时再置 true（三线闲时 sleep）
+    AimPhysX_SetOcclusionDemand(false);
+    const bool wantPhysXOcclusion = AimAssist::模型渲染 &&
+        (AimAssist::开启自瞄 || 显示骨骼);
     // 遮挡隔帧采样用帧号（每进一次 StartBooks +1）
     static int sAimOccFrame = 0;
     sAimOccFrame++;
@@ -1007,6 +1011,10 @@ void Draw::StartBooks() {
         else aiCounts++;
 
         float distance = GetDistance(loc, POV.Location) / 100.0f;
+        // 漏打半径内有存活目标且需要遮挡查询 → 唤醒 PhysX 后台刷新
+        if (wantPhysXOcclusion && Health > 0.f && distance <= AimAssist::漏打距离) {
+            AimPhysX_SetOcclusionDemand(true);
+        }
         Vector2 LocationScreen = WorldToScreen(loc, POV, sw, sh);
         bool onScreen = isScreenVisible(LocationScreen, canvasVec);
         if (distance > 绘制距离上限 && !(显示背敌 && distance <= 背敌距离)) continue;

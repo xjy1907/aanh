@@ -28,6 +28,10 @@ void AimPhysX_SetLoadRadiusMeters(float meters);
 /// 模型渲染开关：false 时 VisibleCheck 三线程只 sleep 不扫网格（降 CPU）。
 void AimPhysX_SetSceneActive(bool active);
 
+/// 本帧是否有遮挡查询需求（半径内需漏打/头骨遮挡）。
+/// false 时三线程与关模型渲染类似只 sleep，避免闲时空扫网格。
+void AimPhysX_SetOcclusionDemand(bool demand);
+
 #ifdef __cplusplus
 }
 #endif
