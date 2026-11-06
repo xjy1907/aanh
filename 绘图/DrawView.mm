@@ -1305,6 +1305,7 @@ void Draw::StartBooks() {
         }
     }
 
+    AimAssist::FinalizeTargetSelect();
     AimAssist::ExecuteAim(gStatic.myCharacter, POV, dl, 屏幕宽度, 屏幕高度);
     AimAssist::DrawOverlays(dl, 屏幕宽度, 屏幕高度);
 

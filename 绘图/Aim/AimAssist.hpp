@@ -29,8 +29,6 @@ inline float 腰射距离 = 30.f;
 inline float 压枪力度 = 0.5f;   // 存储 UI/10
 inline float 自瞄血量 = 100.f;
 inline float 满血距离 = 50.f;
-// 0=初始曲线（线性拉枪），1=贝塞尔主路径（缓动+惯性+目标冻结+轻微弧线）
-inline int 自瞄曲线 = 0;
 inline bool 烟雾不瞄 = false;
 inline float 烟雾范围 = 15.f;
 inline bool 开启动态圈 = false;
@@ -59,6 +57,20 @@ inline bool 距离衰减 = false;
 inline float 衰减起点 = 30.f;   // 米；<此距离拉力≈1
 inline float 衰减终点 = 100.f;  // 米；≥此距离拉力降到远端拉力
 inline float 远端拉力 = 0.35f;  // 存储 UI/100
+
+// --- 实验：贝塞尔曲线（叠在初始线性上；全关=纯线性）---
+inline bool 曲线目标冻结 = false;
+inline float 冻结段长 = 12.f;       // 帧；实际 duration = 段长 + rand%5
+inline bool 曲线缓动 = false;
+inline float 前冲强度 = 0.55f;      // UI/100；越大前半越猛
+inline bool 曲线惯性 = false;
+inline float 惯性强度 = 0.55f;      // UI/100；越大越拖尾
+inline bool 曲线弧线 = false;
+inline float 弧线幅度 = 0.50f;      // UI/100；缩放法向弧
+inline bool 切目标粘滞 = false;
+inline float 粘滞时间 = 250.f;      // ms
+inline float 粘滞近距阈值 = 20.f;   // px；挑战者须更近出该值
+inline float 粘滞确认帧 = 5.f;      // 连续胜出帧数才换人
 
 inline float 当前自瞄大小 = 60.f;
 inline float 当前自瞄距离 = 100.f;
@@ -94,6 +106,28 @@ inline Vector2 选中敌人屏幕位置;
 inline float 选中敌人血量 = 0;
 inline float 选中敌人距离 = 0;
 inline float 最小距离 = 0;
+
+// 本帧选人候选（粘滞在 FinalizeTargetSelect 里落到 选中敌人*）
+inline uint64_t 本帧最佳Actor = 0;
+inline Vector3 本帧最佳瞄准点;
+inline Vector2 本帧最佳屏幕位置;
+inline float 本帧最佳血量 = 0;
+inline float 本帧最佳距离 = 0;
+inline float 本帧最佳偏移 = 0;
+inline bool 粘滞本帧仍有效 = false;
+inline Vector3 粘滞瞄准点;
+inline Vector2 粘滞屏幕位置;
+inline float 粘滞血量 = 0;
+inline float 粘滞距离 = 0;
+inline float 粘滞偏移 = 0;
+inline uint64_t 粘滞Actor = 0;
+inline CFAbsoluteTime 粘滞开始时间 = 0;
+inline uint64_t 挑战者Actor = 0;
+inline int 挑战者计数 = 0;
+
+inline bool AnyBezierPullFeatureOn() {
+    return 曲线目标冻结 || 曲线缓动 || 曲线惯性 || 曲线弧线;
+}
 
 struct SmokeInfo { Vector3 smokePos; };
 inline std::vector<SmokeInfo> 烟雾数组;
@@ -202,8 +236,6 @@ inline void LoadFromPrefs(NSDictionary *cfg) {
     压枪力度 = PrefFloat(cfg, @"压枪力度", 5.f) / 10.f;
     自瞄血量 = PrefFloat(cfg, @"自瞄血量", 100.f);
     满血距离 = PrefFloat(cfg, @"满血距离", 50.f);
-    自瞄曲线 = (int)PrefFloat(cfg, @"自瞄曲线", 0.f);
-    if (自瞄曲线 < 0 || 自瞄曲线 > 1) 自瞄曲线 = 0;
     烟雾不瞄 = PrefBool(cfg, @"烟雾不瞄", false);
     烟雾范围 = PrefFloat(cfg, @"烟雾范围", 15.f);
     开启动态圈 = PrefBool(cfg, @"动态圈", false);
@@ -230,6 +262,18 @@ inline void LoadFromPrefs(NSDictionary *cfg) {
     衰减起点 = PrefFloat(cfg, @"衰减起点", 30.f);
     衰减终点 = PrefFloat(cfg, @"衰减终点", 100.f);
     远端拉力 = PrefFloat(cfg, @"远端拉力", 35.f) / 100.f;
+    曲线目标冻结 = PrefBool(cfg, @"曲线目标冻结", false);
+    冻结段长 = PrefFloat(cfg, @"冻结段长", 12.f);
+    曲线缓动 = PrefBool(cfg, @"曲线缓动", false);
+    前冲强度 = PrefFloat(cfg, @"前冲强度", 55.f) / 100.f;
+    曲线惯性 = PrefBool(cfg, @"曲线惯性", false);
+    惯性强度 = PrefFloat(cfg, @"惯性强度", 55.f) / 100.f;
+    曲线弧线 = PrefBool(cfg, @"曲线弧线", false);
+    弧线幅度 = PrefFloat(cfg, @"弧线幅度", 50.f) / 100.f;
+    切目标粘滞 = PrefBool(cfg, @"切目标粘滞", false);
+    粘滞时间 = PrefFloat(cfg, @"粘滞时间", 250.f);
+    粘滞近距阈值 = PrefFloat(cfg, @"粘滞近距阈值", 20.f);
+    粘滞确认帧 = PrefFloat(cfg, @"粘滞确认帧", 5.f);
 }
 
 // 外强内柔除数：屏幕偏心大→外圈速度；靠近内圈→内圈速度
@@ -317,10 +361,20 @@ inline bool IsPointOccluded(const Vector3 &cam, const Vector3 &bone) {
 }
 
 inline void BeginFrameSelect() {
-    选中敌人Actor = 0;
+    本帧最佳Actor = 0;
+    本帧最佳血量 = 0;
+    本帧最佳距离 = 0;
+    本帧最佳偏移 = 0;
     最小距离 = 0;
-    选中敌人血量 = 0;
-    选中敌人距离 = 0;
+    粘滞本帧仍有效 = false;
+    if (!切目标粘滞) {
+        选中敌人Actor = 0;
+        选中敌人血量 = 0;
+        选中敌人距离 = 0;
+        粘滞Actor = 0;
+        挑战者Actor = 0;
+        挑战者计数 = 0;
+    }
 }
 
 inline void UpdateAimMode(uint64_t character, float dt) {
@@ -378,14 +432,87 @@ inline void ConsiderTarget(uint64_t actor, float distance, float Health, bool bI
     float offsetToCenter = GetCenterOffset(HeadScreen, sw, sh);
     float 有效内圈 = fminf(fmaxf(内圈大小, 0.f), 当前自瞄大小);
     if (offsetToCenter > 有效内圈 && offsetToCenter <= 当前自瞄大小) {
+        if (切目标粘滞 && 粘滞Actor != 0 && actor == 粘滞Actor) {
+            粘滞本帧仍有效 = true;
+            粘滞瞄准点 = aimWorld;
+            粘滞屏幕位置 = HeadScreen;
+            粘滞血量 = Health;
+            粘滞距离 = distance;
+            粘滞偏移 = offsetToCenter;
+        }
         if (最小距离 == 0 || offsetToCenter < 最小距离) {
             最小距离 = offsetToCenter;
-            选中敌人Actor = actor;
-            选中敌人瞄准点 = aimWorld;
-            选中敌人屏幕位置 = HeadScreen;
-            选中敌人血量 = Health;
-            选中敌人距离 = distance;
+            本帧最佳Actor = actor;
+            本帧最佳瞄准点 = aimWorld;
+            本帧最佳屏幕位置 = HeadScreen;
+            本帧最佳血量 = Health;
+            本帧最佳距离 = distance;
+            本帧最佳偏移 = offsetToCenter;
         }
+    }
+}
+
+inline void ApplySelectedCandidate(uint64_t actor, Vector3 aim, Vector2 screen, float hp, float dist) {
+    选中敌人Actor = actor;
+    选中敌人瞄准点 = aim;
+    选中敌人屏幕位置 = screen;
+    选中敌人血量 = hp;
+    选中敌人距离 = dist;
+}
+
+inline void FinalizeTargetSelect() {
+    if (!开启自瞄) {
+        选中敌人Actor = 0;
+        粘滞Actor = 0;
+        挑战者计数 = 0;
+        return;
+    }
+    if (!切目标粘滞) {
+        ApplySelectedCandidate(本帧最佳Actor, 本帧最佳瞄准点, 本帧最佳屏幕位置,
+                               本帧最佳血量, 本帧最佳距离);
+        return;
+    }
+
+    CFAbsoluteTime now = CFAbsoluteTimeGetCurrent();
+    if (粘滞Actor == 0 || !粘滞本帧仍有效) {
+        ApplySelectedCandidate(本帧最佳Actor, 本帧最佳瞄准点, 本帧最佳屏幕位置,
+                               本帧最佳血量, 本帧最佳距离);
+        粘滞Actor = 本帧最佳Actor;
+        粘滞开始时间 = now;
+        挑战者Actor = 0;
+        挑战者计数 = 0;
+        return;
+    }
+
+    // 粘滞目标仍有效：本帧继续跟他
+    ApplySelectedCandidate(粘滞Actor, 粘滞瞄准点, 粘滞屏幕位置, 粘滞血量, 粘滞距离);
+
+    if (本帧最佳Actor != 0 && 本帧最佳Actor != 粘滞Actor) {
+        float needCloser = fmaxf(粘滞近距阈值, 0.f);
+        if (本帧最佳偏移 + needCloser < 粘滞偏移) {
+            if (挑战者Actor != 本帧最佳Actor) {
+                挑战者Actor = 本帧最佳Actor;
+                挑战者计数 = 1;
+            } else {
+                挑战者计数++;
+            }
+            double elapsedMs = (now - 粘滞开始时间) * 1000.0;
+            int needFrames = (int)fmaxf(粘滞确认帧, 1.f);
+            if (elapsedMs >= (double)fmaxf(粘滞时间, 0.f) && 挑战者计数 >= needFrames) {
+                ApplySelectedCandidate(本帧最佳Actor, 本帧最佳瞄准点, 本帧最佳屏幕位置,
+                                       本帧最佳血量, 本帧最佳距离);
+                粘滞Actor = 本帧最佳Actor;
+                粘滞开始时间 = now;
+                挑战者Actor = 0;
+                挑战者计数 = 0;
+            }
+        } else {
+            挑战者Actor = 0;
+            挑战者计数 = 0;
+        }
+    } else {
+        挑战者Actor = 0;
+        挑战者计数 = 0;
     }
 }
 
@@ -397,58 +524,90 @@ inline void EndTouchIfNeeded(float sw, float sh) {
     touchEnd(10, hha.X, hha.Y);
 }
 
-// 贝塞尔主路径：短时冻结目标误差，按段缓动推进，叠惯性与轻微弧线
+// 贝塞尔主路径组件：按开关叠加；全关时不应调用（zimiao 走线性）
 inline Vector2 ComputeBezierPullOffset(Vector2 liveRel, uint64_t actor, float effectiveDiv) {
+    Vector2 planRel = liveRel;
     float errLen = sqrtf(liveRel.X * liveRel.X + liveRel.Y * liveRel.Y);
-    float fdx = liveRel.X - _pullCurve.frozenRel.X;
-    float fdy = liveRel.Y - _pullCurve.frozenRel.Y;
-    float frozenDrift = sqrtf(fdx * fdx + fdy * fdy);
-    bool actorChanged = (_pullCurve.frozenActor != 0 && actor != 0 && _pullCurve.frozenActor != actor);
-    bool driftTooFar = (errLen > 1.f && frozenDrift > fmaxf(28.f, errLen * 0.45f));
-    bool needReplan = !_pullCurve.active ||
-                      _pullCurve.t >= 1.f ||
-                      _pullCurve.duration <= 0 ||
-                      actorChanged ||
-                      driftTooFar;
-    if (needReplan) {
+
+    if (曲线目标冻结) {
+        float fdx = liveRel.X - _pullCurve.frozenRel.X;
+        float fdy = liveRel.Y - _pullCurve.frozenRel.Y;
+        float frozenDrift = sqrtf(fdx * fdx + fdy * fdy);
+        bool actorChanged = (_pullCurve.frozenActor != 0 && actor != 0 && _pullCurve.frozenActor != actor);
+        bool driftTooFar = (errLen > 1.f && frozenDrift > fmaxf(28.f, errLen * 0.45f));
+        bool needReplan = !_pullCurve.active ||
+                          _pullCurve.t >= 1.f ||
+                          _pullCurve.duration <= 0 ||
+                          actorChanged ||
+                          driftTooFar;
+        if (needReplan) {
+            _pullCurve.frozenRel = liveRel;
+            _pullCurve.frozenActor = actor;
+            int baseDur = (int)fmaxf(冻结段长, 4.f);
+            _pullCurve.duration = baseDur + (int)(arc4random() % 5);
+            _pullCurve.t = 0.f;
+            _pullCurve.step = 1.f / (float)_pullCurve.duration;
+            _pullCurve.active = true;
+        }
+        planRel = _pullCurve.frozenRel;
+    } else {
+        // 无冻结：仍用短段推进 t，供缓动/弧线相位；每帧刷新目标误差
+        if (!_pullCurve.active || _pullCurve.t >= 1.f || _pullCurve.duration <= 0) {
+            int baseDur = (int)fmaxf(冻结段长, 4.f);
+            _pullCurve.duration = baseDur + (int)(arc4random() % 5);
+            _pullCurve.t = 0.f;
+            _pullCurve.step = 1.f / (float)_pullCurve.duration;
+            _pullCurve.active = true;
+            _pullCurve.frozenActor = actor;
+        }
         _pullCurve.frozenRel = liveRel;
-        _pullCurve.frozenActor = actor;
-        _pullCurve.duration = 10 + (int)(arc4random() % 9); // 10~18 帧一段
-        _pullCurve.t = 0.f;
-        _pullCurve.step = 1.f / (float)_pullCurve.duration;
-        _pullCurve.active = true;
+        planRel = liveRel;
     }
 
     float t0 = _pullCurve.t;
     float t1 = fminf(t0 + _pullCurve.step, 1.f);
-    // 缓出：段内已消化误差比例（0→1），P1/P2 固定成 ease-out 形状
-    float e0 = _evalBezier(t0, 0.35f, 0.85f, 1.f);
-    float e1 = _evalBezier(t1, 0.35f, 0.85f, 1.f);
-    float de = e1 - e0;
-    Vector2 base( _pullCurve.frozenRel.X * de, _pullCurve.frozenRel.Y * de );
+    float de;
+    if (曲线缓动) {
+        float punch = fminf(fmaxf(前冲强度, 0.05f), 1.f);
+        float p1 = 0.15f + punch * 0.35f;   // ~0.15–0.50
+        float p2 = 0.55f + punch * 0.40f;   // ~0.55–0.95
+        float e0 = _evalBezier(t0, p1, p2, 1.f);
+        float e1 = _evalBezier(t1, p1, p2, 1.f);
+        de = e1 - e0;
+    } else {
+        de = _pullCurve.step;
+    }
 
-    // 按自瞄速度量级缩放：effectiveDiv 越大步进越慢
+    Vector2 base(planRel.X * de, planRel.Y * de);
     float scale = 1.f / fmaxf(effectiveDiv * 0.08f, 0.35f);
     base.X *= scale;
     base.Y *= scale;
 
-    // 轻微弧线：误差法向，中段最大
-    float fl = sqrtf(_pullCurve.frozenRel.X * _pullCurve.frozenRel.X +
-                     _pullCurve.frozenRel.Y * _pullCurve.frozenRel.Y);
-    if (fl > 1.f) {
-        Vector2 perp(-_pullCurve.frozenRel.Y / fl, _pullCurve.frozenRel.X / fl);
-        float arcAmp = fminf(7.f, fl * 0.07f);
-        float arc = sinf(t0 * 3.14159265f) * arcAmp * _pullCurve.step;
-        base.X += perp.X * arc;
-        base.Y += perp.Y * arc;
+    if (曲线弧线) {
+        float fl = sqrtf(planRel.X * planRel.X + planRel.Y * planRel.Y);
+        if (fl > 1.f) {
+            Vector2 perp(-planRel.Y / fl, planRel.X / fl);
+            float ampK = fminf(fmaxf(弧线幅度, 0.f), 1.5f);
+            float arcAmp = fminf(7.f, fl * 0.07f) * ampK;
+            float arc = sinf(t0 * 3.14159265f) * arcAmp * _pullCurve.step;
+            base.X += perp.X * arc;
+            base.Y += perp.Y * arc;
+        }
     }
 
-    // 惯性：速度平滑跟踪本段期望位移
-    _pullCurve.vel.X = _pullCurve.vel.X * 0.72f + base.X * 0.38f;
-    _pullCurve.vel.Y = _pullCurve.vel.Y * 0.72f + base.Y * 0.38f;
+    Vector2 out = base;
+    if (曲线惯性) {
+        float keep = 0.45f + fminf(fmaxf(惯性强度, 0.f), 1.f) * 0.40f; // 0.45–0.85
+        float follow = 1.f - keep;
+        _pullCurve.vel.X = _pullCurve.vel.X * keep + base.X * follow;
+        _pullCurve.vel.Y = _pullCurve.vel.Y * keep + base.Y * follow;
+        out = _pullCurve.vel;
+    } else {
+        _pullCurve.vel = base;
+    }
 
     _pullCurve.t = t1;
-    return _pullCurve.vel;
+    return out;
 }
 
 inline void zimiao(Vector3 aimpos, uint64_t player, uint64_t Character, const CoViewInfo &POV,
@@ -509,7 +668,7 @@ inline void zimiao(Vector3 aimpos, uint64_t player, uint64_t Character, const Co
             // Vector2 仅有 operator/(float)，无 operator*(float)
             float effectiveDiv = (pullScale > 1e-6f) ? (speedDiv / pullScale) : 1e6f;
             Vector2 offset;
-            if (自瞄曲线 == 1) {
+            if (AnyBezierPullFeatureOn()) {
                 offset = ComputeBezierPullOffset(relativePoint, player, effectiveDiv);
             } else {
                 offset = relativePoint / effectiveDiv;
@@ -548,6 +707,8 @@ inline bool ExecuteAim(uint64_t Character, const CoViewInfo &POV, ImDrawList *dl
     if (!开启自瞄) {
         EndTouchIfNeeded(sw, sh);
         动态圈上一帧有锁 = false;
+        粘滞Actor = 0;
+        挑战者计数 = 0;
         return false;
     }
     float 执行内圈 = fminf(fmaxf(内圈大小, 0.f), 当前自瞄大小);

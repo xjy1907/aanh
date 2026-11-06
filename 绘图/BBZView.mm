@@ -16,6 +16,7 @@
 #import "游戏/DrawSettingsViewController.h"
 #import "游戏/AimConfigViewController.h"
 #import "游戏/AimHumanizeConfigViewController.h"
+#import "游戏/AimBezierConfigViewController.h"
 //#import "pp.h"
 
 #ifdef __cplusplus
@@ -1814,6 +1815,27 @@ static void JVR_保存KernelExploit(NSString *ident) {
     };
     [humanizeBtn.heightAnchor constraintEqualToConstant:44].active = YES;
     [stack addArrangedSubview:humanizeBtn];
+
+    // 实验-贝塞尔曲线（与拟人自瞄平级；主路径组件 + 切目标粘滞）
+    JVRKernelButton *bezierBtn = [[JVRKernelButton alloc] init];
+    bezierBtn.translatesAutoresizingMaskIntoConstraints = NO;
+    bezierBtn.label.text = @"实验-贝塞尔曲线";
+    bezierBtn.label.textColor = JVR_主色;
+    bezierBtn.borderGrad.colors = @[(id)JVR_主色.CGColor, (id)JVR_副色.CGColor];
+    bezierBtn.onTap = ^{
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        if (!strongSelf) return;
+        AimBezierConfigViewController *vc = [[AimBezierConfigViewController alloc] init];
+        UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:vc];
+        nav.modalPresentationStyle = UIModalPresentationFullScreen;
+        nav.navigationBar.barStyle = UIBarStyleBlack;
+        nav.navigationBar.tintColor = JVR_主色;
+        nav.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName: JVR_文字色};
+        [strongSelf presentViewController:nav animated:YES completion:nil];
+        KernelLogLine("打开实验-贝塞尔曲线界面");
+    };
+    [bezierBtn.heightAnchor constraintEqualToConstant:44].active = YES;
+    [stack addArrangedSubview:bezierBtn];
     
     return stack;
 }
