@@ -107,7 +107,8 @@
     [self mkSlider:@"物资大小" key:@"lootSize" min:6 max:24 step:1 kind:1],
     [self mkSlider:@"信息大小" key:@"infoSize" min:6 max:24 step:1 kind:1],
     // 对标 qwer：模型漏打独立距离（与「模型渲染」联动，供自瞄不打墙）
-    [self mkSlider:@"漏打距离" key:@"漏打距离" min:0 max:500 step:1 kind:1],
+    // 上限 150：再大 PhysX/Embree 网格负载暴涨
+    [self mkSlider:@"漏打距离" key:@"漏打距离" min:50 max:150 step:1 kind:1],
   ];
 }
 
@@ -233,7 +234,7 @@
     if ([row.key isEqualToString:@"drawDist"]) defV = 252;
     if ([row.key isEqualToString:@"behindDist"]) defV = 252;
     if ([row.key isEqualToString:@"boneDist"]) defV = 30;
-    if ([row.key isEqualToString:@"漏打距离"]) defV = 120;
+    if ([row.key isEqualToString:@"漏打距离"]) defV = 90;
     float cur = [self floatForKey:row.key def:defV];
 
     UILabel *val = [[UILabel alloc] init];

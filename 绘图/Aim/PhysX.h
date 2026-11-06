@@ -152,21 +152,53 @@ namespace PhysXLoadFilter {
     inline std::atomic<float> camX{0.f};
     inline std::atomic<float> camY{0.f};
     inline std::atomic<float> camZ{0.f};
-    // 默认 200m（UE cm）；漏打距离会经 AimPhysX_SetLoadRadiusMeters 覆盖
-    inline std::atomic<float> radiusUU{20000.f};
+    // 默认约 90m（UE cm）；漏打距离会经 AimPhysX_SetLoadRadiusMeters 覆盖
+    inline std::atomic<float> radiusUU{10350.f}; // 90*100*1.15
+    // 镜头静止时后台刷新间隔倍率：1=正常，2/3=降频省 CPU
+    inline std::atomic<int> intervalScale{1};
 
     inline void SetCamera(float x, float y, float z) {
+        static float prevX = 0.f, prevY = 0.f, prevZ = 0.f;
+        static bool hasPrev = false;
+        static int idleFrames = 0;
+        if (hasPrev) {
+            const float dx = x - prevX;
+            const float dy = y - prevY;
+            const float dz = z - prevZ;
+            const float move = sqrtf(dx * dx + dy * dy + dz * dz);
+            // UE cm：单帧位移 <30≈站桩微动；否则视为在移动
+            if (move < 30.f) {
+                if (idleFrames < 10000) idleFrames++;
+            } else {
+                idleFrames = 0;
+            }
+            // ~10 帧静止→2x；~30 帧静止→3x
+            int scale = 1;
+            if (idleFrames >= 30) scale = 3;
+            else if (idleFrames >= 10) scale = 2;
+            intervalScale.store(scale, std::memory_order_relaxed);
+        } else {
+            hasPrev = true;
+            intervalScale.store(1, std::memory_order_relaxed);
+        }
+        prevX = x; prevY = y; prevZ = z;
         camX.store(x, std::memory_order_relaxed);
         camY.store(y, std::memory_order_relaxed);
         camZ.store(z, std::memory_order_relaxed);
         camValid.store(true, std::memory_order_release);
     }
 
+    inline int IntervalScale() {
+        int s = intervalScale.load(std::memory_order_relaxed);
+        return (s < 1) ? 1 : ((s > 3) ? 3 : s);
+    }
+
     /// meters：米；内部转 UE 单位并加 15% 余量，保证漏打边缘仍有网格
     inline void SetRadiusMeters(float meters) {
-        if (!(meters > 0.f)) meters = 120.f;
+        if (!(meters > 0.f)) meters = 90.f;
         if (meters < 50.f) meters = 50.f;
-        if (meters > 500.f) meters = 500.f;
+        // 上限 150：再大网格/Embree 负载暴涨，收益差
+        if (meters > 150.f) meters = 150.f;
         radiusUU.store(meters * 100.f * 1.15f, std::memory_order_relaxed);
     }
 
@@ -1908,7 +1940,9 @@ namespace VisibleCheck {
                 std::this_thread::sleep_for(std::chrono::milliseconds(1500));
                 continue;
             }
-            Throttlered.executeTaskWithSleep("UpdateSceneByRangeSleep", std::chrono::milliseconds(2000), [&cache, &currentSceneObjects, &lastUpdateTimestamp, &alwaysCheckShape] {
+            // 基线 2000ms；镜头静止时 ×intervalScale（最高 3→6s）
+            const int rangeMs = 2000 * PhysXLoadFilter::IntervalScale();
+            Throttlered.executeTaskWithSleep("UpdateSceneByRangeSleep", std::chrono::milliseconds(rangeMs), [&cache, &currentSceneObjects, &lastUpdateTimestamp, &alwaysCheckShape] {
                 std::set<PrunerPayload> willRemoveObjects{};
                 auto Meshs = LoadShapeByRange(lastUpdateTimestamp,cache,currentSceneObjects,willRemoveObjects,alwaysCheckShape);
                 if (!Meshs.empty() || !willRemoveObjects.empty()) DynamicLoadScene->UpdateMesh(Meshs, willRemoveObjects);
@@ -1927,7 +1961,9 @@ namespace VisibleCheck {
                 std::this_thread::sleep_for(std::chrono::milliseconds(1500));
                 continue;
             }
-            Throttlered.executeTaskWithSleep("HeightFieldUpdateSleep", std::chrono::milliseconds(3000), [&UniqueSet, &HeightFieldSet, &HeightFieldSamplePtrSet, &lastUpdateTimestamp] {
+            // 基线 3000ms；静止时最高 9s
+            const int hfMs = 3000 * PhysXLoadFilter::IntervalScale();
+            Throttlered.executeTaskWithSleep("HeightFieldUpdateSleep", std::chrono::milliseconds(hfMs), [&UniqueSet, &HeightFieldSet, &HeightFieldSamplePtrSet, &lastUpdateTimestamp] {
                 std::set<uint64_t> RemoveHeightFieldKey{};
                 auto Meshs = RefreshDynamicLoadHeightField(lastUpdateTimestamp, UniqueSet,HeightFieldSet,HeightFieldSamplePtrSet,RemoveHeightFieldKey);
                 if (!Meshs.empty() || !RemoveHeightFieldKey.empty())HeightFieldScene->UpdateMesh(Meshs, RemoveHeightFieldKey);
@@ -1945,8 +1981,9 @@ namespace VisibleCheck {
                 std::this_thread::sleep_for(std::chrono::milliseconds(1500));
                 continue;
             }
-            // 原 300ms 过密，真实网格下易顶满 CPU；降到 1000ms
-            Throttlered.executeTaskWithSleep("DynamicRigidUpdateSleep", std::chrono::milliseconds(1000), [&currentSceneObjects, &cache, &ptrCache] {
+            // 原 300ms→1000ms→1800ms；静止时 ×scale（最高约 5.4s）
+            const int rigidMs = 1800 * PhysXLoadFilter::IntervalScale();
+            Throttlered.executeTaskWithSleep("DynamicRigidUpdateSleep", std::chrono::milliseconds(rigidMs), [&currentSceneObjects, &cache, &ptrCache] {
                 std::set<PrunerPayload> willRemoveShape{};
                 auto Meshs = LoadDynamicRigidShape(currentSceneObjects,cache,ptrCache,willRemoveShape);
                 if (!Meshs.empty() || !willRemoveShape.empty()) DynamicRigidScene->UpdateMesh(Meshs, willRemoveShape);
