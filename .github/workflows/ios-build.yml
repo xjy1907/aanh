@@ -66,8 +66,7 @@ on:
 
 jobs:
   build:
-    # macos-13/14 are deprecated and queue forever. Use macos-15 + Xcode 16.4
-    # (not latest-stable/Xcode 26) after removing vendored _external/include/xpc.
+    # iOS15 启动兼容：用 macos-15 + Xcode 16.4（Xcode 26 工具链易带入不兼容依赖）
     runs-on: macos-15
     permissions:
       contents: write # deletes the trigger tag
@@ -884,6 +883,12 @@ jobs:
           HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install ldid
           echo "ldid=$(command -v ldid)"
 
+      # 对齐 Dopamine：嵌入的 libchoma 必须是纯 iOS 切片（含 LC_VERSION_MIN_MACOSX 的 fat 臂会在 iOS15 dyld 秒退）
+      - name: Fix libchoma iOS slice
+        run: |
+          set -e
+          python3 supports/fix_choma_ios_slice.py
+
       - name: Build IPA
         env:
           BUILD_ID: ${{ steps.params.outputs.build_id }}
@@ -1180,8 +1185,7 @@ jobs:
             BUILD_CMD="$BUILD_CMD -destination 'generic/platform=iOS'"
             BUILD_CMD="$BUILD_CMD -derivedDataPath '$DERIVED_DATA_PATH'"
             BUILD_CMD="$BUILD_CMD COMPILER_INDEX_STORE_ENABLE=NO $version_settings"
-            BUILD_CMD="$BUILD_CMD -quiet"
-
+            
             if [ "$USE_SIGNING" = "true" ]; then
               # Must archive, not build: the IPA step below exports
               # build/App.xcarchive whenever signing is on. The signing settings
@@ -1213,8 +1217,7 @@ jobs:
             BUILD_CMD="$BUILD_CMD COMPILER_INDEX_STORE_ENABLE=NO"
             BUILD_CMD="$BUILD_CMD DEBUG_INFORMATION_FORMAT=dwarf"
             BUILD_CMD="$BUILD_CMD ONLY_ACTIVE_ARCH=YES"
-            BUILD_CMD="$BUILD_CMD -quiet"
-
+            
             # Xcode 16+ native compilation caching
             BUILD_CMD="$BUILD_CMD SWIFT_ENABLE_COMPILE_CACHE=YES"
             BUILD_CMD="$BUILD_CMD CLANG_ENABLE_COMPILE_CACHE=YES"
@@ -1323,6 +1326,25 @@ jobs:
                   exit 1
                 fi
                 echo "Verified DRAWFPS_SEG_V1 in binary"
+                # iOS15：禁止链入 swiftCompatibility56 / SwiftUI（与 wasd 对齐）
+                if command -v otool >/dev/null 2>&1; then
+                  DEPS=$(otool -L "$EXECUTABLE_PATH" 2>/dev/null || true)
+                  if echo "$DEPS" | grep -qiE 'swiftCompatibility56|SwiftUI\.framework|AppIntents\.framework'; then
+                    echo "::error::Binary still links iOS16+ Swift deps (Compatibility56/SwiftUI/AppIntents); iOS15 will crash on launch"
+                    echo "$DEPS" | grep -iE 'swift|AppIntents|Compatibility' || true
+                    exit 1
+                  fi
+                  echo "Verified no Compatibility56/SwiftUI/AppIntents load commands"
+                  # iOS15：嵌入的 dylib 不得带 LC_VERSION_MIN_MACOSX（arm64 切片曾因此秒退）
+                  while IFS= read -r -d '' dylib; do
+                    if otool -l "$dylib" 2>/dev/null | grep -q 'LC_VERSION_MIN_MACOSX'; then
+                      echo "::error::Embedded dylib still has LC_VERSION_MIN_MACOSX (iOS15 dyld abort): $dylib"
+                      otool -l "$dylib" | grep -A3 'LC_VERSION_MIN_MACOSX' || true
+                      exit 1
+                    fi
+                  done < <(find "$APP_COPY" -name '*.dylib' -print0 2>/dev/null)
+                  echo "Verified no LC_VERSION_MIN_MACOSX on embedded dylibs"
+                fi
                 if [ -f "${APP_COPY}/libjailbreak.dylib" ] || [ -f "${APP_COPY}/libchoma.dylib" ] || [ -f "${APP_COPY}/libxpf.dylib" ]; then
                   echo "::error::IPA still contains unrenamed libjailbreak/libchoma/libxpf"
                   exit 1

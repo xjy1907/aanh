@@ -107,6 +107,13 @@
 		368CEE1B2E7726E9000D0A45 /* BBZGui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 368CEE0A2E7726E9000D0A45 /* BBZGui.cpp */; };
 		368CEE1C2E7726E9000D0A45 /* BBZGui_widgets.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 368CEE112E7726E9000D0A45 /* BBZGui_widgets.cpp */; };
 		36DE04712E83D1C000453C35 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 36DE04702E83D1C000453C35 /* Foundation.framework */; };
+		A1UIKIT001F508F1500FD4AFC /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A1UIKIT002F508F1500FD4AFC /* UIKit.framework */; };
+		A1CG001F508F1500FD4AFC /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A1CG002F508F1500FD4AFC /* CoreGraphics.framework */; };
+		A1QC001F508F1500FD4AFC /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A1QC002F508F1500FD4AFC /* QuartzCore.framework */; };
+		A1CI001F508F1500FD4AFC /* CoreImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A1CI002F508F1500FD4AFC /* CoreImage.framework */; };
+		A1SEC001F508F1500FD4AFC /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A1SEC002F508F1500FD4AFC /* Security.framework */; };
+		A1JBLOAD01F508F1500FD4AFC /* JBDylibLoader.mm in Sources */ = {isa = PBXBuildFile; fileRef = A1JBLOAD02F508F1500FD4AFC /* JBDylibLoader.mm */; };
+		A1JBHOST01F508F1500FD4AFC /* JBHostLog.m in Sources */ = {isa = PBXBuildFile; fileRef = A1JBHOST02F508F1500FD4AFC /* JBHostLog.m */; };
 		3DC0278E4EB983404867C27F /* exploit/IOSurfaceRoot.c in Sources */ = {isa = PBXBuildFile; fileRef = A7C80CB51713E9B06D5FB833 /* exploit/IOSurfaceRoot.c */; };
 		4797DFE60FA80BBCFB376EE4 /* exploit/IOGPU.c in Sources */ = {isa = PBXBuildFile; fileRef = 9B7CCE28E196F3FAA6E32ACE /* exploit/IOGPU.c */; };
 		4D29F71A57A90BA00295D50F /* kfd.h in Headers */ = {isa = PBXBuildFile; fileRef = 8AB5A82D6092C98D77743308 /* kfd.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -320,8 +327,8 @@
 		0FE5D65F2F5067A100FD4AFC /* 绘制类型.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "绘制类型.h"; sourceTree = "<group>"; };
 		0FE5D6602F5067A100FD4AFC /* 物品ID.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "物品ID.h"; sourceTree = "<group>"; };
 		0FE5D6612F5067A100FD4AFC /* SDK.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SDK.h; sourceTree = "<group>"; };
-		0FE5D6A22F50890D00FD4AFC /* IOSurface.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOSurface.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk/System/Library/Frameworks/IOSurface.framework; sourceTree = DEVELOPER_DIR; };
-		0FE5D6A42F50892300FD4AFC /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		0FE5D6A22F50890D00FD4AFC /* IOSurface.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOSurface.framework; path = System/Library/Frameworks/IOSurface.framework; sourceTree = SDKROOT; };
+		0FE5D6A42F50892300FD4AFC /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		0FE5D6A82F508CAC00FD4AFC /* SwiftCompatStubs.s */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.asm; path = SwiftCompatStubs.s; sourceTree = "<group>"; };
 		0FE5D6AB2F508F1500FD4AFC /* CoreHaptics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreHaptics.framework; path = System/Library/Frameworks/CoreHaptics.framework; sourceTree = SDKROOT; };
 		1F0BD8B82D6DAD13008151DA /* entitlements.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = entitlements.plist; sourceTree = "<group>"; };
@@ -423,6 +430,13 @@
 		368CEE142E7726E9000D0A45 /* imstb_textedit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = imstb_textedit.h; sourceTree = "<group>"; };
 		368CEE152E7726E9000D0A45 /* imstb_truetype.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = imstb_truetype.h; sourceTree = "<group>"; };
 		36DE04702E83D1C000453C35 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		A1UIKIT002F508F1500FD4AFC /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		A1CG002F508F1500FD4AFC /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		A1QC002F508F1500FD4AFC /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		A1CI002F508F1500FD4AFC /* CoreImage.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreImage.framework; path = System/Library/Frameworks/CoreImage.framework; sourceTree = SDKROOT; };
+		A1SEC002F508F1500FD4AFC /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		A1JBLOAD02F508F1500FD4AFC /* JBDylibLoader.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = JBDylibLoader.mm; path = sources/JBDylibLoader.mm; sourceTree = SOURCE_ROOT; };
+		A1JBHOST02F508F1500FD4AFC /* JBHostLog.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = JBHostLog.m; path = sources/JBHostLog.m; sourceTree = SOURCE_ROOT; };
 		3F296FCDE6CD33C03BA38851 /* weightBufs.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = weightBufs.m; sourceTree = "<group>"; };
 		4219D763AFE2FAC989FF96AB /* exploit/exploit.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = exploit/exploit.c; sourceTree = "<group>"; };
 		4671680BA67FB3F8238E11AC /* weightBufs.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = weightBufs.h; sourceTree = "<group>"; };
@@ -603,7 +617,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CC8DDA992B66318E001C7C9E /* AppIntents.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -617,26 +630,24 @@
 				06D4D8A22E18DDCF008B33B6 /* libcompression.tbd in Frameworks */,
 				06D4D8A02E18DDCA008B33B6 /* libz.tbd in Frameworks */,
 				06D4D8992E18DD9A008B33B6 /* libjailbreak.dylib in Frameworks */,
-				877385492ECDA62E006B9A42 /* libzstd.a in Frameworks */,
-				06D4D89A2E18DD9A008B33B6 /* libchoma.dylib in Frameworks */,
 				06D4D89B2E18DD9A008B33B6 /* libxpf.dylib in Frameworks */,
+				06D4D89A2E18DD9A008B33B6 /* libchoma.dylib in Frameworks */,
+				877385492ECDA62E006B9A42 /* libzstd.a in Frameworks */,
 				06D4D8932E18D83A008B33B6 /* libpartial.a in Frameworks */,
-				06D4D9822E190828008B33B6 /* NHEngine.framework in Frameworks */,
 				06D4D8942E18D83A008B33B6 /* libgrabkernel2.a in Frameworks */,
-				06D4D8952E18D83A008B33B6 /* Preferences.framework in Frameworks */,
 				36DE04712E83D1C000453C35 /* Foundation.framework in Frameworks */,
-				CC8DDA9A2B6631DC001C7C9E /* AppIntents.framework in Frameworks */,
+				A1UIKIT001F508F1500FD4AFC /* UIKit.framework in Frameworks */,
+				A1CG001F508F1500FD4AFC /* CoreGraphics.framework in Frameworks */,
+				A1QC001F508F1500FD4AFC /* QuartzCore.framework in Frameworks */,
+				A1CI001F508F1500FD4AFC /* CoreImage.framework in Frameworks */,
+				A1SEC001F508F1500FD4AFC /* Security.framework in Frameworks */,
 				06D4D8872E18D774008B33B6 /* IOKit.framework in Frameworks */,
 				06D67DB32E0CD63D002E20EF /* IOSurface.framework in Frameworks */,
 				1F0BD9182D6DB7AA008151DA /* Metal.framework in Frameworks */,
 				1F0BD91A2D6DB7B9008151DA /* MetalKit.framework in Frameworks */,
 				1F190ADE504FF1E5B8E82B49 /* libzstd.a in Frameworks */,
-				06D4D8B02E18DE11008B33B6 /* NHKit.framework in Frameworks */,
-				06D4DA932E190918008B33B6 /* NHDraw.framework in Frameworks */,
-				06D4DBF02E190B9B008B33B6 /* NHStream.framework in Frameworks */,
 				361131B62E49340A00E2AA06 /* AdSupport.framework in Frameworks */,
 				CC711D9C2B5C0032007235A6 /* IOKit.tbd in Frameworks */,
-				06D4D9272E19068A008B33B6 /* NHBase.framework in Frameworks */,
 				CC711D982B5BFF2F007235A6 /* GraphicsServices.tbd in Frameworks */,
 				CC711D9E2B5C0081007235A6 /* AssertionServices.tbd in Frameworks */,
 				CC711D9A2B5BFF2F007235A6 /* BackBoardServices.tbd in Frameworks */,
@@ -1113,6 +1124,11 @@
 				0FE5D6A42F50892300FD4AFC /* Foundation.framework */,
 				0FE5D6A22F50890D00FD4AFC /* IOSurface.framework */,
 				36DE04702E83D1C000453C35 /* Foundation.framework */,
+				A1UIKIT002F508F1500FD4AFC /* UIKit.framework */,
+				A1CG002F508F1500FD4AFC /* CoreGraphics.framework */,
+				A1QC002F508F1500FD4AFC /* QuartzCore.framework */,
+				A1CI002F508F1500FD4AFC /* CoreImage.framework */,
+				A1SEC002F508F1500FD4AFC /* Security.framework */,
 				361131B52E49340A00E2AA06 /* AdSupport.framework */,
 				06D4D8A32E18DDE5008B33B6 /* libMobileGestalt.tbd */,
 				06D4D8A12E18DDCF008B33B6 /* libcompression.tbd */,
@@ -1618,31 +1634,18 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CC2BAFBA2B5CA9DD00A429D1 /* SPLarkPresentingAnimationController.swift in Sources */,
 				CC91309F2B616541006E3280 /* HUDBackdropLabel.mm in Sources */,
-				CC2BAFBB2B5CA9DD00A429D1 /* SPLarkDismissingAnimationController.swift in Sources */,
 				CC2BAFBC2B5CA9DD00A429D1 /* MainButton.mm in Sources */,
-				0FE5D6A92F508CAC00FD4AFC /* SwiftCompatStubs.s in Sources */,
-				CC2BAFBD2B5CA9DD00A429D1 /* HiddenContainerRecognizer.swift in Sources */,
-				CC2BAFC02B5CA9DD00A429D1 /* SPLarkSettingsCloseButton.swift in Sources */,
-				CC2BAFC12B5CA9DD00A429D1 /* SPLarkPresentationController.swift in Sources */,
-				CC2BAFC22B5CA9DD00A429D1 /* TSSettingsController.swift in Sources */,
 				CC2BAFC42B5CA9DD00A429D1 /* MainApplication.mm in Sources */,
 				CC2BAFC52B5CA9DD00A429D1 /* BBZView.mm in Sources */,
 				52D9892696614579B40E3B51 /* MaterialConfigViewController.mm in Sources */,
 				3AF79ADC4BF24B6098EFBE47 /* ItemConfig.mm in Sources */,
 				CC9130A42B616C18006E3280 /* HUDBackdropView.mm in Sources */,
-				CC2BAFC62B5CA9DD00A429D1 /* ScreenshotInvisibleContainer.swift in Sources */,
-				CC2BAFC72B5CA9DD00A429D1 /* ScreenshotInvincibleContainerProtocol.swift in Sources */,
-				CC2BAFC82B5CA9DD00A429D1 /* SPLarkController.swift in Sources */,
 				CC2BAFC92B5CA9DD00A429D1 /* HUDApp.mm in Sources */,
-				CC2BAFCB2B5CA9DD00A429D1 /* SPLarkSettingsCollectionView.swift in Sources */,
-				CC9130A82B62A33A006E3280 /* TSSettingsIndex.swift in Sources */,
-				CC2BAFCC2B5CA9DD00A429D1 /* SPLarkSettingsController.swift in Sources */,
-				CC2BAFCD2B5CA9DD00A429D1 /* SPLarkControllerExtension.swift in Sources */,
+				A1JBLOAD01F508F1500FD4AFC /* JBDylibLoader.mm in Sources */,
+				A1JBHOST01F508F1500FD4AFC /* JBHostLog.m in Sources */,
+				0FE5D6AA2F508CAC00FD4AFC /* SwiftCompatStubs.s in Sources */,
 				CC2BAFCE2B5CA9DD00A429D1 /* MainApplicationDelegate.mm in Sources */,
-				CC2BAFD12B5CA9DD00A429D1 /* SPLarkTransitioningDelegate.swift in Sources */,
-				CC2BAFD22B5CA9DD00A429D1 /* SPLarkSettingsCollectionViewCell.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1650,12 +1653,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CC8DDA8F2B654DC8001C7C9E /* ActivateHUDIntent.swift in Sources */,
 				26F9380D2E8A575D00EC1B64 /* LFSenderIDViewController.m in Sources */,
 				26F9380E2E8A575D00EC1B64 /* LFVirtualDigitizer.mm in Sources */,
 				26F9380F2E8A575D00EC1B64 /* LFSenderIDMonitor.m in Sources */,
 				26F938102E8A575D00EC1B64 /* LFSimpleLogger.m in Sources */,
-				CC9130A72B62A33A006E3280 /* TSSettingsIndex.swift in Sources */,
 				361126832E4476E700E2AA06 /* DOUIManager.m in Sources */,
 				361126842E4476E700E2AA06 /* DOEnvironmentManager.m in Sources */,
 				361126852E4476E700E2AA06 /* DOPreferenceManager.m in Sources */,
@@ -1670,11 +1671,8 @@
 				368CEE1B2E7726E9000D0A45 /* BBZGui.cpp in Sources */,
 				368CEE1C2E7726E9000D0A45 /* BBZGui_widgets.cpp in Sources */,
 				CC711D4A2B5BF5C6007235A6 /* HUDHelper.mm in Sources */,
-				CC711D532B5BF5C6007235A6 /* SPLarkPresentingAnimationController.swift in Sources */,
-				CC711D592B5BF5C6007235A6 /* SPLarkDismissingAnimationController.swift in Sources */,
 				CC9130A32B616C18006E3280 /* HUDBackdropView.mm in Sources */,
 				CC711D512B5BF5C6007235A6 /* MainButton.mm in Sources */,
-				CC711D5E2B5BF5C6007235A6 /* HiddenContainerRecognizer.swift in Sources */,
 				CC711D632B5BF5C6007235A6 /* TSEventFetcher.mm in Sources */,
 				CC711D4F2B5BF5C6007235A6 /* UITouch-KIFAdditions.m in Sources */,
 				26F938232E8A578500EC1B64 /* SVIndefiniteAnimatedView.m in Sources */,
@@ -1686,21 +1684,13 @@
 				26F938282E8A578500EC1B64 /* SVRadialGradientLayer.m in Sources */,
 				26F938292E8A578500EC1B64 /* SVProgressAnimatedView.m in Sources */,
 				26F9382A2E8A578500EC1B64 /* MBProgressHUD+WJExtension.m in Sources */,
-				CC711D522B5BF5C6007235A6 /* SPLarkSettingsCloseButton.swift in Sources */,
 				CC91309E2B616541006E3280 /* HUDBackdropLabel.mm in Sources */,
-				CC711D582B5BF5C6007235A6 /* SPLarkPresentationController.swift in Sources */,
-				0FE5D6AA2F508CAC00FD4AFC /* SwiftCompatStubs.s in Sources */,
-				CC711D622B5BF5C6007235A6 /* TSSettingsController.swift in Sources */,
 				CC711D612B5BF5C6007235A6 /* HUDMainApplication.mm in Sources */,
 				CC711D5F2B5BF5C6007235A6 /* MainApplication.mm in Sources */,
-				CC8DDA952B6551C7001C7C9E /* ToggleHUDIntent.swift in Sources */,
 				CC711D4B2B5BF5C6007235A6 /* BBZView.mm in Sources */,
-				CC711D5C2B5BF5C6007235A6 /* ScreenshotInvisibleContainer.swift in Sources */,
-				CC711D5D2B5BF5C6007235A6 /* ScreenshotInvincibleContainerProtocol.swift in Sources */,
-				CC711D562B5BF5C6007235A6 /* SPLarkController.swift in Sources */,
 				CC711D642B5BF5C6007235A6 /* HUDApp.mm in Sources */,
+				0FE5D6A92F508CAC00FD4AFC /* SwiftCompatStubs.s in Sources */,
 				CC711D502B5BF5C6007235A6 /* IOHIDEvent+KIF.m in Sources */,
-				CC8DDA922B655156001C7C9E /* DeactivateHUDIntent.swift in Sources */,
 				1F0BD93B2D6ED703008151DA /* DrawView.mm in Sources */,
 				2F50CA52FF96439999D47905 /* stb_image.cpp in Sources */,
 				48FAF1654B4F4B44B1423CC9 /* DrawSettingsViewController.mm in Sources */,
@@ -1714,15 +1704,12 @@
 				3BC5ADD429D34DD689FC0109 /* WeaponTextures.mm in Sources */,
 				1EB561C880AF4623B86304D8 /* MaterialConfigViewController.mm in Sources */,
 				E3A40925550F4B9F8723608C /* ItemConfig.mm in Sources */,
-				CC711D572B5BF5C6007235A6 /* SPLarkSettingsCollectionView.swift in Sources */,
-				CC711D552B5BF5C6007235A6 /* SPLarkSettingsController.swift in Sources */,
-				CC711D5B2B5BF5C6007235A6 /* SPLarkControllerExtension.swift in Sources */,
 				26F938032E8A573100EC1B64 /* HapticManager.m in Sources */,
 				26F938042E8A573100EC1B64 /* touchaa.mm in Sources */,
 				CC711D4D2B5BF5C6007235A6 /* MainApplicationDelegate.mm in Sources */,
+				A1JBLOAD01F508F1500FD4AFC /* JBDylibLoader.mm in Sources */,
+				A1JBHOST01F508F1500FD4AFC /* JBHostLog.m in Sources */,
 				CC711D4E2B5BF5C6007235A6 /* BBZViewController.mm in Sources */,
-				CC711D5A2B5BF5C6007235A6 /* SPLarkTransitioningDelegate.swift in Sources */,
-				CC711D542B5BF5C6007235A6 /* SPLarkSettingsCollectionViewCell.swift in Sources */,
 				CC711D4C2B5BF5C6007235A6 /* HonyWindow.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1799,6 +1786,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/supports",
+					"$(PROJECT_DIR)/sources",
 					"$(PROJECT_DIR)/Embree/include",
 					"$(PROJECT_DIR)/绘图/Aim",
 					"$(PROJECT_DIR)/dependencies/include",
@@ -1849,6 +1837,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/supports",
+					"$(PROJECT_DIR)/sources",
 					"$(PROJECT_DIR)/Embree/include",
 					"$(PROJECT_DIR)/绘图/Aim",
 					"$(PROJECT_DIR)/dependencies/include",
@@ -2273,9 +2262,8 @@
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = "supports/hudapp-bridging-header.h";
-				SWIFT_VERSION = 5.0;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -2316,9 +2304,8 @@
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = "supports/hudapp-bridging-header.h";
-				SWIFT_VERSION = 5.0;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -2327,7 +2314,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
@@ -2393,7 +2380,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = NO;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
@@ -2468,7 +2455,6 @@
 					"$(PROJECT_DIR)/dependencies/build/fallback",
 					"$(PROJECT_DIR)/_external/basebin/fallback",
 					"$(PROJECT_DIR)/fuck",
-					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos,
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "supports/hudapp-prefix.pch";
@@ -2479,6 +2465,7 @@
 				GCC_WARN_CHECK_SWITCH_STATEMENTS = NO;
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/supports",
+					"$(PROJECT_DIR)/sources",
 					"$(PROJECT_DIR)/Embree/include",
 					"$(PROJECT_DIR)/绘图/Aim",
 					"$(PROJECT_DIR)/dependencies/include",
@@ -2490,7 +2477,7 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2502,14 +2489,20 @@
 					"$(PROJECT_DIR)/dependencies/build",
 					"$(PROJECT_DIR)/_external/lib",
 					"$(PROJECT_DIR)/fuck",
-					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos,
 				);
 				MARKETING_VERSION = 1.12.1;
 				OTHER_CFLAGS = "-fno-modules";
 				OTHER_LDFLAGS = (
-					"-Wl,-U,___swift_FORCE_LOAD_$_swiftCompatibility51",
-					"-Wl,-U,___swift_FORCE_LOAD_$_swiftCompatibility56",
-					"-Wl,-U,___swift_FORCE_LOAD_$_swiftCompatibilityConcurrency",
+					"-framework",
+					"UIKit",
+					"-framework",
+					"CoreGraphics",
+					"-framework",
+					"QuartzCore",
+					"-framework",
+					"CoreImage",
+					"-framework",
+					"Security",
 					"$(PROJECT_DIR)/Embree/libembree4.a",
 					"$(PROJECT_DIR)/Embree/libsys.a",
 					"$(PROJECT_DIR)/Embree/libtasking.a",
@@ -2525,9 +2518,8 @@
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = "supports/hudapp-bridging-header.h";
-				SWIFT_VERSION = 5.0;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -2550,7 +2542,6 @@
 					"$(PROJECT_DIR)/dependencies/build/fallback",
 					"$(PROJECT_DIR)/_external/basebin/fallback",
 					"$(PROJECT_DIR)/fuck",
-					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos,
 				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "supports/hudapp-prefix.pch";
@@ -2561,6 +2552,7 @@
 				GCC_WARN_CHECK_SWITCH_STATEMENTS = NO;
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/supports",
+					"$(PROJECT_DIR)/sources",
 					"$(PROJECT_DIR)/Embree/include",
 					"$(PROJECT_DIR)/绘图/Aim",
 					"$(PROJECT_DIR)/dependencies/include",
@@ -2572,7 +2564,7 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2584,14 +2576,20 @@
 					"$(PROJECT_DIR)/dependencies/build",
 					"$(PROJECT_DIR)/_external/lib",
 					"$(PROJECT_DIR)/fuck",
-					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/iphoneos,
 				);
 				MARKETING_VERSION = 1.12.1;
 				OTHER_CFLAGS = "-fno-modules";
 				OTHER_LDFLAGS = (
-					"-Wl,-U,___swift_FORCE_LOAD_$_swiftCompatibility51",
-					"-Wl,-U,___swift_FORCE_LOAD_$_swiftCompatibility56",
-					"-Wl,-U,___swift_FORCE_LOAD_$_swiftCompatibilityConcurrency",
+					"-framework",
+					"UIKit",
+					"-framework",
+					"CoreGraphics",
+					"-framework",
+					"QuartzCore",
+					"-framework",
+					"CoreImage",
+					"-framework",
+					"Security",
 					"$(PROJECT_DIR)/Embree/libembree4.a",
 					"$(PROJECT_DIR)/Embree/libsys.a",
 					"$(PROJECT_DIR)/Embree/libtasking.a",
@@ -2607,9 +2605,8 @@
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = "supports/hudapp-bridging-header.h";
-				SWIFT_VERSION = 5.0;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = NO;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;

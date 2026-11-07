@@ -34,6 +34,8 @@ bool IsReadingEnabled(void);
 }
 #endif
 
+static void StartDrawBootPollerIfNeeded(void);
+
 @implementation DrawWindow
 
 static pid_t gamePid = -1;
@@ -193,6 +195,9 @@ static bool LoadReadingFlagFromDisk(void) {
 
 extern "C" void SetReadingEnabled(bool enabled) {
     gReadingEnabled = enabled;
+    if (enabled) {
+        StartDrawBootPollerIfNeeded();
+    }
     PersistReadingFlag(enabled);
     if (!enabled) {
         gamePid = -1;
@@ -720,25 +725,29 @@ bool getbbz() {
     return (gamePid > 0 && 模块地址 != 0);
 }
 
-+ (void)load {
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        DrawDbg("[Boot] DrawWindow.load pid=%d 后台轮询+7s诊断+CPU启动", (int)getpid());
-        int tick = 0;
-        while (true) {
-            // prefs 每 1s 刷新（含 drx 扩展项：手持/血量/物资模式等）
-            RefreshDrawPrefs();
-            if (gReadingEnabled && ((DOJailbreaker *)DOJailbreaker.sharedInstance).isSuccess) {
-                getbbz(); // 内部已对 pid/基址扫描节流
+// 对齐 qwer：不在 +load 启动后台轮询（类加载早于 UIApplicationMain，易在 iOS15 点开即踩库）。
+// 由「开始读取」/叠层就绪路径显式调用 StartDrawBootPollerIfNeeded。
+static void StartDrawBootPollerIfNeeded(void) {
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            DrawDbg("[Boot] DrawWindow poller pid=%d 后台轮询+7s诊断+CPU启动", (int)getpid());
+            int tick = 0;
+            while (true) {
+                RefreshDrawPrefs();
+                if (gReadingEnabled && ((DOJailbreaker *)DOJailbreaker.sharedInstance).isSuccess) {
+                    getbbz();
+                }
+                if ((tick % 2) == 0) {
+                    gCurrentCPUUsage = GetCurrentProcessCPUUsage();
+                }
+                if ((tick % 7) == 0 && NHDebugLogEnabled()) {
+                    DumpReadPipelineEvery7s();
+                }
+                tick++;
+                sleep(1);
             }
-            if ((tick % 2) == 0) {
-                gCurrentCPUUsage = GetCurrentProcessCPUUsage();
-            }
-            if ((tick % 7) == 0 && NHDebugLogEnabled()) {
-                DumpReadPipelineEvery7s();
-            }
-            tick++;
-            sleep(1);
-        }
+        });
     });
 }
 

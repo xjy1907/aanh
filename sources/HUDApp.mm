@@ -19,9 +19,6 @@
 #import "TSEventFetcher.h"
 #import "UIApplication+Private.h"
 
-#import "DOEnvironmentManager.h"
-#import <libjailbreak/info.h>
-#import <libjailbreak/jbclient_xpc.h>
 #import "LFVirtualDigitizer.h"
 #import "AimFloatWindow.h"
 // PID 文件改为每机派生路径，见 NHIdentity.h → NHPidPath()
@@ -122,22 +119,16 @@ static __used void _HUDEventCallback(void *target, void *refcon, IOHIDServiceRef
 int main(int argc, char *argv[]) {
   @autoreleasepool {
     log_debug(OS_LOG_DEFAULT, "launched argc %{public}d, argv[1] %{public}s", argc, argc > 1 ? argv[1] : "NULL");
-    
-    /// jai
-    {
-      // If systemhook isn't loaded and we are already jailbroken, we need to do the checkin ourselves
-      // This can happen when the jailbreak is hidden or when tweak injection into the Dopamine app is disabled via Choicy
-      jbclient_process_checkin(NULL, NULL, NULL, NULL);
-      
-      if ([DOEnvironmentManager sharedManager].isJailbroken) {
-        setenv("PATH", "/sbin:/bin:/usr/sbin:/usr/bin:/var/jb/sbin:/var/jb/bin:/var/jb/usr/sbin:/var/jb/usr/bin", 1);
-        setenv("TERM", "xterm-256color", 1);
-      }
-    }
-    
+
 #if !NO_TROLL
+    // 对齐 qwer/wasd：普通点击启动直接进 UI，不做 jbclient/DOEnvironmentManager
+    // （那些会在启动瞬间拉起 libjailbreak→libchoma；choma 坏切片曾导致 iOS15 秒退）
+    if (!NHIsOverlayRole()) {
+      return UIApplicationMain(argc, argv, @"MainApplication", @"MainApplicationDelegate");
+    }
+
     // 叠层角色由每机派生 env 标记（不再依赖 Helium 同源 -hud/-exit/-check argv）
-    if (NHIsOverlayRole()) {
+    {
       pid_t pid = getpid();
       pid_t pgid = getgid();
       (void)pgid;
@@ -187,8 +178,6 @@ int main(int argc, char *argv[]) {
       CFRunLoopRun();
       return EXIT_SUCCESS;
     }
-
-    return UIApplicationMain(argc, argv, @"MainApplication", @"MainApplicationDelegate");
 #else
     return UIApplicationMain(argc, argv, @"MainApplication", @"MainApplicationDelegate");
 #endif
