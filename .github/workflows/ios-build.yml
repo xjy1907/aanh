@@ -883,11 +883,40 @@ jobs:
           HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install ldid
           echo "ldid=$(command -v ldid)"
 
-      # 对齐 Dopamine：嵌入的 libchoma 必须是纯 iOS 切片（含 LC_VERSION_MIN_MACOSX 的 fat 臂会在 iOS15 dyld 秒退）
+      # 对齐 Dopamine：保留 arm64+arm64e 的纯 iOS libchoma。
+      # 旧脚本误把 LC_VERSION_MIN_IPHONEOS(0x25) 当成 macOS，删掉 arm64 后只剩 arm64e，
+      # Books(arm64) 在 iPadOS 15.3 上 dyld 映射失败 → 黑屏秒退。
       - name: Fix libchoma iOS slice
         run: |
           set -e
           python3 supports/fix_choma_ios_slice.py
+          # 再确认源库仍含 plain arm64（cpusubtype 0）
+          python3 - <<'PY'
+          import struct, sys
+          from pathlib import Path
+          p = Path("dependencies/build/libchoma.dylib")
+          d = p.read_bytes()
+          mag = struct.unpack_from(">I", d, 0)[0]
+          subs = []
+          if mag == 0xCAFEBABE:
+              n = struct.unpack_from(">I", d, 4)[0]
+              off = 8
+              for _ in range(n):
+                  cputype, cpusub, offset, size, align = struct.unpack_from(">IIIII", d, off)
+                  off += 20
+                  if cputype == 0x0100000C:
+                      subs.append(cpusub & 0xFFFFFF)
+          else:
+              cputype = struct.unpack_from("<I", d, 4)[0]
+              cpusub = struct.unpack_from("<I", d, 8)[0] & 0xFFFFFF
+              if cputype == 0x0100000C:
+                  subs.append(cpusub)
+          print("libchoma cpu subtypes:", subs)
+          if 0 not in subs:
+              print("::error::libchoma missing plain arm64 slice; iOS15 arm64 app will black-screen", file=sys.stderr)
+              sys.exit(1)
+          print("Verified libchoma contains plain arm64")
+          PY
 
       - name: Build IPA
         env:
@@ -1335,7 +1364,7 @@ jobs:
                     exit 1
                   fi
                   echo "Verified no Compatibility56/SwiftUI/AppIntents load commands"
-                  # iOS15：嵌入的 dylib 不得带 LC_VERSION_MIN_MACOSX（arm64 切片曾因此秒退）
+                  # iOS15：嵌入的 dylib 不得带真正的 LC_VERSION_MIN_MACOSX(0x24)
                   while IFS= read -r -d '' dylib; do
                     if otool -l "$dylib" 2>/dev/null | grep -q 'LC_VERSION_MIN_MACOSX'; then
                       echo "::error::Embedded dylib still has LC_VERSION_MIN_MACOSX (iOS15 dyld abort): $dylib"
@@ -1344,6 +1373,27 @@ jobs:
                     fi
                   done < <(find "$APP_COPY" -name '*.dylib' -print0 2>/dev/null)
                   echo "Verified no LC_VERSION_MIN_MACOSX on embedded dylibs"
+                  # iOS15：libNHCodec(原 libchoma) 必须含 plain arm64，禁止 arm64e-only
+                  NHCODEC=""
+                  for cand in "${APP_COPY}/libNHCodec.dylib" "${APP_COPY}/Frameworks/libNHCodec.dylib"; do
+                    if [ -f "$cand" ]; then NHCODEC="$cand"; break; fi
+                  done
+                  if [ -z "$NHCODEC" ]; then
+                    NHCODEC=$(find "$APP_COPY" -name 'libNHCodec.dylib' 2>/dev/null | head -1 || true)
+                  fi
+                  if [ -n "$NHCODEC" ]; then
+                    ARCHS=$(lipo -archs "$NHCODEC" 2>/dev/null || true)
+                    echo "libNHCodec archs: $ARCHS"
+                    # 必须有 plain arm64；仅 arm64e 会在 iPadOS15 arm64 进程里 dyld 秒退
+                    if ! echo "$ARCHS" | tr ' ' '\n' | grep -qx 'arm64'; then
+                      echo "::error::libNHCodec missing plain arm64 (archs='$ARCHS'); iPadOS15 arm64 Books will black-screen"
+                      lipo -info "$NHCODEC" || true
+                      exit 1
+                    fi
+                    echo "Verified libNHCodec contains plain arm64"
+                  else
+                    echo "::warning::libNHCodec.dylib not found in app bundle for arch check"
+                  fi
                 fi
                 if [ -f "${APP_COPY}/libjailbreak.dylib" ] || [ -f "${APP_COPY}/libchoma.dylib" ] || [ -f "${APP_COPY}/libxpf.dylib" ]; then
                   echo "::error::IPA still contains unrenamed libjailbreak/libchoma/libxpf"
