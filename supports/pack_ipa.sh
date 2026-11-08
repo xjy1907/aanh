@@ -81,34 +81,42 @@ if [ ! -f "${EXECUTABLE_PATH}" ]; then
   exit 1
 fi
 
-# Soften conspicuous dylib filenames inside the shipped IPA only.
-rename_dylib() {
-  local old="$1" new="$2"
-  local src="${COPIED_APP}/${old}"
-  local dst="${COPIED_APP}/${new}"
-  if [ ! -f "${src}" ]; then
-    return 0
-  fi
-  echo "[Pack IPA] rename ${old} -> ${new}"
-  mv "${src}" "${dst}"
-  install_name_tool -id "@executable_path/${new}" "${dst}" 2>/dev/null || true
-  install_name_tool -change "@executable_path/${old}" "@executable_path/${new}" "${EXECUTABLE_PATH}" 2>/dev/null || true
-  install_name_tool -change "@loader_path/${old}" "@executable_path/${new}" "${EXECUTABLE_PATH}" 2>/dev/null || true
-  if [ -d "${COPIED_APP}/Frameworks" ]; then
-    find "${COPIED_APP}/Frameworks" -type f ! -name "*.plist" ! -name "*.h" 2>/dev/null | while IFS= read -r bin; do
-      install_name_tool -change "@executable_path/${old}" "@executable_path/${new}" "${bin}" 2>/dev/null || true
-      install_name_tool -change "@loader_path/${old}" "@executable_path/${new}" "${bin}" 2>/dev/null || true
+# iOS15 诊断壳：二进制含 SHELL3-NO-DYLIB 时，强制剔除包内所有 dylib（含 libNH*/越狱库）
+# 避免未强链仍因签名校验/注入扫描嵌入库导致秒退。
+if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -q 'SHELL3-NO-DYLIB'; then
+  echo "[Pack IPA] SHELL3 detected — stripping all embedded dylibs"
+  find "${COPIED_APP}" -name '*.dylib' -type f -print -delete 2>/dev/null || true
+  find "${COPIED_APP}/Frameworks" -name '*.dylib' -type f -print -delete 2>/dev/null || true
+else
+  # Soften conspicuous dylib filenames inside the shipped IPA only.
+  rename_dylib() {
+    local old="$1" new="$2"
+    local src="${COPIED_APP}/${old}"
+    local dst="${COPIED_APP}/${new}"
+    if [ ! -f "${src}" ]; then
+      return 0
+    fi
+    echo "[Pack IPA] rename ${old} -> ${new}"
+    mv "${src}" "${dst}"
+    install_name_tool -id "@executable_path/${new}" "${dst}" 2>/dev/null || true
+    install_name_tool -change "@executable_path/${old}" "@executable_path/${new}" "${EXECUTABLE_PATH}" 2>/dev/null || true
+    install_name_tool -change "@loader_path/${old}" "@executable_path/${new}" "${EXECUTABLE_PATH}" 2>/dev/null || true
+    if [ -d "${COPIED_APP}/Frameworks" ]; then
+      find "${COPIED_APP}/Frameworks" -type f ! -name "*.plist" ! -name "*.h" 2>/dev/null | while IFS= read -r bin; do
+        install_name_tool -change "@executable_path/${old}" "@executable_path/${new}" "${bin}" 2>/dev/null || true
+        install_name_tool -change "@loader_path/${old}" "@executable_path/${new}" "${bin}" 2>/dev/null || true
+      done
+    fi
+    for d in "${COPIED_APP}"/*.dylib; do
+      [ -f "${d}" ] || continue
+      install_name_tool -change "@loader_path/${old}" "@loader_path/${new}" "${d}" 2>/dev/null || true
+      install_name_tool -change "@executable_path/${old}" "@executable_path/${new}" "${d}" 2>/dev/null || true
     done
-  fi
-  for d in "${COPIED_APP}"/*.dylib; do
-    [ -f "${d}" ] || continue
-    install_name_tool -change "@loader_path/${old}" "@loader_path/${new}" "${d}" 2>/dev/null || true
-    install_name_tool -change "@executable_path/${old}" "@executable_path/${new}" "${d}" 2>/dev/null || true
-  done
-}
-rename_dylib libjailbreak.dylib libNHSupport.dylib
-rename_dylib libchoma.dylib libNHCodec.dylib
-rename_dylib libxpf.dylib libNHParse.dylib
+  }
+  rename_dylib libjailbreak.dylib libNHSupport.dylib
+  rename_dylib libchoma.dylib libNHCodec.dylib
+  rename_dylib libxpf.dylib libNHParse.dylib
+fi
 
 echo "[Pack IPA] signing with ldid..."
 if ! ldid -S"${ENTITLEMENTS_PATH}" "${COPIED_APP}"; then
