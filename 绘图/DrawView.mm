@@ -968,6 +968,9 @@ void Draw::StartBooks() {
     AimPhysX_TickCamera(POV.Location);
     // 默认无遮挡需求；半径内出现需漏打/头骨遮挡的目标时再置 true（三线闲时 sleep）
     AimPhysX_SetOcclusionDemand(false);
+    // 实验-模型按需加载：每帧清焦点；开时按目标补走廊，关时无焦点→完整漏打球
+    const bool wantRayCorridor = AimAssist::模型渲染 && AimAssist::模型按需加载;
+    AimPhysX_ClearRayFoci();
     const bool wantPhysXOcclusion = AimAssist::模型渲染 &&
         (AimAssist::开启自瞄 || 显示骨骼);
     // 遮挡隔帧采样用帧号（每进一次 StartBooks +1）
@@ -1011,9 +1014,14 @@ void Draw::StartBooks() {
         else aiCounts++;
 
         float distance = GetDistance(loc, POV.Location) / 100.0f;
-        // 漏打半径内有存活目标且需要遮挡查询 → 唤醒 PhysX 后台刷新
+        // 漏打半径内有存活目标且需要遮挡查询 → 唤醒 PhysX；实验开时写走廊焦点
         if (wantPhysXOcclusion && Health > 0.f && distance <= AimAssist::漏打距离) {
             AimPhysX_SetOcclusionDemand(true);
+            if (wantRayCorridor) {
+                Vector3 focusEnd = loc;
+                focusEnd.Z += 85.f; // 近似头点；走廊半宽覆盖真实头骨偏移
+                AimPhysX_AddRayFocus(POV.Location, focusEnd);
+            }
         }
         Vector2 LocationScreen = WorldToScreen(loc, POV, sw, sh);
         bool onScreen = isScreenVisible(LocationScreen, canvasVec);

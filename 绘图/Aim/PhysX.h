@@ -15,6 +15,7 @@
 #include <iostream>
 #include <thread>
 #include <atomic>
+#include <mutex>
 #include <set>
 #include <numeric>
 #include <sstream>
@@ -209,6 +210,114 @@ namespace PhysXLoadFilter {
         const float dz = p.z - camZ.load(std::memory_order_relaxed);
         const float r = radiusUU.load(std::memory_order_relaxed);
         return (dx * dx + dy * dy + dz * dz) <= (r * r);
+    }
+
+    // —— 射线走廊局部加载（有焦点时只灌走廊+近距泡，否则退回完整漏打球）——
+    // 原写死：半宽 12m(1200)、近距泡 40m(4000)、静态刷新 2000ms
+    static constexpr int kMaxRayFoci = 16;
+    struct RayFocus {
+        float ax, ay, az, bx, by, bz;
+    };
+    inline std::mutex rayMu;
+    inline RayFocus rayFoci[kMaxRayFoci]{};
+    inline int rayFocusCount{0};
+    inline std::atomic<bool> rayLocalEnabled{false};
+    inline std::atomic<float> corridorHalfUU{1200.f};   // 12m
+    inline std::atomic<float> nearCamBubbleUU{4000.f};  // 40m
+    inline std::atomic<int> rangeBaseMs{2000};          // Range 基线 ms
+
+    inline void SetCorridorHalfMeters(float meters) {
+        if (!(meters > 0.f)) meters = 12.f;
+        if (meters < 6.f) meters = 6.f;
+        if (meters > 24.f) meters = 24.f;
+        corridorHalfUU.store(meters * 100.f, std::memory_order_relaxed);
+    }
+
+    inline void SetNearBubbleMeters(float meters) {
+        if (!(meters > 0.f)) meters = 40.f;
+        if (meters < 15.f) meters = 15.f;
+        if (meters > 80.f) meters = 80.f;
+        nearCamBubbleUU.store(meters * 100.f, std::memory_order_relaxed);
+    }
+
+    inline void SetRangeBaseMs(int ms) {
+        if (ms < 600) ms = 600;
+        if (ms > 5000) ms = 5000;
+        rangeBaseMs.store(ms, std::memory_order_relaxed);
+    }
+
+    inline int RangeBaseMs() {
+        int v = rangeBaseMs.load(std::memory_order_relaxed);
+        return (v < 600) ? 600 : ((v > 5000) ? 5000 : v);
+    }
+
+    inline void ClearRayFoci() {
+        std::lock_guard<std::mutex> lock(rayMu);
+        rayFocusCount = 0;
+        rayLocalEnabled.store(false, std::memory_order_release);
+    }
+
+    inline void AddRayFocus(float ax, float ay, float az, float bx, float by, float bz) {
+        std::lock_guard<std::mutex> lock(rayMu);
+        if (rayFocusCount >= kMaxRayFoci) return;
+        rayFoci[rayFocusCount++] = RayFocus{ax, ay, az, bx, by, bz};
+        rayLocalEnabled.store(true, std::memory_order_release);
+    }
+
+    inline float DistPointSegment2(float px, float py, float pz,
+                                   float ax, float ay, float az,
+                                   float bx, float by, float bz) {
+        const float abx = bx - ax, aby = by - ay, abz = bz - az;
+        const float apx = px - ax, apy = py - ay, apz = pz - az;
+        const float ab2 = abx * abx + aby * aby + abz * abz;
+        float t = 0.f;
+        if (ab2 > 1e-4f) {
+            t = (apx * abx + apy * aby + apz * abz) / ab2;
+            if (t < 0.f) t = 0.f;
+            else if (t > 1.f) t = 1.f;
+        }
+        const float qx = ax + abx * t - px;
+        const float qy = ay + aby * t - py;
+        const float qz = az + abz * t - pz;
+        return qx * qx + qy * qy + qz * qz;
+    }
+
+    /// 加载过滤：有射线焦点时→近距泡∪走廊；否则→完整漏打球
+    inline bool ShouldLoadPoint(const physx::PxVec3 &p) {
+        if (!camValid.load(std::memory_order_acquire)) return false;
+        const float cx = camX.load(std::memory_order_relaxed);
+        const float cy = camY.load(std::memory_order_relaxed);
+        const float cz = camZ.load(std::memory_order_relaxed);
+        const float dx = p.x - cx, dy = p.y - cy, dz = p.z - cz;
+        const float d2 = dx * dx + dy * dy + dz * dz;
+        const float fullR = radiusUU.load(std::memory_order_relaxed);
+
+        if (!rayLocalEnabled.load(std::memory_order_acquire)) {
+            return d2 <= (fullR * fullR);
+        }
+
+        float nearR = fullR;
+        const float nearCap = nearCamBubbleUU.load(std::memory_order_relaxed);
+        if (nearR > nearCap) nearR = nearCap;
+        if (d2 <= (nearR * nearR)) return true;
+
+        RayFocus local[kMaxRayFoci];
+        int n = 0;
+        {
+            std::lock_guard<std::mutex> lock(rayMu);
+            n = rayFocusCount;
+            for (int i = 0; i < n; i++) local[i] = rayFoci[i];
+        }
+        const float half = corridorHalfUU.load(std::memory_order_relaxed);
+        const float thick2 = half * half;
+        for (int i = 0; i < n; i++) {
+            if (DistPointSegment2(p.x, p.y, p.z,
+                                  local[i].ax, local[i].ay, local[i].az,
+                                  local[i].bx, local[i].by, local[i].bz) <= thick2) {
+                return true;
+            }
+        }
+        return false;
     }
 }
 
@@ -1421,10 +1530,10 @@ inline std::vector<TriangleMeshData> LoadDynamicRigidShape(
         }
     }
 
-// 根据缓存筛选出在指定范围内的 Shape（相机半径，见 PhysXLoadFilter）
+// 根据缓存筛选：射线走廊局部加载 / 相机半径（见 PhysXLoadFilter::ShouldLoadPoint）
     std::set<PrunerPayload> result;
     for (const auto& [obj, pos] : cache) {
-        if (PhysXLoadFilter::InRange(pos.p)) {
+        if (PhysXLoadFilter::ShouldLoadPoint(pos.p)) {
             result.insert(obj);
         }
     }
@@ -1590,10 +1699,10 @@ inline std::vector<TriangleMeshData> LoadShapeByRange(
     }
 
 
-// 根据位置过滤在指定范围内的 Shape（相机半径，见 PhysXLoadFilter）
+// 根据位置过滤：射线走廊局部加载 / 相机半径（见 PhysXLoadFilter::ShouldLoadPoint）
     std::set<PrunerPayload> result;
     for (const auto& [obj, pos] : cache) {
-        if (PhysXLoadFilter::InRange(pos.p)) {
+        if (PhysXLoadFilter::ShouldLoadPoint(pos.p)) {
             result.insert(obj);
         }
     }
@@ -1947,8 +2056,8 @@ namespace VisibleCheck {
                 std::this_thread::sleep_for(std::chrono::milliseconds(1500));
                 continue;
             }
-            // 基线 2000ms；镜头静止时 ×intervalScale（最高 3→6s）
-            const int rangeMs = 2000 * PhysXLoadFilter::IntervalScale();
+            // 基线可调（默认 2000ms）；镜头静止时 ×intervalScale
+            const int rangeMs = PhysXLoadFilter::RangeBaseMs() * PhysXLoadFilter::IntervalScale();
             Throttlered.executeTaskWithSleep("UpdateSceneByRangeSleep", std::chrono::milliseconds(rangeMs), [&cache, &currentSceneObjects, &lastUpdateTimestamp, &alwaysCheckShape] {
                 std::set<PrunerPayload> willRemoveObjects{};
                 auto Meshs = LoadShapeByRange(lastUpdateTimestamp,cache,currentSceneObjects,willRemoveObjects,alwaysCheckShape);

@@ -17,6 +17,7 @@
 #import "游戏/AimConfigViewController.h"
 #import "游戏/AimHumanizeConfigViewController.h"
 #import "游戏/AimBezierConfigViewController.h"
+#import "游戏/AimDemandLoadConfigViewController.h"
 //#import "pp.h"
 
 #ifdef __cplusplus
@@ -1836,6 +1837,27 @@ static void JVR_保存KernelExploit(NSString *ident) {
     };
     [bezierBtn.heightAnchor constraintEqualToConstant:44].active = YES;
     [stack addArrangedSubview:bezierBtn];
+
+    // 实验-模型按需加载（与贝塞尔平级；射线走廊+近距泡）
+    JVRKernelButton *demandBtn = [[JVRKernelButton alloc] init];
+    demandBtn.translatesAutoresizingMaskIntoConstraints = NO;
+    demandBtn.label.text = @"实验-模型按需加载";
+    demandBtn.label.textColor = JVR_副色;
+    demandBtn.borderGrad.colors = @[(id)JVR_副色.CGColor, (id)JVR_主色.CGColor];
+    demandBtn.onTap = ^{
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        if (!strongSelf) return;
+        AimDemandLoadConfigViewController *vc = [[AimDemandLoadConfigViewController alloc] init];
+        UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:vc];
+        nav.modalPresentationStyle = UIModalPresentationFullScreen;
+        nav.navigationBar.barStyle = UIBarStyleBlack;
+        nav.navigationBar.tintColor = JVR_主色;
+        nav.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName: JVR_文字色};
+        [strongSelf presentViewController:nav animated:YES completion:nil];
+        KernelLogLine("打开实验-模型按需加载界面");
+    };
+    [demandBtn.heightAnchor constraintEqualToConstant:44].active = YES;
+    [stack addArrangedSubview:demandBtn];
     
     return stack;
 }

@@ -43,6 +43,26 @@ void AimPhysX_SetOcclusionDemand(bool demand) {
     VisibleCheck::gPhysXOcclusionDemand.store(demand, std::memory_order_release);
 }
 
+void AimPhysX_ClearRayFoci() {
+    PhysXLoadFilter::ClearRayFoci();
+}
+
+void AimPhysX_AddRayFocus(const Vector3 &cam, const Vector3 &bone) {
+    PhysXLoadFilter::AddRayFocus(cam.X, cam.Y, cam.Z, bone.X, bone.Y, bone.Z);
+}
+
+void AimPhysX_SetCorridorHalfMeters(float meters) {
+    PhysXLoadFilter::SetCorridorHalfMeters(meters);
+}
+
+void AimPhysX_SetNearBubbleMeters(float meters) {
+    PhysXLoadFilter::SetNearBubbleMeters(meters);
+}
+
+void AimPhysX_SetRangeBaseMs(int ms) {
+    PhysXLoadFilter::SetRangeBaseMs(ms);
+}
+
 bool AimPhysX_IsReady() {
     return gPhysXReady.load(std::memory_order_acquire);
 }
