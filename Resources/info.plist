@@ -24,17 +24,6 @@
 	<string>1.12.1</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleURLName</key>
-			<string>com.apple.iBooks</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>nhdraw</string>
-			</array>
-		</dict>
-	</array>
 	<key>CFBundleVersion</key>
 	<string>c016dd82</string>
 	<key>LSApplicationCategoryType</key>

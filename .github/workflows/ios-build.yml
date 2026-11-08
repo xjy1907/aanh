@@ -1317,9 +1317,17 @@ jobs:
                 EXECUTABLE_PATH="$APP_COPY/$EXE_NAME"
               fi
               # 与 supports/pack_ipa.sh 一致；SHELL3 诊断壳强制剔除全部 dylib
-              if [ -n "${EXECUTABLE_PATH}" ] && strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -q 'SHELL3-NO-DYLIB'; then
-                echo "SHELL3 detected — stripping all embedded dylibs"
+              if [ -n "${EXECUTABLE_PATH}" ] && strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'SHELL3-NO-DYLIB|SHELL4-MIN-ENT'; then
+                echo "shell diagnostic detected — stripping all embedded dylibs"
                 find "${APP_COPY}" -name '*.dylib' -type f -print -delete 2>/dev/null || true
+                if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -q 'SHELL4-MIN-ENT'; then
+                  ENTITLEMENTS="${GITHUB_WORKSPACE}/supports/entitlements-shell.plist"
+                  if [ ! -f "$ENTITLEMENTS" ]; then
+                    echo "::error::Missing entitlements-shell.plist for SHELL4"
+                    exit 1
+                  fi
+                  echo "SHELL4 using entitlements-shell.plist"
+                fi
               else
                 rename_dylib() {
                   local old="$1" new="$2"
@@ -1360,14 +1368,28 @@ jobs:
                   exit 1
                 fi
                 echo "Verified DRAWFPS_SEG_V1 in binary"
-                if strings "$EXECUTABLE_PATH" | grep -q 'SHELL3-NO-DYLIB'; then
-                  echo "Verified SHELL3-NO-DYLIB marker"
+                if strings "$EXECUTABLE_PATH" | grep -qE 'SHELL3-NO-DYLIB|SHELL4-MIN-ENT'; then
+                  echo "Verified shell diagnostic marker"
                   if find "$APP_COPY" -name '*.dylib' | grep -q .; then
-                    echo "::error::SHELL3 IPA still contains dylibs"
+                    echo "::error::shell IPA still contains dylibs"
                     find "$APP_COPY" -name '*.dylib' -print
                     exit 1
                   fi
-                  echo "Verified SHELL3 IPA has zero dylibs"
+                  echo "Verified shell IPA has zero dylibs"
+                fi
+                if strings "$EXECUTABLE_PATH" | grep -q 'SHELL4-MIN-ENT'; then
+                  BID=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP_COPY/Info.plist" 2>/dev/null || true)
+                  echo "SHELL4 bundle id: $BID"
+                  if [ "$BID" != "com.nh.shell4diag" ]; then
+                    echo "::error::SHELL4 expected bundle id com.nh.shell4diag, got '$BID'"
+                    exit 1
+                  fi
+                  if ldid -e "$EXECUTABLE_PATH" 2>/dev/null | grep -q 'no-container'; then
+                    echo "::error::SHELL4 still signed with no-container"
+                    ldid -e "$EXECUTABLE_PATH" || true
+                    exit 1
+                  fi
+                  echo "Verified SHELL4 min entitlements / bundle id"
                 fi
                 # iOS15：禁止链入 swiftCompatibility56 / SwiftUI（与 wasd 对齐）
                 if command -v otool >/dev/null 2>&1; then

@@ -9,6 +9,8 @@ APP_PATH="${CODESIGNING_FOLDER_PATH}"
 PROJECT_DIR="${SRCROOT:-${PROJECT_DIR}}"
 ENTITLEMENTS_PATH="${PROJECT_DIR}/supports/entitlements.plist"
 OUTPUT_DIR="${HOME}/Desktop/ipa"
+# SHELL4 诊断：若二进制已带标记，改用极简 entitlements（在签名前再确认一次）
+SHELL_ENTITLEMENTS_PATH="${PROJECT_DIR}/supports/entitlements-shell.plist"
 
 echo "[Pack IPA] start"
 echo "[Pack IPA] PROJECT_DIR=${PROJECT_DIR}"
@@ -81,12 +83,20 @@ if [ ! -f "${EXECUTABLE_PATH}" ]; then
   exit 1
 fi
 
-# iOS15 诊断壳：二进制含 SHELL3-NO-DYLIB 时，强制剔除包内所有 dylib（含 libNH*/越狱库）
-# 避免未强链仍因签名校验/注入扫描嵌入库导致秒退。
-if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -q 'SHELL3-NO-DYLIB'; then
-  echo "[Pack IPA] SHELL3 detected — stripping all embedded dylibs"
+# iOS15 诊断壳：SHELL3/SHELL4 强制剔除包内 dylib；SHELL4 另用极简 entitlements
+if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'SHELL3-NO-DYLIB|SHELL4-MIN-ENT'; then
+  echo "[Pack IPA] shell diagnostic detected — stripping all embedded dylibs"
   find "${COPIED_APP}" -name '*.dylib' -type f -print -delete 2>/dev/null || true
   find "${COPIED_APP}/Frameworks" -name '*.dylib' -type f -print -delete 2>/dev/null || true
+  if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -q 'SHELL4-MIN-ENT'; then
+    if [ -f "${SHELL_ENTITLEMENTS_PATH}" ]; then
+      ENTITLEMENTS_PATH="${SHELL_ENTITLEMENTS_PATH}"
+      echo "[Pack IPA] SHELL4 using entitlements-shell.plist"
+    else
+      echo "[Pack IPA] ERROR: missing ${SHELL_ENTITLEMENTS_PATH}"
+      exit 1
+    fi
+  fi
 else
   # Soften conspicuous dylib filenames inside the shipped IPA only.
   rename_dylib() {
