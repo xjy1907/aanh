@@ -4,8 +4,9 @@
 
 #import "MainApplicationDelegate.h"
 
-// CI Pack IPA 校验用：壳包暂无真实 FPS 面板，保留标记避免构建失败
-static const char kDrawFpsSegMarker[] = "DRAWFPS_SEG_V1";
+// CI Pack IPA 校验用：壳包暂无真实 FPS 面板，强制保留字符串避免被优化掉
+__attribute__((used)) static const char kDrawFpsSegMarker[] = "DRAWFPS_SEG_V1";
+
 
 @implementation MainApplicationDelegate
 
@@ -13,7 +14,9 @@ static const char kDrawFpsSegMarker[] = "DRAWFPS_SEG_V1";
     didFinishLaunchingWithOptions:(NSDictionary<UIApplicationLaunchOptionsKey, id> *)launchOptions {
   (void)application;
   (void)launchOptions;
-  (void)kDrawFpsSegMarker; // keep DRAWFPS_SEG_V1 in binary for CI
+  // touch the marker so linker cannot dead-strip it
+  volatile const char *keep = kDrawFpsSegMarker;
+  (void)keep[0];
 
   self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
   UIViewController *root = [[UIViewController alloc] init];
