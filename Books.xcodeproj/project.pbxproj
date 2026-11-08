@@ -29,9 +29,9 @@
 		06D4D8992E18DD9A008B33B6 /* libjailbreak.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8962E18DD9A008B33B6 /* libjailbreak.dylib */; };
 		06D4D89A2E18DD9A008B33B6 /* libchoma.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8972E18DD9A008B33B6 /* libchoma.dylib */; };
 		06D4D89B2E18DD9A008B33B6 /* libxpf.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8982E18DD9A008B33B6 /* libxpf.dylib */; };
-		06D4D89C2E18DDAC008B33B6 /* libchoma.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 06D4D8972E18DD9A008B33B6 /* libchoma.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		06D4D89D2E18DDAC008B33B6 /* libjailbreak.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 06D4D8962E18DD9A008B33B6 /* libjailbreak.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		06D4D89E2E18DDAC008B33B6 /* libxpf.dylib in Embed Libraries */ = {isa = PBXBuildFile; fileRef = 06D4D8982E18DD9A008B33B6 /* libxpf.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		06D4D89C2E18DDAC008B33B6 /* libchoma.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 06D4D8972E18DD9A008B33B6 /* libchoma.dylib */; };
+		06D4D89D2E18DDAC008B33B6 /* libjailbreak.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 06D4D8962E18DD9A008B33B6 /* libjailbreak.dylib */; };
+		06D4D89E2E18DDAC008B33B6 /* libxpf.dylib in Resources */ = {isa = PBXBuildFile; fileRef = 06D4D8982E18DD9A008B33B6 /* libxpf.dylib */; };
 		06D4D8A02E18DDCA008B33B6 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D89F2E18DDCA008B33B6 /* libz.tbd */; };
 		06D4D8A22E18DDCF008B33B6 /* libcompression.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8A12E18DDCF008B33B6 /* libcompression.tbd */; };
 		06D4D8A42E18DDE5008B33B6 /* libMobileGestalt.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8A32E18DDE5008B33B6 /* libMobileGestalt.tbd */; };
@@ -265,9 +265,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 6;
 			files = (
-				06D4D89C2E18DDAC008B33B6 /* libchoma.dylib in Embed Libraries */,
-				06D4D89D2E18DDAC008B33B6 /* libjailbreak.dylib in Embed Libraries */,
-				06D4D89E2E18DDAC008B33B6 /* libxpf.dylib in Embed Libraries */,
 			);
 			name = "Embed Libraries";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -643,7 +640,6 @@
 				1F0BD9182D6DB7AA008151DA /* Metal.framework in Frameworks */,
 				1F0BD91A2D6DB7B9008151DA /* MetalKit.framework in Frameworks */,
 				1F190ADE504FF1E5B8E82B49 /* libzstd.a in Frameworks */,
-				361131B62E49340A00E2AA06 /* AdSupport.framework in Frameworks */,
 				CC711D9C2B5C0032007235A6 /* IOKit.tbd in Frameworks */,
 				CC711D982B5BFF2F007235A6 /* GraphicsServices.tbd in Frameworks */,
 				CC711D9E2B5C0081007235A6 /* AssertionServices.tbd in Frameworks */,
@@ -1445,6 +1441,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				06D4D89D2E18DDAC008B33B6 /* libjailbreak.dylib in Resources */,
+				06D4D89C2E18DDAC008B33B6 /* libchoma.dylib in Resources */,
+				06D4D89E2E18DDAC008B33B6 /* libxpf.dylib in Resources */,
 				0FE5D65C2F504E1000FD4AFC /* 阿里巴巴惠普体.ttf in Resources */,
 				CC711D8C2B5BFD50007235A6 /* InfoPlist.strings in Resources */,
 				CC2A77302B6AADB400796650 /* Settings.bundle in Resources */,

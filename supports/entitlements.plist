@@ -46,10 +46,6 @@
 	<true/>
 	<key>com.apple.private.persona-mgmt</key>
 	<true/>
-	<key>com.apple.private.kernel.jetsam</key>
-	<true/>
-	<key>com.apple.private.memorystatus</key>
-	<true/>
 	<key>com.apple.springboard-ui.client</key>
 	<true/>
 	<key>com.apple.springboard.accessibility-window-hosting</key>
