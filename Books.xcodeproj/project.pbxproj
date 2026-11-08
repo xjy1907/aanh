@@ -1435,15 +1435,12 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				06D4D89D2E18DDAC008B33B6 /* libjailbreak.dylib in Resources */,
-				06D4D89C2E18DDAC008B33B6 /* libchoma.dylib in Resources */,
-				06D4D89E2E18DDAC008B33B6 /* libxpf.dylib in Resources */,
 				0FE5D65C2F504E1000FD4AFC /* 阿里巴巴惠普体.ttf in Resources */,
 				CC711D8C2B5BFD50007235A6 /* InfoPlist.strings in Resources */,
 				CC2A77302B6AADB400796650 /* Settings.bundle in Resources */,
 				CC711D852B5BFCC4007235A6 /* Localizable.strings in Resources */,
 				CC711D112B5BF551007235A6 /* Assets.xcassets in Resources */,
-			);
+);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */

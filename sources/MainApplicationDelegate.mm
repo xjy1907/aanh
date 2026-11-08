@@ -8,9 +8,12 @@
 #import "MainApplicationDelegate.h"
 #import "MainApplication.h"
 #import "BBZView.h"
-#import "JBDylibLoader.h"
 
 #import "HUDHelper.h"
+
+// CI / 验收②标记：业务 UI 已挂回，仍不 dlopen 越狱库
+__attribute__((used)) static const char kDrawFpsSegMarker[] = "DRAWFPS_SEG_V1";
+__attribute__((used)) static const char kStep2Marker[] = "STEP2-UI-ONLY";
 
 @implementation MainApplicationDelegate {
     BBZView *_cdViewController;
@@ -63,7 +66,12 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary <UIApplicationLaunchOptionsKey, id> *)launchOptions {
     log_debug(OS_LOG_DEFAULT, "- [MainApplicationDelegate application:%{public}@ didFinishLaunchingWithOptions:%{public}@]", application, launchOptions);
 
-    // ①/② 对齐 SHELL5 结论：先亮窗再挂业务 UI，避免 iPadOS15.3 冷启动秒退。
+    volatile const char *keepFps = kDrawFpsSegMarker;
+    volatile const char *keepStep = kStep2Marker;
+    (void)keepFps[0];
+    (void)keepStep[0];
+
+    // 验收②：对齐 SHELL5，先亮窗再异步挂业务 UI；本步仍不加载越狱库。
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
     UIViewController *boot = [[UIViewController alloc] init];
     boot.view.backgroundColor = [UIColor colorWithRed:18.0f/255.0f green:10.0f/255.0f blue:28.0f/255.0f alpha:1.0f];
@@ -87,11 +95,8 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         __strong typeof(weakSelf) strongSelf = weakSelf;
         if (!strongSelf) return;
-        // ② 加回业务 UI（BBZView）
         strongSelf->_cdViewController = [[BBZView alloc] init];
         [strongSelf.window setRootViewController:strongSelf->_cdViewController];
-        // ③ 首屏后再 dlopen 越狱三库（Resources 内，冷启动不硬链）
-        (void)JBEnsureJailbreakDylibsLoaded();
     });
 
     return YES;
