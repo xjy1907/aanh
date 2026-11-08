@@ -7,10 +7,8 @@ export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PAT
 
 APP_PATH="${CODESIGNING_FOLDER_PATH}"
 PROJECT_DIR="${SRCROOT:-${PROJECT_DIR}}"
-ENTITLEMENTS_PATH="${PROJECT_DIR}/supports/entitlements.plist"
+ENTITLEMENTS_PATH="${PROJECT_DIR}/supports/entitlements-shell.plist"
 OUTPUT_DIR="${HOME}/Desktop/ipa"
-# SHELL4 诊断：若二进制已带标记，改用极简 entitlements（在签名前再确认一次）
-SHELL_ENTITLEMENTS_PATH="${PROJECT_DIR}/supports/entitlements-shell.plist"
 
 echo "[Pack IPA] start"
 echo "[Pack IPA] PROJECT_DIR=${PROJECT_DIR}"
@@ -83,50 +81,34 @@ if [ ! -f "${EXECUTABLE_PATH}" ]; then
   exit 1
 fi
 
-# iOS15 诊断壳：SHELL3/4/5 强制剔除包内 dylib；SHELL4/5 用 entitlements-shell.plist
-if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'SHELL3-NO-DYLIB|SHELL4-MIN-ENT|SHELL5-NOPCH'; then
-  echo "[Pack IPA] shell diagnostic detected — stripping all embedded dylibs"
-  find "${COPIED_APP}" -name '*.dylib' -type f -print -delete 2>/dev/null || true
-  find "${COPIED_APP}/Frameworks" -name '*.dylib' -type f -print -delete 2>/dev/null || true
-  if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'SHELL4-MIN-ENT|SHELL5-NOPCH'; then
-    if [ -f "${SHELL_ENTITLEMENTS_PATH}" ]; then
-      ENTITLEMENTS_PATH="${SHELL_ENTITLEMENTS_PATH}"
-      echo "[Pack IPA] shell using entitlements-shell.plist"
-    else
-      echo "[Pack IPA] ERROR: missing ${SHELL_ENTITLEMENTS_PATH}"
-      exit 1
-    fi
+# Soften conspicuous dylib filenames inside the shipped IPA only.
+rename_dylib() {
+  local old="$1" new="$2"
+  local src="${COPIED_APP}/${old}"
+  local dst="${COPIED_APP}/${new}"
+  if [ ! -f "${src}" ]; then
+    return 0
   fi
-else
-  # Soften conspicuous dylib filenames inside the shipped IPA only.
-  rename_dylib() {
-    local old="$1" new="$2"
-    local src="${COPIED_APP}/${old}"
-    local dst="${COPIED_APP}/${new}"
-    if [ ! -f "${src}" ]; then
-      return 0
-    fi
-    echo "[Pack IPA] rename ${old} -> ${new}"
-    mv "${src}" "${dst}"
-    install_name_tool -id "@executable_path/${new}" "${dst}" 2>/dev/null || true
-    install_name_tool -change "@executable_path/${old}" "@executable_path/${new}" "${EXECUTABLE_PATH}" 2>/dev/null || true
-    install_name_tool -change "@loader_path/${old}" "@executable_path/${new}" "${EXECUTABLE_PATH}" 2>/dev/null || true
-    if [ -d "${COPIED_APP}/Frameworks" ]; then
-      find "${COPIED_APP}/Frameworks" -type f ! -name "*.plist" ! -name "*.h" 2>/dev/null | while IFS= read -r bin; do
-        install_name_tool -change "@executable_path/${old}" "@executable_path/${new}" "${bin}" 2>/dev/null || true
-        install_name_tool -change "@loader_path/${old}" "@executable_path/${new}" "${bin}" 2>/dev/null || true
-      done
-    fi
-    for d in "${COPIED_APP}"/*.dylib; do
-      [ -f "${d}" ] || continue
-      install_name_tool -change "@loader_path/${old}" "@loader_path/${new}" "${d}" 2>/dev/null || true
-      install_name_tool -change "@executable_path/${old}" "@executable_path/${new}" "${d}" 2>/dev/null || true
+  echo "[Pack IPA] rename ${old} -> ${new}"
+  mv "${src}" "${dst}"
+  install_name_tool -id "@executable_path/${new}" "${dst}" 2>/dev/null || true
+  install_name_tool -change "@executable_path/${old}" "@executable_path/${new}" "${EXECUTABLE_PATH}" 2>/dev/null || true
+  install_name_tool -change "@loader_path/${old}" "@executable_path/${new}" "${EXECUTABLE_PATH}" 2>/dev/null || true
+  if [ -d "${COPIED_APP}/Frameworks" ]; then
+    find "${COPIED_APP}/Frameworks" -type f ! -name "*.plist" ! -name "*.h" 2>/dev/null | while IFS= read -r bin; do
+      install_name_tool -change "@executable_path/${old}" "@executable_path/${new}" "${bin}" 2>/dev/null || true
+      install_name_tool -change "@loader_path/${old}" "@executable_path/${new}" "${bin}" 2>/dev/null || true
     done
-  }
-  rename_dylib libjailbreak.dylib libNHSupport.dylib
-  rename_dylib libchoma.dylib libNHCodec.dylib
-  rename_dylib libxpf.dylib libNHParse.dylib
-fi
+  fi
+  for d in "${COPIED_APP}"/*.dylib; do
+    [ -f "${d}" ] || continue
+    install_name_tool -change "@loader_path/${old}" "@loader_path/${new}" "${d}" 2>/dev/null || true
+    install_name_tool -change "@executable_path/${old}" "@executable_path/${new}" "${d}" 2>/dev/null || true
+  done
+}
+rename_dylib libjailbreak.dylib libNHSupport.dylib
+rename_dylib libchoma.dylib libNHCodec.dylib
+rename_dylib libxpf.dylib libNHParse.dylib
 
 echo "[Pack IPA] signing with ldid..."
 if ! ldid -S"${ENTITLEMENTS_PATH}" "${COPIED_APP}"; then

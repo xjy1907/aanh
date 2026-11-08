@@ -1,57 +1,110 @@
 //
-//  MainApplicationDelegate.mm — SHELL4：极简 entitlements + 独立 Bundle ID
+//  MainApplicationDelegate.mm
+//  DZ
+//
+//  Created by Lessica on 2024/1/24.
 //
 
 #import "MainApplicationDelegate.h"
+#import "MainApplication.h"
+#import "BBZView.h"
+#import "JBDylibLoader.h"
 
-__attribute__((used)) static const char kDrawFpsSegMarker[] = "DRAWFPS_SEG_V1";
-__attribute__((used)) static const char kShellMarker[] = "SHELL4-MIN-ENT";
+#import "HUDHelper.h"
 
-@implementation MainApplicationDelegate
+@implementation MainApplicationDelegate {
+    BBZView *_cdViewController;
+}
 
-- (BOOL)application:(UIApplication *)application
-    didFinishLaunchingWithOptions:(NSDictionary<UIApplicationLaunchOptionsKey, id> *)launchOptions {
-  (void)application;
-  (void)launchOptions;
-  volatile const char *keepFps = kDrawFpsSegMarker;
-  volatile const char *keepShell = kShellMarker;
-  (void)keepFps[0];
-  (void)keepShell[0];
+- (instancetype)init {
+    if (self = [super init]) {
+        log_debug(OS_LOG_DEFAULT, "- [MainApplicationDelegate init]");
+    }
+    return self;
+}
 
-  self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-  UIViewController *root = [[UIViewController alloc] init];
-  // 纯绿：区分 SHELL3 红屏；能看见 = 冷启动已活
-  root.view.backgroundColor = [UIColor colorWithRed:0.0f green:0.75f blue:0.2f alpha:1.0f];
+- (BOOL)application:(UIApplication *)application openURL:(nonnull NSURL *)url options:(nonnull NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options
+{
+    if ([url.scheme isEqualToString:@"Books"]) {
+        if ([url.host isEqualToString:@"toggle"]) {
+            [self setupAndNotifyToggleHUDAfterLaunchWithAction:nil];
+            return YES;
+        } else if ([url.host isEqualToString:@"on"]) {
+            [self setupAndNotifyToggleHUDAfterLaunchWithAction:kToggleHUDAfterLaunchNotificationActionToggleOn];
+            return YES;
+        } else if ([url.host isEqualToString:@"off"]) {
+            [self setupAndNotifyToggleHUDAfterLaunchWithAction:kToggleHUDAfterLaunchNotificationActionToggleOff];
+            return YES;
+        }
+    }
+    return NO;
+}
 
-  UILabel *title = [[UILabel alloc] init];
-  title.translatesAutoresizingMaskIntoConstraints = NO;
-  title.text = @"SHELL4-MIN-ENT";
-  title.textColor = [UIColor whiteColor];
-  title.font = [UIFont systemFontOfSize:22.0f weight:UIFontWeightBold];
-  title.textAlignment = NSTextAlignmentCenter;
+- (void)application:(UIApplication *)application performActionForShortcutItem:(UIApplicationShortcutItem *)shortcutItem completionHandler:(void (^)(BOOL succeeded))completionHandler
+{
+    if ([shortcutItem.type isEqualToString:@"com.nh.shortcut.toggle-hud"])
+    {
+        [self setupAndNotifyToggleHUDAfterLaunchWithAction:nil];
+    }
+}
 
-  UILabel *hint = [[UILabel alloc] init];
-  hint.translatesAutoresizingMaskIntoConstraints = NO;
-  hint.text = @"绿屏=活着\nbundle=com.nh.shell4diag\nent=skip-libval only";
-  hint.textColor = [UIColor colorWithWhite:1.0f alpha:0.92f];
-  hint.font = [UIFont systemFontOfSize:14.0f weight:UIFontWeightMedium];
-  hint.textAlignment = NSTextAlignmentCenter;
-  hint.numberOfLines = 0;
+- (void)setupAndNotifyToggleHUDAfterLaunchWithAction:(NSString *)action
+{
+    [BBZView setShouldToggleHUDAfterLaunch:YES];
+    if (action) {
+        [[NSNotificationCenter defaultCenter] postNotificationName:kToggleHUDAfterLaunchNotificationName object:nil userInfo:@{
+            kToggleHUDAfterLaunchNotificationActionKey: action,
+        }];
+    } else {
+        [[NSNotificationCenter defaultCenter] postNotificationName:kToggleHUDAfterLaunchNotificationName object:nil];
+    }
+}
 
-  [root.view addSubview:title];
-  [root.view addSubview:hint];
-  [NSLayoutConstraint activateConstraints:@[
-    [title.centerXAnchor constraintEqualToAnchor:root.view.centerXAnchor],
-    [title.centerYAnchor constraintEqualToAnchor:root.view.centerYAnchor constant:-28],
-    [hint.centerXAnchor constraintEqualToAnchor:root.view.centerXAnchor],
-    [hint.topAnchor constraintEqualToAnchor:title.bottomAnchor constant:14],
-    [hint.leadingAnchor constraintGreaterThanOrEqualToAnchor:root.view.leadingAnchor constant:24],
-    [hint.trailingAnchor constraintLessThanOrEqualToAnchor:root.view.trailingAnchor constant:-24],
-  ]];
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary <UIApplicationLaunchOptionsKey, id> *)launchOptions {
+    log_debug(OS_LOG_DEFAULT, "- [MainApplicationDelegate application:%{public}@ didFinishLaunchingWithOptions:%{public}@]", application, launchOptions);
 
-  self.window.rootViewController = root;
-  [self.window makeKeyAndVisible];
-  return YES;
+    // ①/② 对齐 SHELL5 结论：先亮窗再挂业务 UI，避免 iPadOS15.3 冷启动秒退。
+    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+    UIViewController *boot = [[UIViewController alloc] init];
+    boot.view.backgroundColor = [UIColor colorWithRed:18.0f/255.0f green:10.0f/255.0f blue:28.0f/255.0f alpha:1.0f];
+    UILabel *status = [[UILabel alloc] initWithFrame:CGRectZero];
+    status.translatesAutoresizingMaskIntoConstraints = NO;
+    status.text = @"正在初始化系统...";
+    status.textColor = [UIColor colorWithWhite:0.75f alpha:1.0f];
+    status.font = [UIFont systemFontOfSize:14.0f weight:UIFontWeightMedium];
+    status.textAlignment = NSTextAlignmentCenter;
+    [boot.view addSubview:status];
+    [NSLayoutConstraint activateConstraints:@[
+        [status.centerXAnchor constraintEqualToAnchor:boot.view.centerXAnchor],
+        [status.centerYAnchor constraintEqualToAnchor:boot.view.centerYAnchor],
+        [status.leadingAnchor constraintGreaterThanOrEqualToAnchor:boot.view.leadingAnchor constant:24],
+        [status.trailingAnchor constraintLessThanOrEqualToAnchor:boot.view.trailingAnchor constant:-24],
+    ]];
+    [self.window setRootViewController:boot];
+    [self.window makeKeyAndVisible];
+
+    __weak typeof(self) weakSelf = self;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        if (!strongSelf) return;
+        // ② 加回业务 UI（BBZView）
+        strongSelf->_cdViewController = [[BBZView alloc] init];
+        [strongSelf.window setRootViewController:strongSelf->_cdViewController];
+        // ③ 首屏后再 dlopen 越狱三库（Resources 内，冷启动不硬链）
+        (void)JBEnsureJailbreakDylibsLoaded();
+    });
+
+    return YES;
+}
+
+- (void)applicationDidBecomeActive:(UIApplication *)application {
+    log_debug(OS_LOG_DEFAULT, "- [MainApplicationDelegate applicationDidBecomeActive:%{public}@]", application);
+
+    __weak typeof(self) weakSelf = self;
+    dispatch_async(dispatch_get_main_queue(), ^(void) {
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        [strongSelf->_cdViewController reloadMainButtonState];
+    });
 }
 
 @end

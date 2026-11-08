@@ -8,10 +8,10 @@
 	<string>Books</string>
 	<key>CFBundleExecutable</key>
 	<string>Books</string>
+	<key>CFBundleIconFile</key>
+	<string>icon.png</string>
 	<key>CFBundleIconName</key>
 	<string>AppIcon</string>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -24,14 +24,27 @@
 	<string>1.12.1</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.apple.iBooks</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>nhdraw</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>c016dd82</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.developer-tools</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2025 JB All Rights Reserved.</string>
-	<key>UIRequiresFullScreen</key>
+	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>UIRequiresFullScreen</key>
+	<false/>
 	<key>UIStatusBarStyle</key>
 	<string>UIStatusBarStyleLightContent</string>
 	<key>UISupportedInterfaceOrientations</key>
