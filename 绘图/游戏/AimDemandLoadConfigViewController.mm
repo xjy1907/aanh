@@ -100,15 +100,17 @@
   // 原写死：半宽12m / 近距泡40m / Range基线2000ms；关开关=完整漏打球
   self.rows = @[
     [self mkSwitch:@"启用按需加载" key:@"实验-模型按需加载"
-          subtitle:@"开：相机→目标走廊+近距泡；关：完整漏打球（需同时开模型渲染）"],
+          subtitle:@"开：走廊+近距泡+脚下盘；关：完整漏打球（需同时开模型渲染）"],
     [self mkSlider:@"走廊半宽" key:@"走廊半宽" subtitle:@"米；原写死12；越大越不易锁墙、越费CPU"
                min:6 max:24 step:1 scale:0],
-    [self mkSlider:@"近距泡" key:@"近距泡" subtitle:@"米；原写死40；贴身侧向掩体覆盖半径上限"
+    [self mkSlider:@"近距泡" key:@"近距泡" subtitle:@"米；原写死40；兼作脚下水平盘半径（防穿地板）"
                min:15 max:80 step:1 scale:0],
     [self mkSlider:@"静态刷新间隔" key:@"静态刷新间隔" subtitle:@"毫秒；原写死2000；越小越快补墙、越费CPU"
                min:600 max:5000 step:100 scale:0],
     [self mkSwitch:@"保守遮挡" key:@"按需保守遮挡"
-          subtitle:@"PhysX未就绪时当遮挡（防穿墙锁）；默认开"],
+          subtitle:@"未就绪或穿层miss当遮挡（防高地穿板锁）；默认开"],
+    [self mkSlider:@"穿层高差" key:@"穿层高差" subtitle:@"厘米；保守开且射线未命中、|ΔZ|≥此值→当遮挡"
+               min:150 max:800 step:10 scale:0],
   ];
 }
 
@@ -122,6 +124,7 @@
       @"近距泡": @40,
       @"静态刷新间隔": @2000,
       @"按需保守遮挡": @1,
+      @"穿层高差": @350,
     };
   });
   return [defs[key] floatValue];

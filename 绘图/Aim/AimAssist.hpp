@@ -23,7 +23,8 @@ inline bool 模型按需加载 = false; // 实验：开→射线走廊局部加�
 inline float 走廊半宽 = 12.f;     // 米；原写死 12
 inline float 近距泡 = 40.f;       // 米；原写死 40
 inline float 静态刷新间隔 = 2000.f; // ms；原写死 2000
-inline bool 按需保守遮挡 = true;  // 未就绪时当遮挡，降低穿墙锁风险
+inline bool 按需保守遮挡 = true;  // 未就绪/穿层miss当遮挡，降低穿墙锁风险
+inline float 穿层高差 = 350.f;    // cm；按需+保守且 LineTrace miss、|ΔZ|≥此值 → 当遮挡
 inline float 漏打距离 = 90.f; // 默认 90（过大则 PhysX 射线/网格负载暴涨；硬上限 150）
 inline float 自瞄速度 = 26.f;
 inline float 自瞄大小 = 60.f;
@@ -229,6 +230,9 @@ inline void LoadFromPrefs(NSDictionary *cfg) {
     if (静态刷新间隔 < 600.f) 静态刷新间隔 = 600.f;
     if (静态刷新间隔 > 5000.f) 静态刷新间隔 = 5000.f;
     按需保守遮挡 = PrefBool(cfg, @"按需保守遮挡", true);
+    穿层高差 = PrefFloat(cfg, @"穿层高差", 350.f);
+    if (穿层高差 < 150.f) 穿层高差 = 150.f;
+    if (穿层高差 > 800.f) 穿层高差 = 800.f;
     漏打距离 = PrefFloat(cfg, @"漏打距离", 90.f);
     if (漏打距离 > 150.f) 漏打距离 = 150.f;
     if (漏打距离 > 0.f && 漏打距离 < 50.f) 漏打距离 = 50.f;
@@ -382,7 +386,13 @@ inline bool IsPointOccluded(const Vector3 &cam, const Vector3 &bone) {
         // 按需+保守：未就绪当遮挡，避免空场景穿墙锁；关保守则与旧行为一致（当可见）
         return 模型按需加载 && 按需保守遮挡;
     }
-    return AimPhysX_IsOccluded(cam, bone);
+    if (AimPhysX_IsOccluded(cam, bone)) return true;
+    // 按需+保守：竖向高差大且射线未命中 → 多半漏加载地板/天花板，当遮挡防穿层锁
+    if (模型按需加载 && 按需保守遮挡) {
+        const float dz = fabsf(cam.Z - bone.Z);
+        if (dz >= 穿层高差) return true;
+    }
+    return false;
 }
 
 inline void BeginFrameSelect() {

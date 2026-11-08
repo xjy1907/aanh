@@ -225,6 +225,8 @@ namespace PhysXLoadFilter {
     inline std::atomic<float> corridorHalfUU{1200.f};   // 12m
     inline std::atomic<float> nearCamBubbleUU{4000.f};  // 40m
     inline std::atomic<int> rangeBaseMs{2000};          // Range 基线 ms
+    // 大板中心偏离射线：走廊有效半宽 = half + pad（约 18m）
+    inline constexpr float kCorridorExtentPadUU = 1800.f;
 
     inline void SetCorridorHalfMeters(float meters) {
         if (!(meters > 0.f)) meters = 12.f;
@@ -282,7 +284,7 @@ namespace PhysXLoadFilter {
         return qx * qx + qy * qy + qz * qz;
     }
 
-    /// 加载过滤：有射线焦点时→近距泡∪走廊；否则→完整漏打球
+    /// 加载过滤：有射线焦点时→近距泡∪脚下盘∪(走廊+外扩)；否则→完整漏打球
     inline bool ShouldLoadPoint(const physx::PxVec3 &p) {
         if (!camValid.load(std::memory_order_acquire)) return false;
         const float cx = camX.load(std::memory_order_relaxed);
@@ -301,6 +303,15 @@ namespace PhysXLoadFilter {
         if (nearR > nearCap) nearR = nearCap;
         if (d2 <= (nearR * nearR)) return true;
 
+        // 脚下/同层水平盘：专治高地穿地板（大地板中心常偏离竖线）
+        // 水平半径用近距泡；垂直：相机上方 3m 内到漏打球深
+        {
+            const float h2 = dx * dx + dy * dy;
+            if (h2 <= (nearCap * nearCap) && dz <= 300.f && dz >= -fullR) {
+                return true;
+            }
+        }
+
         RayFocus local[kMaxRayFoci];
         int n = 0;
         {
@@ -308,8 +319,10 @@ namespace PhysXLoadFilter {
             n = rayFocusCount;
             for (int i = 0; i < n; i++) local[i] = rayFoci[i];
         }
+        // 走廊半宽 + 外扩：大板 Shape 原点偏离射线仍可进 Embree
         const float half = corridorHalfUU.load(std::memory_order_relaxed);
-        const float thick2 = half * half;
+        const float thick = half + kCorridorExtentPadUU;
+        const float thick2 = thick * thick;
         for (int i = 0; i < n; i++) {
             if (DistPointSegment2(p.x, p.y, p.z,
                                   local[i].ax, local[i].ay, local[i].az,
