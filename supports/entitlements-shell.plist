@@ -1,12 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
-	<!-- SHELL4 诊断：去掉 no-container / platform-application / HID / SpringBoard 私有权 -->
-	<!-- 仅保留 TrollStore 常需的 skip-library-validation + get-task-allow -->
-	<key>get-task-allow</key>
-	<true/>
-	<key>com.apple.private.skip-library-validation</key>
-	<true/>
-</dict>
+<dict/>
 </plist>

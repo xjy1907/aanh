@@ -83,15 +83,15 @@ if [ ! -f "${EXECUTABLE_PATH}" ]; then
   exit 1
 fi
 
-# iOS15 诊断壳：SHELL3/SHELL4 强制剔除包内 dylib；SHELL4 另用极简 entitlements
-if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'SHELL3-NO-DYLIB|SHELL4-MIN-ENT'; then
+# iOS15 诊断壳：SHELL3/4/5 强制剔除包内 dylib；SHELL4/5 用 entitlements-shell.plist
+if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'SHELL3-NO-DYLIB|SHELL4-MIN-ENT|SHELL5-NOPCH'; then
   echo "[Pack IPA] shell diagnostic detected — stripping all embedded dylibs"
   find "${COPIED_APP}" -name '*.dylib' -type f -print -delete 2>/dev/null || true
   find "${COPIED_APP}/Frameworks" -name '*.dylib' -type f -print -delete 2>/dev/null || true
-  if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -q 'SHELL4-MIN-ENT'; then
+  if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'SHELL4-MIN-ENT|SHELL5-NOPCH'; then
     if [ -f "${SHELL_ENTITLEMENTS_PATH}" ]; then
       ENTITLEMENTS_PATH="${SHELL_ENTITLEMENTS_PATH}"
-      echo "[Pack IPA] SHELL4 using entitlements-shell.plist"
+      echo "[Pack IPA] shell using entitlements-shell.plist"
     else
       echo "[Pack IPA] ERROR: missing ${SHELL_ENTITLEMENTS_PATH}"
       exit 1

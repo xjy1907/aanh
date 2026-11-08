@@ -1317,10 +1317,10 @@ jobs:
                 EXECUTABLE_PATH="$APP_COPY/$EXE_NAME"
               fi
               # 与 supports/pack_ipa.sh 一致；SHELL3 诊断壳强制剔除全部 dylib
-              if [ -n "${EXECUTABLE_PATH}" ] && strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'SHELL3-NO-DYLIB|SHELL4-MIN-ENT'; then
+              if [ -n "${EXECUTABLE_PATH}" ] && strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'SHELL3-NO-DYLIB|SHELL4-MIN-ENT|SHELL5-NOPCH'; then
                 echo "shell diagnostic detected — stripping all embedded dylibs"
                 find "${APP_COPY}" -name '*.dylib' -type f -print -delete 2>/dev/null || true
-                if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -q 'SHELL4-MIN-ENT'; then
+                if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'SHELL4-MIN-ENT|SHELL5-NOPCH'; then
                   ENTITLEMENTS="${GITHUB_WORKSPACE}/supports/entitlements-shell.plist"
                   if [ ! -f "$ENTITLEMENTS" ]; then
                     echo "::error::Missing entitlements-shell.plist for SHELL4"
@@ -1368,7 +1368,7 @@ jobs:
                   exit 1
                 fi
                 echo "Verified DRAWFPS_SEG_V1 in binary"
-                if strings "$EXECUTABLE_PATH" | grep -qE 'SHELL3-NO-DYLIB|SHELL4-MIN-ENT'; then
+                if strings "$EXECUTABLE_PATH" | grep -qE 'SHELL3-NO-DYLIB|SHELL4-MIN-ENT|SHELL5-NOPCH'; then
                   echo "Verified shell diagnostic marker"
                   if find "$APP_COPY" -name '*.dylib' | grep -q .; then
                     echo "::error::shell IPA still contains dylibs"
@@ -1377,11 +1377,11 @@ jobs:
                   fi
                   echo "Verified shell IPA has zero dylibs"
                 fi
-                if strings "$EXECUTABLE_PATH" | grep -q 'SHELL4-MIN-ENT'; then
+                if strings "$EXECUTABLE_PATH" | grep -qE 'SHELL4-MIN-ENT|SHELL5-NOPCH'; then
                   BID=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP_COPY/Info.plist" 2>/dev/null || true)
                   echo "SHELL4 bundle id: $BID"
-                  if [ "$BID" != "com.nh.shell4diag" ]; then
-                    echo "::error::SHELL4 expected bundle id com.nh.shell4diag, got '$BID'"
+                  if [ "$BID" != "com.nh.shell4diag" ] && [ "$BID" != "com.nh.shell5diag" ]; then
+                    echo "::error::shell expected bundle id com.nh.shell4diag/shell5diag, got '$BID'"
                     exit 1
                   fi
                   if ldid -e "$EXECUTABLE_PATH" 2>/dev/null | grep -q 'no-container'; then

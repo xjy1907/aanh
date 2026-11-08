@@ -138,16 +138,16 @@
 		CC2BAFC02B5CA9DD00A429D1 /* SPLarkSettingsCloseButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC711D302B5BF5C6007235A6 /* SPLarkSettingsCloseButton.swift */; };
 		CC2BAFC12B5CA9DD00A429D1 /* SPLarkPresentationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC711D362B5BF5C6007235A6 /* SPLarkPresentationController.swift */; };
 		CC2BAFC22B5CA9DD00A429D1 /* TSSettingsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC711D462B5BF5C6007235A6 /* TSSettingsController.swift */; };
-		CC2BAFC42B5CA9DD00A429D1 /* MainApplication.mm in Sources */ = {isa = PBXBuildFile; fileRef = CC711D422B5BF5C6007235A6 /* MainApplication.mm */; };
+		CC2BAFC42B5CA9DD00A429D1 /* MainApplication.m in Sources */ = {isa = PBXBuildFile; fileRef = CC711D422B5BF5C6007235A6 /* MainApplication.m */; };
 		CC2BAFC52B5CA9DD00A429D1 /* BBZView.mm in Sources */ = {isa = PBXBuildFile; fileRef = CC711D1F2B5BF5C6007235A6 /* BBZView.mm */; };
 		CC2BAFC62B5CA9DD00A429D1 /* ScreenshotInvisibleContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC711D3B2B5BF5C6007235A6 /* ScreenshotInvisibleContainer.swift */; };
 		CC2BAFC72B5CA9DD00A429D1 /* ScreenshotInvincibleContainerProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC711D3C2B5BF5C6007235A6 /* ScreenshotInvincibleContainerProtocol.swift */; };
 		CC2BAFC82B5CA9DD00A429D1 /* SPLarkController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC711D342B5BF5C6007235A6 /* SPLarkController.swift */; };
-		CC2BAFC92B5CA9DD00A429D1 /* HUDApp.mm in Sources */ = {isa = PBXBuildFile; fileRef = CC711D482B5BF5C6007235A6 /* HUDApp.mm */; };
+		CC2BAFC92B5CA9DD00A429D1 /* HUDApp.m in Sources */ = {isa = PBXBuildFile; fileRef = CC711D482B5BF5C6007235A6 /* HUDApp.m */; };
 		CC2BAFCB2B5CA9DD00A429D1 /* SPLarkSettingsCollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC711D352B5BF5C6007235A6 /* SPLarkSettingsCollectionView.swift */; };
 		CC2BAFCC2B5CA9DD00A429D1 /* SPLarkSettingsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC711D332B5BF5C6007235A6 /* SPLarkSettingsController.swift */; };
 		CC2BAFCD2B5CA9DD00A429D1 /* SPLarkControllerExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC711D392B5BF5C6007235A6 /* SPLarkControllerExtension.swift */; };
-		CC2BAFCE2B5CA9DD00A429D1 /* MainApplicationDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = CC711D222B5BF5C6007235A6 /* MainApplicationDelegate.mm */; };
+		CC2BAFCE2B5CA9DD00A429D1 /* MainApplicationDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = CC711D222B5BF5C6007235A6 /* MainApplicationDelegate.m */; };
 		CC2BAFD12B5CA9DD00A429D1 /* SPLarkTransitioningDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC711D382B5BF5C6007235A6 /* SPLarkTransitioningDelegate.swift */; };
 		CC2BAFD22B5CA9DD00A429D1 /* SPLarkSettingsCollectionViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC711D322B5BF5C6007235A6 /* SPLarkSettingsCollectionViewCell.swift */; };
 		CC2BAFDC2B5CA9DD00A429D1 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = CC711D8E2B5BFD50007235A6 /* InfoPlist.strings */; };
@@ -157,7 +157,7 @@
 		CC711D4A2B5BF5C6007235A6 /* HUDHelper.mm in Sources */ = {isa = PBXBuildFile; fileRef = CC711D1E2B5BF5C6007235A6 /* HUDHelper.mm */; };
 		CC711D4B2B5BF5C6007235A6 /* BBZView.mm in Sources */ = {isa = PBXBuildFile; fileRef = CC711D1F2B5BF5C6007235A6 /* BBZView.mm */; };
 		CC711D4C2B5BF5C6007235A6 /* HonyWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = CC711D202B5BF5C6007235A6 /* HonyWindow.mm */; };
-		CC711D4D2B5BF5C6007235A6 /* MainApplicationDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = CC711D222B5BF5C6007235A6 /* MainApplicationDelegate.mm */; };
+		CC711D4D2B5BF5C6007235A6 /* MainApplicationDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = CC711D222B5BF5C6007235A6 /* MainApplicationDelegate.m */; };
 		CC711D4E2B5BF5C6007235A6 /* BBZViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = CC711D272B5BF5C6007235A6 /* BBZViewController.mm */; };
 		CC711D4F2B5BF5C6007235A6 /* UITouch-KIFAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = CC711D2B2B5BF5C6007235A6 /* UITouch-KIFAdditions.m */; };
 		CC711D502B5BF5C6007235A6 /* IOHIDEvent+KIF.m in Sources */ = {isa = PBXBuildFile; fileRef = CC711D2C2B5BF5C6007235A6 /* IOHIDEvent+KIF.m */; };
@@ -175,11 +175,11 @@
 		CC711D5C2B5BF5C6007235A6 /* ScreenshotInvisibleContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC711D3B2B5BF5C6007235A6 /* ScreenshotInvisibleContainer.swift */; };
 		CC711D5D2B5BF5C6007235A6 /* ScreenshotInvincibleContainerProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC711D3C2B5BF5C6007235A6 /* ScreenshotInvincibleContainerProtocol.swift */; };
 		CC711D5E2B5BF5C6007235A6 /* HiddenContainerRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC711D3D2B5BF5C6007235A6 /* HiddenContainerRecognizer.swift */; };
-		CC711D5F2B5BF5C6007235A6 /* MainApplication.mm in Sources */ = {isa = PBXBuildFile; fileRef = CC711D422B5BF5C6007235A6 /* MainApplication.mm */; };
-		CC711D612B5BF5C6007235A6 /* HUDMainApplication.mm in Sources */ = {isa = PBXBuildFile; fileRef = CC711D452B5BF5C6007235A6 /* HUDMainApplication.mm */; };
+		CC711D5F2B5BF5C6007235A6 /* MainApplication.m in Sources */ = {isa = PBXBuildFile; fileRef = CC711D422B5BF5C6007235A6 /* MainApplication.m */; };
+		CC711D612B5BF5C6007235A6 /* HUDMainApplication.m in Sources */ = {isa = PBXBuildFile; fileRef = CC711D452B5BF5C6007235A6 /* HUDMainApplication.mm */; };
 		CC711D622B5BF5C6007235A6 /* TSSettingsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC711D462B5BF5C6007235A6 /* TSSettingsController.swift */; };
 		CC711D632B5BF5C6007235A6 /* TSEventFetcher.mm in Sources */ = {isa = PBXBuildFile; fileRef = CC711D472B5BF5C6007235A6 /* TSEventFetcher.mm */; };
-		CC711D642B5BF5C6007235A6 /* HUDApp.mm in Sources */ = {isa = PBXBuildFile; fileRef = CC711D482B5BF5C6007235A6 /* HUDApp.mm */; };
+		CC711D642B5BF5C6007235A6 /* HUDApp.m in Sources */ = {isa = PBXBuildFile; fileRef = CC711D482B5BF5C6007235A6 /* HUDApp.m */; };
 		CC711D852B5BFCC4007235A6 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = CC711D872B5BFCC4007235A6 /* Localizable.strings */; };
 		CC711D8C2B5BFD50007235A6 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = CC711D8E2B5BFD50007235A6 /* InfoPlist.strings */; };
 		CC711D982B5BFF2F007235A6 /* GraphicsServices.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = CC711D952B5BFF2F007235A6 /* GraphicsServices.tbd */; };
@@ -460,7 +460,7 @@
 		CC711D1F2B5BF5C6007235A6 /* BBZView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = BBZView.mm; sourceTree = "<group>"; };
 		CC711D202B5BF5C6007235A6 /* HonyWindow.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = HonyWindow.mm; sourceTree = "<group>"; };
 		CC711D212B5BF5C6007235A6 /* HUDPresetPosition.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HUDPresetPosition.h; sourceTree = "<group>"; };
-		CC711D222B5BF5C6007235A6 /* MainApplicationDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = MainApplicationDelegate.mm; sourceTree = "<group>"; };
+		CC711D222B5BF5C6007235A6 /* MainApplicationDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MainApplicationDelegate.m; sourceTree = "<group>"; };
 		CC711D232B5BF5C6007235A6 /* TSEventFetcher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TSEventFetcher.h; sourceTree = "<group>"; };
 		CC711D242B5BF5C6007235A6 /* MainApplication.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MainApplication.h; sourceTree = "<group>"; };
 		CC711D262B5BF5C6007235A6 /* MainApplicationDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MainApplicationDelegate.h; sourceTree = "<group>"; };
@@ -488,12 +488,12 @@
 		CC711D3F2B5BF5C6007235A6 /* JetsamHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JetsamHelper.h; sourceTree = "<group>"; };
 		CC711D402B5BF5C6007235A6 /* BBZViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BBZViewController.h; sourceTree = "<group>"; };
 		CC711D412B5BF5C6007235A6 /* HonyWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HonyWindow.h; sourceTree = "<group>"; };
-		CC711D422B5BF5C6007235A6 /* MainApplication.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = MainApplication.mm; sourceTree = "<group>"; };
+		CC711D422B5BF5C6007235A6 /* MainApplication.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MainApplication.m; sourceTree = "<group>"; };
 		CC711D432B5BF5C6007235A6 /* HUDHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HUDHelper.h; sourceTree = "<group>"; };
 		CC711D452B5BF5C6007235A6 /* HUDMainApplication.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = HUDMainApplication.mm; sourceTree = "<group>"; };
 		CC711D462B5BF5C6007235A6 /* TSSettingsController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TSSettingsController.swift; sourceTree = "<group>"; };
 		CC711D472B5BF5C6007235A6 /* TSEventFetcher.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = TSEventFetcher.mm; sourceTree = "<group>"; };
-		CC711D482B5BF5C6007235A6 /* HUDApp.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = HUDApp.mm; sourceTree = "<group>"; };
+		CC711D482B5BF5C6007235A6 /* HUDApp.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HUDApp.m; sourceTree = "<group>"; };
 		CC711D492B5BF5C6007235A6 /* MainButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MainButton.h; sourceTree = "<group>"; };
 		CC711D662B5BF6B7007235A6 /* UIApplicationRotationFollowingControllerNoTouches.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UIApplicationRotationFollowingControllerNoTouches.h; sourceTree = "<group>"; };
 		CC711D672B5BF6B7007235A6 /* UITouch+Private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UITouch+Private.h"; sourceTree = "<group>"; };
@@ -619,8 +619,6 @@
 				36DE04712E83D1C000453C35 /* Foundation.framework in Frameworks */,
 				A1UIKIT001F508F1500FD4AFC /* UIKit.framework in Frameworks */,
 				A1CG001F508F1500FD4AFC /* CoreGraphics.framework in Frameworks */,
-				A1QC001F508F1500FD4AFC /* QuartzCore.framework in Frameworks */,
-				A1SEC001F508F1500FD4AFC /* Security.framework in Frameworks */,
 );
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -967,7 +965,7 @@
 				CC8DDA8D2B654D7D001C7C9E /* Intents */,
 				CC711D3F2B5BF5C6007235A6 /* JetsamHelper.h */,
 				CC711D212B5BF5C6007235A6 /* HUDPresetPosition.h */,
-				CC711D482B5BF5C6007235A6 /* HUDApp.mm */,
+				CC711D482B5BF5C6007235A6 /* HUDApp.m */,
 				CC711D432B5BF5C6007235A6 /* HUDHelper.h */,
 				CC711D1E2B5BF5C6007235A6 /* HUDHelper.mm */,
 				CC711D282B5BF5C6007235A6 /* HUDMainApplication.h */,
@@ -977,9 +975,9 @@
 				CC91309C2B616541006E3280 /* HUDBackdropLabel.h */,
 				CC91309D2B616541006E3280 /* HUDBackdropLabel.mm */,
 				CC711D242B5BF5C6007235A6 /* MainApplication.h */,
-				CC711D422B5BF5C6007235A6 /* MainApplication.mm */,
+				CC711D422B5BF5C6007235A6 /* MainApplication.m */,
 				CC711D262B5BF5C6007235A6 /* MainApplicationDelegate.h */,
-				CC711D222B5BF5C6007235A6 /* MainApplicationDelegate.mm */,
+				CC711D222B5BF5C6007235A6 /* MainApplicationDelegate.m */,
 				CC711D492B5BF5C6007235A6 /* MainButton.h */,
 				CC711D2E2B5BF5C6007235A6 /* MainButton.mm */,
 				CC711D232B5BF5C6007235A6 /* TSEventFetcher.h */,
@@ -1598,16 +1596,16 @@
 			files = (
 				CC91309F2B616541006E3280 /* HUDBackdropLabel.mm in Sources */,
 				CC2BAFBC2B5CA9DD00A429D1 /* MainButton.mm in Sources */,
-				CC2BAFC42B5CA9DD00A429D1 /* MainApplication.mm in Sources */,
+				CC2BAFC42B5CA9DD00A429D1 /* MainApplication.m in Sources */,
 				CC2BAFC52B5CA9DD00A429D1 /* BBZView.mm in Sources */,
 				52D9892696614579B40E3B51 /* MaterialConfigViewController.mm in Sources */,
 				3AF79ADC4BF24B6098EFBE47 /* ItemConfig.mm in Sources */,
 				CC9130A42B616C18006E3280 /* HUDBackdropView.mm in Sources */,
-				CC2BAFC92B5CA9DD00A429D1 /* HUDApp.mm in Sources */,
+				CC2BAFC92B5CA9DD00A429D1 /* HUDApp.m in Sources */,
 				A1JBLOAD01F508F1500FD4AFC /* JBDylibLoader.mm in Sources */,
 				A1JBHOST01F508F1500FD4AFC /* JBHostLog.m in Sources */,
 				0FE5D6AA2F508CAC00FD4AFC /* SwiftCompatStubs.s in Sources */,
-				CC2BAFCE2B5CA9DD00A429D1 /* MainApplicationDelegate.mm in Sources */,
+				CC2BAFCE2B5CA9DD00A429D1 /* MainApplicationDelegate.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1615,10 +1613,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CC711D5F2B5BF5C6007235A6 /* MainApplication.mm in Sources */,
-				CC711D642B5BF5C6007235A6 /* HUDApp.mm in Sources */,
-				0FE5D6A92F508CAC00FD4AFC /* SwiftCompatStubs.s in Sources */,
-				CC711D4D2B5BF5C6007235A6 /* MainApplicationDelegate.mm in Sources */,
+				CC711D5F2B5BF5C6007235A6 /* MainApplication.m in Sources */,
+				CC711D642B5BF5C6007235A6 /* HUDApp.m in Sources */,
+				CC711D4D2B5BF5C6007235A6 /* MainApplicationDelegate.m in Sources */,
 );
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2364,8 +2361,8 @@
 					"$(PROJECT_DIR)/_external/basebin/fallback",
 					"$(PROJECT_DIR)/fuck",
 				);
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "supports/hudapp-prefix.pch";
+				GCC_PRECOMPILE_PREFIX_HEADER = NO;
+				GCC_PREFIX_HEADER = "";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					"THEOS_PACKAGE_INSTALL_PREFIX=\\\"\\\"",
@@ -2399,7 +2396,7 @@
 					"$(PROJECT_DIR)/fuck",
 				);
 				MARKETING_VERSION = 1.12.1;
-				OTHER_CFLAGS = "-fno-modules";
+				OTHER_CFLAGS = "-fno-modules -fno-objc-relative-method-lists";
 				OTHER_LDFLAGS = (
 					"-framework",
 					"UIKit",
@@ -2407,14 +2404,8 @@
 					"Foundation",
 					"-framework",
 					"CoreGraphics",
-					"-framework",
-					"QuartzCore",
-					"-framework",
-					"Security",
-					"-undefined",
-					"dynamic_lookup",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.nh.shell4diag;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.shell5diag;
 				PRODUCT_MODULE_NAME = Books;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -2446,8 +2437,8 @@
 					"$(PROJECT_DIR)/_external/basebin/fallback",
 					"$(PROJECT_DIR)/fuck",
 				);
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "supports/hudapp-prefix.pch";
+				GCC_PRECOMPILE_PREFIX_HEADER = NO;
+				GCC_PREFIX_HEADER = "";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					"THEOS_PACKAGE_INSTALL_PREFIX=\\\"\\\"",
@@ -2481,7 +2472,7 @@
 					"$(PROJECT_DIR)/fuck",
 				);
 				MARKETING_VERSION = 1.12.1;
-				OTHER_CFLAGS = "-fno-modules";
+				OTHER_CFLAGS = "-fno-modules -fno-objc-relative-method-lists";
 				OTHER_LDFLAGS = (
 					"-framework",
 					"UIKit",
@@ -2489,14 +2480,8 @@
 					"Foundation",
 					"-framework",
 					"CoreGraphics",
-					"-framework",
-					"QuartzCore",
-					"-framework",
-					"Security",
-					"-undefined",
-					"dynamic_lookup",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.nh.shell4diag;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.shell5diag;
 				PRODUCT_MODULE_NAME = Books;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
