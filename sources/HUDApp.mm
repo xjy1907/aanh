@@ -124,7 +124,8 @@ int main(int argc, char *argv[]) {
     // 对齐 qwer/wasd：普通点击启动直接进 UI，不做 jbclient/DOEnvironmentManager
     // （那些会在启动瞬间拉起 libjailbreak→libchoma；choma 坏切片曾导致 iOS15 秒退）
     if (!NHIsOverlayRole()) {
-      return UIApplicationMain(argc, argv, @"MainApplication", @"MainApplicationDelegate");
+      // 对齐 Dopamine：principalClass=nil，走系统 UIApplication
+      return UIApplicationMain(argc, argv, nil, @"MainApplicationDelegate");
     }
 
     // 叠层角色由每机派生 env 标记（不再依赖 Helium 同源 -hud/-exit/-check argv）
@@ -182,7 +183,7 @@ int main(int argc, char *argv[]) {
       return EXIT_SUCCESS;
     }
 #else
-    return UIApplicationMain(argc, argv, @"MainApplication", @"MainApplicationDelegate");
+    return UIApplicationMain(argc, argv, nil, @"MainApplicationDelegate");
 #endif
   }
 }

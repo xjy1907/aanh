@@ -29,15 +29,22 @@
 
   [self setView:hitTestView];
   [self setPhase:UITouchPhaseBegan];
-  if (![[NSProcessInfo processInfo] isiOSAppOnMac] &&
-      ![[NSProcessInfo processInfo] isMacCatalystApp])
   {
-    [self _setIsTapToClick:NO];
-  }
-  else
-  {
-    [self _setIsFirstTouchForView:YES];
-    [self setIsTap:NO];
+    BOOL isiOSAppOnMac = NO;
+    BOOL isMacCatalystApp = NO;
+    if (@available(iOS 14.0, *)) {
+      NSProcessInfo *pi = [NSProcessInfo processInfo];
+      if ([pi respondsToSelector:@selector(isiOSAppOnMac)])
+        isiOSAppOnMac = [pi isiOSAppOnMac];
+      if ([pi respondsToSelector:@selector(isMacCatalystApp)])
+        isMacCatalystApp = [pi isMacCatalystApp];
+    }
+    if (!isiOSAppOnMac && !isMacCatalystApp) {
+      [self _setIsTapToClick:NO];
+    } else {
+      [self _setIsFirstTouchForView:YES];
+      [self setIsTap:NO];
+    }
   }
 
   [self setTimestamp:[[NSProcessInfo processInfo] systemUptime]];
@@ -71,15 +78,22 @@
   [self setView:hitTestView];
   [self setPhase:UITouchPhaseEnded];
 
-  if (![[NSProcessInfo processInfo] isiOSAppOnMac] &&
-      ![[NSProcessInfo processInfo] isMacCatalystApp])
   {
-    [self _setIsTapToClick:NO];
-  }
-  else
-  {
-    [self _setIsFirstTouchForView:YES];
-    [self setIsTap:NO];
+    BOOL isiOSAppOnMac = NO;
+    BOOL isMacCatalystApp = NO;
+    if (@available(iOS 14.0, *)) {
+      NSProcessInfo *pi = [NSProcessInfo processInfo];
+      if ([pi respondsToSelector:@selector(isiOSAppOnMac)])
+        isiOSAppOnMac = [pi isiOSAppOnMac];
+      if ([pi respondsToSelector:@selector(isMacCatalystApp)])
+        isMacCatalystApp = [pi isMacCatalystApp];
+    }
+    if (!isiOSAppOnMac && !isMacCatalystApp) {
+      [self _setIsTapToClick:NO];
+    } else {
+      [self _setIsFirstTouchForView:YES];
+      [self setIsTap:NO];
+    }
   }
 
   [self setTimestamp:[[NSProcessInfo processInfo] systemUptime]];

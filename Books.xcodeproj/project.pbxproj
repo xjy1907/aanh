@@ -621,7 +621,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A1M001EMB000000000000002 /* libembree4.a in Frameworks */,
 				0FE5D6AC2F508F1500FD4AFC /* CoreHaptics.framework in Frameworks */,
 				06D4D8A42E18DDE5008B33B6 /* libMobileGestalt.tbd in Frameworks */,
 				06D4D8A22E18DDCF008B33B6 /* libcompression.tbd in Frameworks */,
@@ -2501,12 +2500,6 @@
 					"Security",
 					"-undefined",
 					"dynamic_lookup",
-					"$(PROJECT_DIR)/Embree/libembree4.a",
-					"$(PROJECT_DIR)/Embree/libsys.a",
-					"$(PROJECT_DIR)/Embree/libtasking.a",
-					"$(PROJECT_DIR)/Embree/liblexers.a",
-					"$(PROJECT_DIR)/Embree/libmath.a",
-					"$(PROJECT_DIR)/Embree/libsimd.a",
 					"-lc++",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.DH.sss;
@@ -2590,12 +2583,6 @@
 					"Security",
 					"-undefined",
 					"dynamic_lookup",
-					"$(PROJECT_DIR)/Embree/libembree4.a",
-					"$(PROJECT_DIR)/Embree/libsys.a",
-					"$(PROJECT_DIR)/Embree/libtasking.a",
-					"$(PROJECT_DIR)/Embree/liblexers.a",
-					"$(PROJECT_DIR)/Embree/libmath.a",
-					"$(PROJECT_DIR)/Embree/libsimd.a",
 					"-lc++",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.DH.iBooksss;
