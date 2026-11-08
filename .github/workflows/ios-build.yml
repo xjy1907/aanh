@@ -1364,6 +1364,13 @@ jobs:
                     exit 1
                   fi
                   echo "Verified no Compatibility56/SwiftUI/AppIntents load commands"
+                  # iOS15：冷启动不得强链 jb/NH 库（对齐 qwer，避免 dyld 秒退）
+                  if echo "$DEPS" | grep -qiE 'libjailbreak|libchoma|libxpf|libNHSupport|libNHCodec|libNHParse'; then
+                    echo "::error::Books still LC_LOAD_DYLIB jailbreak libs at cold start; iPadOS15 will black-screen"
+                    echo "$DEPS" | grep -iE 'libjailbreak|libchoma|libxpf|libNH' || true
+                    exit 1
+                  fi
+                  echo "Verified Books does not hard-link jailbreak dylibs"
                   # iOS15：嵌入的 dylib 不得带真正的 LC_VERSION_MIN_MACOSX(0x24)
                   while IFS= read -r -d '' dylib; do
                     if otool -l "$dylib" 2>/dev/null | grep -q 'LC_VERSION_MIN_MACOSX'; then

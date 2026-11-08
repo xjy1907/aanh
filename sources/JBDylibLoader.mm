@@ -33,7 +33,8 @@ BOOL JBEnsureJailbreakDylibsLoaded(void) {
   }
   attempted = YES;
 
-  // 对齐 Dopamine：主程序可 LC_LOAD 三库；若已加载则直接成功。
+  // 对齐 qwer：冷启动不强链三库；仅越狱路径 dlopen。
+  // 若已由别处加载则直接成功。
   if (dlopen("libjailbreak.dylib", RTLD_NOLOAD | RTLD_NOW) ||
       dlopen("libNHSupport.dylib", RTLD_NOLOAD | RTLD_NOW) ||
       dlopen("@executable_path/libNHSupport.dylib", RTLD_NOLOAD | RTLD_NOW) ||
