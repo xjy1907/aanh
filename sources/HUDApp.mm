@@ -154,6 +154,9 @@ int main(int argc, char *argv[]) {
       static id<UIApplicationDelegate> appDelegate = [[objc_getClass("BBZViewController") alloc] init];
       [UIApplication.sharedApplication setDelegate:appDelegate];
       [UIApplication.sharedApplication _accessibilityInit];
+
+      // HUD 路径才初始化触摸池（Books 冷启动不再 +load）
+      [TSEventFetcher setupIfNeeded];
       
       [NSRunLoop currentRunLoop];
       BKSHIDEventRegisterEventCallback(_HUDEventCallback);

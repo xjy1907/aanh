@@ -54,12 +54,13 @@
   self = [super init];
   if (self == nil)
     return nil;
-  
-  NSArray *scenes =
-      [[[UIApplication sharedApplication] connectedScenes] allObjects];
-  
-  NSArray *windows = [[scenes objectAtIndex:0] windows];
-  UIWindow *window = [windows lastObject];
+
+  // 对齐 qwer：Books 非 Scene 应用，冷启动 connectedScenes 为空。
+  // 旧代码 objectAtIndex:0 会在 iPadOS15.3 上 NSRangeException → 黑屏秒退。
+  UIWindow *window = [[[UIApplication sharedApplication] windows] firstObject];
+  if (!window) {
+    window = [[UIWindow alloc] initWithFrame:CGRectZero];
+  }
   CGPoint point = CGPointMake(0, 0);
   
   [self setWindow:window];  // Wipes out some values.  Needs to be first.

@@ -62,11 +62,33 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary <UIApplicationLaunchOptionsKey, id> *)launchOptions {
     log_debug(OS_LOG_DEFAULT, "- [MainApplicationDelegate application:%{public}@ didFinishLaunchingWithOptions:%{public}@]", application, launchOptions);
 
-    _cdViewController = [[BBZView alloc] init];
-
+    // 对齐 Dopamine：先亮窗再挂主界面，避免冷启动同步拉起重依赖导致 iPadOS15 黑屏。
     self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-    [self.window setRootViewController:_cdViewController];
+    UIViewController *boot = [[UIViewController alloc] init];
+    boot.view.backgroundColor = [UIColor colorWithRed:18.0f/255.0f green:10.0f/255.0f blue:28.0f/255.0f alpha:1.0f];
+    UILabel *status = [[UILabel alloc] initWithFrame:CGRectZero];
+    status.translatesAutoresizingMaskIntoConstraints = NO;
+    status.text = @"正在初始化系统...";
+    status.textColor = [UIColor colorWithWhite:0.75f alpha:1.0f];
+    status.font = [UIFont systemFontOfSize:14.0f weight:UIFontWeightMedium];
+    status.textAlignment = NSTextAlignmentCenter;
+    [boot.view addSubview:status];
+    [NSLayoutConstraint activateConstraints:@[
+        [status.centerXAnchor constraintEqualToAnchor:boot.view.centerXAnchor],
+        [status.centerYAnchor constraintEqualToAnchor:boot.view.centerYAnchor],
+        [status.leadingAnchor constraintGreaterThanOrEqualToAnchor:boot.view.leadingAnchor constant:24],
+        [status.trailingAnchor constraintLessThanOrEqualToAnchor:boot.view.trailingAnchor constant:-24],
+    ]];
+    [self.window setRootViewController:boot];
     [self.window makeKeyAndVisible];
+
+    __weak typeof(self) weakSelf = self;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        if (!strongSelf) return;
+        strongSelf->_cdViewController = [[BBZView alloc] init];
+        [strongSelf.window setRootViewController:strongSelf->_cdViewController];
+    });
 
     return YES;
 }

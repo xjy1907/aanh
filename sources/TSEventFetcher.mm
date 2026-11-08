@@ -52,26 +52,35 @@ static void __TSEventFetcherCallback(void *info)
 
 @implementation TSEventFetcher
 
++ (void)setupIfNeeded
+{
+  static dispatch_once_t once;
+  dispatch_once(&once, ^{
+    _livingTouchAry = [[NSMutableArray alloc] init];
+    _touchAry = [[NSMutableArray alloc] init];
+
+    for (NSInteger i = 0; i < 100; i++)
+    {
+      UITouch *touch = [[UITouch alloc] initTouch];
+      [touch setPhaseAndUpdateTimestamp:UITouchPhaseEnded];
+      [_touchAry addObject:touch];
+    }
+
+    CFRunLoopSourceContext context;
+    memset(&context, 0, sizeof(CFRunLoopSourceContext));
+    context.perform = __TSEventFetcherCallback;
+
+    // content of context is copied
+    _source = CFRunLoopSourceCreate(kCFAllocatorDefault, -2, &context);
+    CFRunLoopRef loop = CFRunLoopGetMain();
+    CFRunLoopAddSource(loop, _source, kCFRunLoopCommonModes);
+  });
+}
+
 + (void)load
 {
-  _livingTouchAry = [[NSMutableArray alloc] init];
-  _touchAry = [[NSMutableArray alloc] init];
-  
-  for (NSInteger i = 0; i < 100; i++)
-  {
-    UITouch *touch = [[UITouch alloc] initTouch];
-    [touch setPhaseAndUpdateTimestamp:UITouchPhaseEnded];
-    [_touchAry addObject:touch];
-  }
-
-  CFRunLoopSourceContext context;
-  memset(&context, 0, sizeof(CFRunLoopSourceContext));
-  context.perform = __TSEventFetcherCallback;
-  
-  // content of context is copied
-  _source = CFRunLoopSourceCreate(kCFAllocatorDefault, -2, &context);
-  CFRunLoopRef loop = CFRunLoopGetMain();
-  CFRunLoopAddSource(loop, _source, kCFRunLoopCommonModes);
+  // 对齐 Dopamine 冷启动：不在 +load 预建 UITouch。
+  // 旧实现会在 UIApplicationMain 前 initTouch，iPadOS15.3 秒退。
 }
 
 + (NSInteger)receiveAXEventID:(NSInteger)eventId
@@ -80,6 +89,8 @@ static void __TSEventFetcherCallback(void *info)
                      inWindow:(UIWindow *)window
                        onView:(UIView *)view
 {
+  [self setupIfNeeded];
+
   BOOL deleted = NO;
   UITouch *touch = nil;
   BOOL needsCopy = NO;
