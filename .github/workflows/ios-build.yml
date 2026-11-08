@@ -1317,7 +1317,7 @@ jobs:
                 EXECUTABLE_PATH="$APP_COPY/$EXE_NAME"
               fi
               # 与 supports/pack_ipa.sh 一致；STEP2/SHELL 验收包剔除嵌入 dylib
-              if [ -n "${EXECUTABLE_PATH}" ] && strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'STEP2-UI-ONLY|SHELL3-NO-DYLIB|SHELL4-MIN-ENT|SHELL5-NOPCH'; then
+              if [ -n "${EXECUTABLE_PATH}" ] && strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'STEP2-UI-LIGHT|STEP2-UI-ONLY|SHELL3-NO-DYLIB|SHELL4-MIN-ENT|SHELL5-NOPCH'; then
                 echo "step2/shell marker — stripping embedded dylibs"
                 find "${APP_COPY}" -name '*.dylib' -type f -print -delete 2>/dev/null || true
               else
@@ -1360,8 +1360,8 @@ jobs:
                   exit 1
                 fi
                 echo "Verified DRAWFPS_SEG_V1 in binary"
-                if strings "$EXECUTABLE_PATH" | grep -q 'STEP2-UI-ONLY'; then
-                  echo "Verified STEP2-UI-ONLY marker"
+                if strings "$EXECUTABLE_PATH" | grep -qE 'STEP2-UI-LIGHT|STEP2-UI-ONLY'; then
+                  echo "Verified STEP2 UI marker"
                   if find "$APP_COPY" -name '*.dylib' | grep -q .; then
                     echo "::error::STEP2 IPA still contains dylibs"
                     find "$APP_COPY" -name '*.dylib' -print

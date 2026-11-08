@@ -9,6 +9,8 @@ APP_PATH="${CODESIGNING_FOLDER_PATH}"
 PROJECT_DIR="${SRCROOT:-${PROJECT_DIR}}"
 ENTITLEMENTS_PATH="${PROJECT_DIR}/supports/entitlements-shell.plist"
 OUTPUT_DIR="${HOME}/Desktop/ipa"
+# SHELL4 诊断：若二进制已带标记，改用极简 entitlements（在签名前再确认一次）
+SHELL_ENTITLEMENTS_PATH="${PROJECT_DIR}/supports/entitlements-shell.plist"
 
 echo "[Pack IPA] start"
 echo "[Pack IPA] PROJECT_DIR=${PROJECT_DIR}"
@@ -81,10 +83,18 @@ if [ ! -f "${EXECUTABLE_PATH}" ]; then
   exit 1
 fi
 
-# 验收②（STEP2-UI-ONLY）/SHELL 诊断：包内不带越狱 dylib
-if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'STEP2-UI-ONLY|SHELL3-NO-DYLIB|SHELL4-MIN-ENT|SHELL5-NOPCH'; then
+# iOS15 诊断壳：SHELL3/4/5 强制剔除包内 dylib；SHELL4/5 用 entitlements-shell.plist
+if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'STEP2-UI-LIGHT|STEP2-UI-ONLY|SHELL3-NO-DYLIB|SHELL4-MIN-ENT|SHELL5-NOPCH'; then
   echo "[Pack IPA] step2/shell marker — stripping embedded dylibs"
   find "${COPIED_APP}" -name '*.dylib' -type f -print -delete 2>/dev/null || true
+  find "${COPIED_APP}/Frameworks" -name '*.dylib' -type f -print -delete 2>/dev/null || true
+  if [ -f "${PROJECT_DIR}/supports/entitlements-shell.plist" ]; then
+    ENTITLEMENTS_PATH="${PROJECT_DIR}/supports/entitlements-shell.plist"
+    echo "[Pack IPA] using entitlements-shell.plist"
+  elif [ -n "${SHELL_ENTITLEMENTS_PATH:-}" ] && [ -f "${SHELL_ENTITLEMENTS_PATH}" ]; then
+    ENTITLEMENTS_PATH="${SHELL_ENTITLEMENTS_PATH}"
+    echo "[Pack IPA] using ${SHELL_ENTITLEMENTS_PATH}"
+  fi
 else
   # Soften conspicuous dylib filenames inside the shipped IPA only.
   rename_dylib() {
