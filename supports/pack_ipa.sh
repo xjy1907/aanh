@@ -83,19 +83,29 @@ if [ ! -f "${EXECUTABLE_PATH}" ]; then
   exit 1
 fi
 
-# iOS15 诊断壳：SHELL3/4/5 强制剔除包内 dylib；SHELL4/5 用 entitlements-shell.plist
-if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'STEP2-UI-LIGHT|STEP2-UI-ONLY|SHELL3-NO-DYLIB|SHELL4-MIN-ENT|SHELL5-NOPCH'; then
-  echo "[Pack IPA] step2/shell marker — stripping embedded dylibs"
-  find "${COPIED_APP}" -name '*.dylib' -type f -print -delete 2>/dev/null || true
-  find "${COPIED_APP}/Frameworks" -name '*.dylib' -type f -print -delete 2>/dev/null || true
-  if [ -f "${PROJECT_DIR}/supports/entitlements-shell.plist" ]; then
+# iOS15：SHELL/STEP2 诊断壳剔除 dylib；STEP3 起保留并改名，仍用空 entitlements
+if [ -f "${PROJECT_DIR}/supports/entitlements-shell.plist" ]; then
+  if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'STEP3-DLOPEN-JB|STEP2-UI-LIGHT|STEP2-UI-ONLY|SHELL3-NO-DYLIB|SHELL4-MIN-ENT|SHELL5-NOPCH'; then
     ENTITLEMENTS_PATH="${PROJECT_DIR}/supports/entitlements-shell.plist"
     echo "[Pack IPA] using entitlements-shell.plist"
-  elif [ -n "${SHELL_ENTITLEMENTS_PATH:-}" ] && [ -f "${SHELL_ENTITLEMENTS_PATH}" ]; then
-    ENTITLEMENTS_PATH="${SHELL_ENTITLEMENTS_PATH}"
-    echo "[Pack IPA] using ${SHELL_ENTITLEMENTS_PATH}"
   fi
-else
+elif [ -n "${SHELL_ENTITLEMENTS_PATH:-}" ] && [ -f "${SHELL_ENTITLEMENTS_PATH}" ]; then
+  ENTITLEMENTS_PATH="${SHELL_ENTITLEMENTS_PATH}"
+  echo "[Pack IPA] using ${SHELL_ENTITLEMENTS_PATH}"
+fi
+
+if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'STEP2-UI-LIGHT|STEP2-UI-ONLY|SHELL3-NO-DYLIB|SHELL4-MIN-ENT|SHELL5-NOPCH'; then
+  if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -q 'STEP3-DLOPEN-JB'; then
+    echo "[Pack IPA] STEP3 marker — keep/rename embedded dylibs for deferred dlopen"
+  else
+    echo "[Pack IPA] step2/shell marker — stripping embedded dylibs"
+    find "${COPIED_APP}" -name '*.dylib' -type f -print -delete 2>/dev/null || true
+    find "${COPIED_APP}/Frameworks" -name '*.dylib' -type f -print -delete 2>/dev/null || true
+  fi
+fi
+
+if ! strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'STEP2-UI-LIGHT|STEP2-UI-ONLY|SHELL3-NO-DYLIB|SHELL4-MIN-ENT|SHELL5-NOPCH' \
+  || strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -q 'STEP3-DLOPEN-JB'; then
   # Soften conspicuous dylib filenames inside the shipped IPA only.
   rename_dylib() {
     local old="$1" new="$2"

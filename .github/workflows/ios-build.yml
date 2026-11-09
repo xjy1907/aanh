@@ -1316,11 +1316,24 @@ jobs:
               if [ -n "$EXE_NAME" ] && [ -f "$APP_COPY/$EXE_NAME" ]; then
                 EXECUTABLE_PATH="$APP_COPY/$EXE_NAME"
               fi
-              # 与 supports/pack_ipa.sh 一致；STEP2/SHELL 验收包剔除嵌入 dylib
+              # 与 supports/pack_ipa.sh 一致；STEP2/SHELL 剔除 dylib；STEP3 保留并改名
+              IS_STEP3=0
+              IS_STRIP_SHELL=0
+              if [ -n "${EXECUTABLE_PATH}" ] && strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -q 'STEP3-DLOPEN-JB'; then
+                IS_STEP3=1
+              fi
               if [ -n "${EXECUTABLE_PATH}" ] && strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'STEP2-UI-LIGHT|STEP2-UI-ONLY|SHELL3-NO-DYLIB|SHELL4-MIN-ENT|SHELL5-NOPCH'; then
+                if [ "$IS_STEP3" != "1" ]; then
+                  IS_STRIP_SHELL=1
+                fi
+              fi
+              if [ "$IS_STRIP_SHELL" = "1" ]; then
                 echo "step2/shell marker — stripping embedded dylibs"
                 find "${APP_COPY}" -name '*.dylib' -type f -print -delete 2>/dev/null || true
               else
+                if [ "$IS_STEP3" = "1" ]; then
+                  echo "STEP3 marker — keep/rename embedded dylibs for deferred dlopen"
+                fi
                 rename_dylib() {
                   local old="$1" new="$2"
                   local src="${APP_COPY}/${old}"
@@ -1360,7 +1373,15 @@ jobs:
                   exit 1
                 fi
                 echo "Verified DRAWFPS_SEG_V1 in binary"
-                if strings "$EXECUTABLE_PATH" | grep -qE 'STEP2-UI-LIGHT|STEP2-UI-ONLY'; then
+                if strings "$EXECUTABLE_PATH" | grep -q 'STEP3-DLOPEN-JB'; then
+                  echo "Verified STEP3 dlopen marker"
+                  if [ ! -f "${APP_COPY}/libNHSupport.dylib" ] || [ ! -f "${APP_COPY}/libNHCodec.dylib" ] || [ ! -f "${APP_COPY}/libNHParse.dylib" ]; then
+                    echo "::error::STEP3 IPA missing renamed jailbreak dylibs (libNH*)"
+                    find "$APP_COPY" -name '*.dylib' -print || true
+                    exit 1
+                  fi
+                  echo "Verified STEP3 IPA embeds libNHSupport/libNHCodec/libNHParse"
+                elif strings "$EXECUTABLE_PATH" | grep -qE 'STEP2-UI-LIGHT|STEP2-UI-ONLY'; then
                   echo "Verified STEP2 UI marker"
                   if find "$APP_COPY" -name '*.dylib' | grep -q .; then
                     echo "::error::STEP2 IPA still contains dylibs"

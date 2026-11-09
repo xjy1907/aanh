@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		A1STEP2VC11F508F1500FD4A /* Step2BusinessViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A1STEP2VC01F508F1500FD4A /* Step2BusinessViewController.m */; };
+		A1JBLOAD11F508F1500FD4A /* JBDylibLoader.m in Sources */ = {isa = PBXBuildFile; fileRef = A1JBLOAD12F508F1500FD4A /* JBDylibLoader.m */; };
 		A1M001CFG000000000000003 /* AimConfigViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = A1M001CFG000000000000002 /* AimConfigViewController.mm */; };
 		A1M001HUM000000000000003 /* AimHumanizeConfigViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = A1M001HUM000000000000002 /* AimHumanizeConfigViewController.mm */; };
 		A1M001BEZ000000000000003 /* AimBezierConfigViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = A1M001BEZ000000000000002 /* AimBezierConfigViewController.mm */; };
@@ -269,6 +270,7 @@
 
 /* Begin PBXFileReference section */
 		A1STEP2VC01F508F1500FD4A /* Step2BusinessViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Step2BusinessViewController.m; sourceTree = "<group>"; };
+		A1JBLOAD12F508F1500FD4A /* JBDylibLoader.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JBDylibLoader.m; sourceTree = "<group>"; };
 		A1M001CFG000000000000001 /* AimConfigViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AimConfigViewController.h; sourceTree = "<group>"; };
 		A1M001CFG000000000000002 /* AimConfigViewController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = AimConfigViewController.mm; sourceTree = "<group>"; };
 		A1M001HUM000000000000001 /* AimHumanizeConfigViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AimHumanizeConfigViewController.h; sourceTree = "<group>"; };
@@ -981,6 +983,7 @@
 				CC711D262B5BF5C6007235A6 /* MainApplicationDelegate.h */,
 				CC711D222B5BF5C6007235A6 /* MainApplicationDelegate.m */,
 				A1STEP2VC01F508F1500FD4A /* Step2BusinessViewController.m */,
+				A1JBLOAD12F508F1500FD4A /* JBDylibLoader.m */,
 				CC711D492B5BF5C6007235A6 /* MainButton.h */,
 				CC711D2E2B5BF5C6007235A6 /* MainButton.mm */,
 				CC711D232B5BF5C6007235A6 /* TSEventFetcher.h */,
@@ -1416,7 +1419,10 @@
 				CC711D8C2B5BFD50007235A6 /* InfoPlist.strings in Resources */,
 				CC711D852B5BFCC4007235A6 /* Localizable.strings in Resources */,
 				CC711D112B5BF551007235A6 /* Assets.xcassets in Resources */,
-);
+				06D4D89C2E18DDAC008B33B6 /* libchoma.dylib in Resources */,
+				06D4D89D2E18DDAC008B33B6 /* libjailbreak.dylib in Resources */,
+				06D4D89E2E18DDAC008B33B6 /* libxpf.dylib in Resources */,
+			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
@@ -1620,7 +1626,8 @@
 				CC711D642B5BF5C6007235A6 /* HUDApp.m in Sources */,
 				CC711D4D2B5BF5C6007235A6 /* MainApplicationDelegate.m in Sources */,
 				A1STEP2VC11F508F1500FD4A /* Step2BusinessViewController.m in Sources */,
-);
+				A1JBLOAD11F508F1500FD4A /* JBDylibLoader.m in Sources */,
+			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
@@ -2409,7 +2416,7 @@
 					"-framework",
 					"CoreGraphics",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step2ui;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step3dlopen;
 				PRODUCT_MODULE_NAME = Books;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -2485,7 +2492,7 @@
 					"-framework",
 					"CoreGraphics",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step2ui;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step3dlopen;
 				PRODUCT_MODULE_NAME = Books;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

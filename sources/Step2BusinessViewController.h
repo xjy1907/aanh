@@ -1,6 +1,6 @@
 //
 //  Step2BusinessViewController.h
-//  验收②：轻量业务 UI（不链 BBZView/PhysX/越狱库）
+//  验收③：轻量业务 UI + 首屏后 dlopen 越狱三库（不硬链、不链 BBZView/PhysX）
 //
 
 #import <UIKit/UIKit.h>

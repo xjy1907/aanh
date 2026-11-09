@@ -1,6 +1,6 @@
 //
 //  JBDylibLoader.h
-//  对齐 Dopamine：主程序可硬链 jailbreak dylib；未加载时再按需 dlopen。
+//  按需 dlopen 越狱三库（验收③：冷启动不硬链，首屏后再加载）。
 //
 
 #import <Foundation/Foundation.h>
