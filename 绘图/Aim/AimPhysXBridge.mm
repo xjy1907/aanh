@@ -63,6 +63,10 @@ void AimPhysX_SetRangeBaseMs(int ms) {
     PhysXLoadFilter::SetRangeBaseMs(ms);
 }
 
+void AimPhysX_SetRigidBaseMs(int ms) {
+    PhysXLoadFilter::SetRigidBaseMs(ms);
+}
+
 bool AimPhysX_IsReady() {
     return gPhysXReady.load(std::memory_order_acquire);
 }

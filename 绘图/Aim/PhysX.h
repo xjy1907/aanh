@@ -224,7 +224,8 @@ namespace PhysXLoadFilter {
     inline std::atomic<bool> rayLocalEnabled{false};
     inline std::atomic<float> corridorHalfUU{1200.f};   // 12m
     inline std::atomic<float> nearCamBubbleUU{4000.f};  // 40m
-    inline std::atomic<int> rangeBaseMs{2000};          // Range 基线 ms
+    inline std::atomic<int> rangeBaseMs{2000};          // Range 基线 ms（默认 2000）
+    inline std::atomic<int> rigidBaseMs{1800};          // Rigid 基线 ms（默认 1800）
     // 大板中心偏离射线：走廊有效半宽 = half + pad（约 18m）
     inline constexpr float kCorridorExtentPadUU = 1800.f;
 
@@ -250,6 +251,17 @@ namespace PhysXLoadFilter {
 
     inline int RangeBaseMs() {
         int v = rangeBaseMs.load(std::memory_order_relaxed);
+        return (v < 600) ? 600 : ((v > 5000) ? 5000 : v);
+    }
+
+    inline void SetRigidBaseMs(int ms) {
+        if (ms < 600) ms = 600;
+        if (ms > 5000) ms = 5000;
+        rigidBaseMs.store(ms, std::memory_order_relaxed);
+    }
+
+    inline int RigidBaseMs() {
+        int v = rigidBaseMs.load(std::memory_order_relaxed);
         return (v < 600) ? 600 : ((v > 5000) ? 5000 : v);
     }
 
@@ -2110,8 +2122,8 @@ namespace VisibleCheck {
                 std::this_thread::sleep_for(std::chrono::milliseconds(1500));
                 continue;
             }
-            // 原 300ms→1000ms→1800ms；静止时 ×scale（最高约 5.4s）
-            const int rigidMs = 1800 * PhysXLoadFilter::IntervalScale();
+            // 基线可调（默认 1800ms）；镜头静止时 ×intervalScale
+            const int rigidMs = PhysXLoadFilter::RigidBaseMs() * PhysXLoadFilter::IntervalScale();
             Throttlered.executeTaskWithSleep("DynamicRigidUpdateSleep", std::chrono::milliseconds(rigidMs), [&currentSceneObjects, &cache, &ptrCache] {
                 std::set<PrunerPayload> willRemoveShape{};
                 auto Meshs = LoadDynamicRigidShape(currentSceneObjects,cache,ptrCache,willRemoveShape);

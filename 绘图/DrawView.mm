@@ -1014,8 +1014,11 @@ void Draw::StartBooks() {
         else aiCounts++;
 
         float distance = GetDistance(loc, POV.Location) / 100.0f;
-        // 漏打半径内有存活目标且需要遮挡查询 → 唤醒 PhysX；实验开时写走廊焦点
-        if (wantPhysXOcclusion && Health > 0.f && distance <= AimAssist::漏打距离) {
+        Vector2 LocationScreen = WorldToScreen(loc, POV, sw, sh);
+        bool onScreen = isScreenVisible(LocationScreen, canvasVec);
+        // 漏打半径内有存活目标且需要遮挡查询 → 唤醒 PhysX；性能2+仅圈内时只认遮挡圈内
+        const bool inOccCircle = AimAssist::IsInsideOcclusionCircle(LocationScreen, (float)sw, (float)sh);
+        if (wantPhysXOcclusion && Health > 0.f && distance <= AimAssist::漏打距离 && inOccCircle) {
             AimPhysX_SetOcclusionDemand(true);
             if (wantRayCorridor) {
                 Vector3 focusEnd = loc;
@@ -1023,8 +1026,6 @@ void Draw::StartBooks() {
                 AimPhysX_AddRayFocus(POV.Location, focusEnd);
             }
         }
-        Vector2 LocationScreen = WorldToScreen(loc, POV, sw, sh);
-        bool onScreen = isScreenVisible(LocationScreen, canvasVec);
         if (distance > 绘制距离上限 && !(显示背敌 && distance <= 背敌距离)) continue;
 
         uint64_t mesh = 0;
@@ -1181,11 +1182,12 @@ void Draw::StartBooks() {
             }
 
             // 骨骼可见性（对标 qwer 掩体漏打）
-            // doOcclusion：模型渲染 + PhysX 就绪 + 距离≤漏打距离
+            // doOcclusion：模型渲染 + PhysX 就绪 + 距离≤漏打距离 +（性能2时）遮挡圈内
             // 降 CPU：只测头骨(index 5)；隔帧复用缓存；骨骼绘制距离不再跟漏打距离绑死
             bool hasVisibleBone = false;
             Vector3 firstVisibleBoneWorld = {};
-            bool doOcclusion = AimAssist::模型渲染 && AimPhysX_IsReady() && distance <= AimAssist::漏打距离;
+            bool doOcclusion = AimAssist::模型渲染 && AimPhysX_IsReady() && distance <= AimAssist::漏打距离 &&
+                AimAssist::IsInsideOcclusionCircle(HeadScreen, (float)sw, (float)sh);
             Vector3 cachedBoneWorld = {};
             bool boneCalculatedForOcclusion = false;
             if ((doOcclusion || AimAssist::开启自瞄) && IsValidAddr(staticMesh)) {

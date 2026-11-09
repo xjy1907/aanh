@@ -18,6 +18,7 @@
 #import "游戏/AimHumanizeConfigViewController.h"
 #import "游戏/AimBezierConfigViewController.h"
 #import "游戏/AimDemandLoadConfigViewController.h"
+#import "游戏/AimPerf2ConfigViewController.h"
 //#import "pp.h"
 
 #ifdef __cplusplus
@@ -1858,6 +1859,27 @@ static void JVR_保存KernelExploit(NSString *ident) {
     };
     [demandBtn.heightAnchor constraintEqualToConstant:44].active = YES;
     [stack addArrangedSubview:demandBtn];
+
+    // 实验-模型性能2（与按需加载平级；Range/Rigid 降频 + 仅遮挡圈内）
+    JVRKernelButton *perf2Btn = [[JVRKernelButton alloc] init];
+    perf2Btn.translatesAutoresizingMaskIntoConstraints = NO;
+    perf2Btn.label.text = @"实验-模型性能2";
+    perf2Btn.label.textColor = JVR_主色;
+    perf2Btn.borderGrad.colors = @[(id)JVR_主色.CGColor, (id)JVR_副色.CGColor];
+    perf2Btn.onTap = ^{
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        if (!strongSelf) return;
+        AimPerf2ConfigViewController *vc = [[AimPerf2ConfigViewController alloc] init];
+        UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:vc];
+        nav.modalPresentationStyle = UIModalPresentationFullScreen;
+        nav.navigationBar.barStyle = UIBarStyleBlack;
+        nav.navigationBar.tintColor = JVR_主色;
+        nav.navigationBar.titleTextAttributes = @{NSForegroundColorAttributeName: JVR_文字色};
+        [strongSelf presentViewController:nav animated:YES completion:nil];
+        KernelLogLine("打开实验-模型性能2界面");
+    };
+    [perf2Btn.heightAnchor constraintEqualToConstant:44].active = YES;
+    [stack addArrangedSubview:perf2Btn];
     
     return stack;
 }

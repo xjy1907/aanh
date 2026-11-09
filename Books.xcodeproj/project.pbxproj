@@ -11,6 +11,7 @@
 		A1M001HUM000000000000003 /* AimHumanizeConfigViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = A1M001HUM000000000000002 /* AimHumanizeConfigViewController.mm */; };
 		A1M001BEZ000000000000003 /* AimBezierConfigViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = A1M001BEZ000000000000002 /* AimBezierConfigViewController.mm */; };
 		A1M001DEM000000000000003 /* AimDemandLoadConfigViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = A1M001DEM000000000000002 /* AimDemandLoadConfigViewController.mm */; };
+		A1M001PF2000000000000003 /* AimPerf2ConfigViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = A1M001PF2000000000000002 /* AimPerf2ConfigViewController.mm */; };
 		A1M001FLT000000000000003 /* AimFloatWindow.mm in Sources */ = {isa = PBXBuildFile; fileRef = A1M001FLT000000000000002 /* AimFloatWindow.mm */; };
 		A1M001FLT000000000000006 /* AimFloatRootViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = A1M001FLT000000000000005 /* AimFloatRootViewController.mm */; };
 		A1M001PHY000000000000002 /* AimPhysXBridge.mm in Sources */ = {isa = PBXBuildFile; fileRef = A1M001PHY000000000000001 /* AimPhysXBridge.mm */; };
@@ -277,6 +278,8 @@
 		A1M001BEZ000000000000002 /* AimBezierConfigViewController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = AimBezierConfigViewController.mm; sourceTree = "<group>"; };
 		A1M001DEM000000000000001 /* AimDemandLoadConfigViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AimDemandLoadConfigViewController.h; sourceTree = "<group>"; };
 		A1M001DEM000000000000002 /* AimDemandLoadConfigViewController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = AimDemandLoadConfigViewController.mm; sourceTree = "<group>"; };
+		A1M001PF2000000000000001 /* AimPerf2ConfigViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AimPerf2ConfigViewController.h; sourceTree = "<group>"; };
+		A1M001PF2000000000000002 /* AimPerf2ConfigViewController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = AimPerf2ConfigViewController.mm; sourceTree = "<group>"; };
 		A1M001FLT000000000000001 /* AimFloatWindow.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AimFloatWindow.h; sourceTree = "<group>"; };
 		A1M001FLT000000000000002 /* AimFloatWindow.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = AimFloatWindow.mm; sourceTree = "<group>"; };
 		A1M001FLT000000000000004 /* AimFloatRootViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AimFloatRootViewController.h; sourceTree = "<group>"; };
@@ -737,6 +740,8 @@
 				A1M001BEZ000000000000002 /* AimBezierConfigViewController.mm */,
 				A1M001DEM000000000000001 /* AimDemandLoadConfigViewController.h */,
 				A1M001DEM000000000000002 /* AimDemandLoadConfigViewController.mm */,
+				A1M001PF2000000000000001 /* AimPerf2ConfigViewController.h */,
+				A1M001PF2000000000000002 /* AimPerf2ConfigViewController.mm */,
 				5486369C49784FF3808FD160 /* WeaponTextures.h */,
 				54D381EE9E2145908F6B1B4E /* WeaponTextures.mm */,
 				233F0963537B4745B0582A43 /* ItemConfig.h */,
@@ -1713,6 +1718,7 @@
 				A1M001HUM000000000000003 /* AimHumanizeConfigViewController.mm in Sources */,
 				A1M001BEZ000000000000003 /* AimBezierConfigViewController.mm in Sources */,
 				A1M001DEM000000000000003 /* AimDemandLoadConfigViewController.mm in Sources */,
+				A1M001PF2000000000000003 /* AimPerf2ConfigViewController.mm in Sources */,
 				A1M001FLT000000000000003 /* AimFloatWindow.mm in Sources */,
 				A1M001FLT000000000000006 /* AimFloatRootViewController.mm in Sources */,
 				A1M001PHY000000000000002 /* AimPhysXBridge.mm in Sources */,

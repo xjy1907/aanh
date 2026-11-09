@@ -47,6 +47,9 @@ void AimPhysX_SetNearBubbleMeters(float meters);
 /// 静态 Range 刷新基线（毫秒）；原写死 2000。
 void AimPhysX_SetRangeBaseMs(int ms);
 
+/// 动态刚体 Rigid 刷新基线（毫秒）；原写死 1800。
+void AimPhysX_SetRigidBaseMs(int ms);
+
 #ifdef __cplusplus
 }
 #endif
