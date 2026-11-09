@@ -25,12 +25,13 @@ inline float 近距泡 = 40.f;       // 米；原写死 40
 inline float 静态刷新间隔 = 2000.f; // ms；原写死 2000
 inline bool 按需保守遮挡 = true;  // 未就绪/穿层miss当遮挡，降低穿墙锁风险
 inline float 穿层高差 = 350.f;    // cm；按需+保守且 LineTrace miss、|ΔZ|≥此值 → 当遮挡
-// --- 实验：模型性能2（Range/Rigid 降频 + 仅遮挡圈内测遮挡）---
+// --- 实验：模型性能2（Range/Rigid 间隔 + 仅遮挡圈内测遮挡）---
 inline bool 模型性能2 = false;
 inline bool 仅圈内遮挡 = true;     // 只对遮挡圈内目标 LineTrace / 唤醒三线
-inline float 遮挡圈倍率 = 1.f;     // ×当前自瞄大小
-inline float 性能2_Range间隔 = 3000.f; // ms；相对默认 2000 降一档
-inline float 性能2_Rigid间隔 = 2700.f; // ms；相对默认 1800 降一档
+inline bool 显示遮挡圈 = false;
+inline float 遮挡圈范围 = 60.f;    // 像素半径，自行调节 0–450
+inline float 性能2_Range间隔 = 2000.f; // ms；默认对齐原写死 2000
+inline float 性能2_Rigid间隔 = 1800.f; // ms；默认对齐原写死 1800
 inline float 漏打距离 = 90.f; // 默认 90（过大则 PhysX 射线/网格负载暴涨；硬上限 150）
 inline float 自瞄速度 = 26.f;
 inline float 自瞄大小 = 60.f;
@@ -241,13 +242,14 @@ inline void LoadFromPrefs(NSDictionary *cfg) {
     if (穿层高差 > 800.f) 穿层高差 = 800.f;
     模型性能2 = PrefBool(cfg, @"实验-模型性能2", false);
     仅圈内遮挡 = PrefBool(cfg, @"仅圈内遮挡", true);
-    遮挡圈倍率 = PrefFloat(cfg, @"遮挡圈倍率", 100.f) / 100.f;
-    if (遮挡圈倍率 < 0.5f) 遮挡圈倍率 = 0.5f;
-    if (遮挡圈倍率 > 1.5f) 遮挡圈倍率 = 1.5f;
-    性能2_Range间隔 = PrefFloat(cfg, @"性能2_Range间隔", 3000.f);
+    显示遮挡圈 = PrefBool(cfg, @"显示遮挡圈", false);
+    遮挡圈范围 = PrefFloat(cfg, @"遮挡圈范围", 60.f);
+    if (遮挡圈范围 < 0.f) 遮挡圈范围 = 0.f;
+    if (遮挡圈范围 > 450.f) 遮挡圈范围 = 450.f;
+    性能2_Range间隔 = PrefFloat(cfg, @"性能2_Range间隔", 2000.f);
     if (性能2_Range间隔 < 1500.f) 性能2_Range间隔 = 1500.f;
     if (性能2_Range间隔 > 5000.f) 性能2_Range间隔 = 5000.f;
-    性能2_Rigid间隔 = PrefFloat(cfg, @"性能2_Rigid间隔", 2700.f);
+    性能2_Rigid间隔 = PrefFloat(cfg, @"性能2_Rigid间隔", 1800.f);
     if (性能2_Rigid间隔 < 1200.f) 性能2_Rigid间隔 = 1200.f;
     if (性能2_Rigid间隔 > 5000.f) 性能2_Rigid间隔 = 5000.f;
     漏打距离 = PrefFloat(cfg, @"漏打距离", 90.f);
@@ -395,9 +397,12 @@ inline float GetCenterOffset(Vector2 point, float sw, float sh) {
     return sqrtf(dx * dx + dy * dy);
 }
 
-/// 遮挡圈半径（像素）= 当前自瞄大小 × 遮挡圈倍率
+/// 遮挡圈半径（像素）= 遮挡圈范围（0–450 自行调节）
 inline float OcclusionCircleRadiusPx() {
-    return fmaxf(当前自瞄大小, 1.f) * fmaxf(遮挡圈倍率, 0.5f);
+    float r = 遮挡圈范围;
+    if (r < 0.f) r = 0.f;
+    if (r > 450.f) r = 450.f;
+    return r;
 }
 
 /// 性能2+仅圈内：屏幕偏心超过遮挡圈则不做遮挡
@@ -813,6 +818,13 @@ inline void DrawOverlays(ImDrawList *dl, float sw, float sh) {
         dl->AddRect(ImVec2(cx - hw, cy - hh), ImVec2(cx + hw, cy + hh),
                     IM_COL32(255, 100, 100, 200), 0, 0, 2.f);
         dl->AddCircleFilled(ImVec2(cx, cy), 4.f, IM_COL32(100, 255, 100, 255));
+    }
+    // 遮挡圈可视化（性能2页开关；不依赖开启自瞄）
+    if (显示遮挡圈) {
+        float occR = OcclusionCircleRadiusPx();
+        if (occR > 0.f) {
+            dl->AddCircle(ImVec2(sw / 2.f, sh / 2.f), occR, IM_COL32(255, 200, 0, 200), 64, 1.5f);
+        }
     }
     if (!开启自瞄) return;
     if (当前开镜中) {

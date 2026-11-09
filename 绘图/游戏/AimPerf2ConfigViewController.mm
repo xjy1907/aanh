@@ -97,17 +97,19 @@
 }
 
 - (void)buildRows {
-  // 默认相对原写死 Range2000 / Rigid1800 再降一档；遮挡圈跟自瞄圈
+  // Range/Rigid 默认对齐原写死 2000/1800；遮挡圈范围像素自行调
   self.rows = @[
     [self mkSwitch:@"启用性能2" key:@"实验-模型性能2"
-          subtitle:@"开：应用下方降频与圈内遮挡（需同时开模型渲染）"],
+          subtitle:@"开：应用下方间隔与圈内遮挡（需同时开模型渲染）"],
     [self mkSwitch:@"仅圈内遮挡" key:@"仅圈内遮挡"
           subtitle:@"只对遮挡圈内目标做 LineTrace/唤醒三线；默认开"],
-    [self mkSlider:@"遮挡圈倍率" key:@"遮挡圈倍率" subtitle:@"×当前自瞄大小（1.00=跟自瞄圈一致）"
-               min:50 max:150 step:5 scale:100],
-    [self mkSlider:@"Range刷新间隔" key:@"性能2_Range间隔" subtitle:@"毫秒；原默认2000，降一档默认3000"
+    [self mkSwitch:@"显示遮挡圈" key:@"显示遮挡圈"
+          subtitle:@"屏幕上画出遮挡检测圆（黄色）"],
+    [self mkSlider:@"遮挡圈范围" key:@"遮挡圈范围" subtitle:@"像素半径 0–450；自行调节圆圈大小"
+               min:0 max:450 step:1 scale:0],
+    [self mkSlider:@"Range刷新间隔" key:@"性能2_Range间隔" subtitle:@"毫秒；默认2000"
                min:1500 max:5000 step:100 scale:0],
-    [self mkSlider:@"Rigid刷新间隔" key:@"性能2_Rigid间隔" subtitle:@"毫秒；原默认1800，降一档默认2700"
+    [self mkSlider:@"Rigid刷新间隔" key:@"性能2_Rigid间隔" subtitle:@"毫秒；默认1800"
                min:1200 max:5000 step:100 scale:0],
   ];
 }
@@ -119,9 +121,10 @@
     defs = @{
       @"实验-模型性能2": @0,
       @"仅圈内遮挡": @1,
-      @"遮挡圈倍率": @100,
-      @"性能2_Range间隔": @3000,
-      @"性能2_Rigid间隔": @2700,
+      @"显示遮挡圈": @0,
+      @"遮挡圈范围": @60,
+      @"性能2_Range间隔": @2000,
+      @"性能2_Rigid间隔": @1800,
     };
   });
   return [defs[key] floatValue];
