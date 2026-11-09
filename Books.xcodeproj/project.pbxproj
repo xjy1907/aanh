@@ -2360,7 +2360,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_MODULES = NO;
 				CODE_SIGNING_ALLOWED = NO;
-				CODE_SIGN_ENTITLEMENTS = supports/entitlements-shell.plist;
+				CODE_SIGN_ENTITLEMENTS = supports/entitlements.plist;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMPILER_INDEX_STORE_ENABLE = NO;
@@ -2416,7 +2416,7 @@
 					"-framework",
 					"CoreGraphics",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step3dlopen;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step4ent;
 				PRODUCT_MODULE_NAME = Books;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -2436,7 +2436,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_MODULES = NO;
 				CODE_SIGNING_ALLOWED = NO;
-				CODE_SIGN_ENTITLEMENTS = supports/entitlements-shell.plist;
+				CODE_SIGN_ENTITLEMENTS = supports/entitlements.plist;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMPILER_INDEX_STORE_ENABLE = NO;
@@ -2492,7 +2492,7 @@
 					"-framework",
 					"CoreGraphics",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step3dlopen;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step4ent;
 				PRODUCT_MODULE_NAME = Books;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

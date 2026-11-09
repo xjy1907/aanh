@@ -1,12 +1,12 @@
 //
-//  MainApplicationDelegate.m — 验收③：先亮窗，挂轻量 UI，首屏后再 dlopen
+//  MainApplicationDelegate.m — 验收④：正式 entitlements + 轻量 UI + 延后 dlopen
 //
 
 #import "MainApplicationDelegate.h"
 #import "Step2BusinessViewController.h"
 
 __attribute__((used)) static const char kDrawFpsSegMarker[] = "DRAWFPS_SEG_V1";
-__attribute__((used)) static const char kStep3Marker[] = "STEP3-DLOPEN-JB";
+__attribute__((used)) static const char kStep4Marker[] = "STEP4-FULL-ENT";
 
 @implementation MainApplicationDelegate
 
@@ -15,7 +15,7 @@ __attribute__((used)) static const char kStep3Marker[] = "STEP3-DLOPEN-JB";
   (void)application;
   (void)launchOptions;
   volatile const char *keepFps = kDrawFpsSegMarker;
-  volatile const char *keepStep = kStep3Marker;
+  volatile const char *keepStep = kStep4Marker;
   (void)keepFps[0];
   (void)keepStep[0];
 
@@ -44,7 +44,7 @@ __attribute__((used)) static const char kStep3Marker[] = "STEP3-DLOPEN-JB";
   dispatch_async(dispatch_get_main_queue(), ^{
     __strong typeof(weakSelf) strongSelf = weakSelf;
     if (!strongSelf) return;
-    // 验收③：轻量面板；dlopen 放在 viewDidAppear 之后，仍不链 BBZView/PhysX
+    // 验收④：轻量面板 + 延后 dlopen；本步只换正式 entitlements
     strongSelf.window.rootViewController = [[Step2BusinessViewController alloc] init];
   });
   return YES;

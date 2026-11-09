@@ -1299,6 +1299,7 @@ jobs:
               echo "Packing from app: $APP_PATH"
               export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
               ENTITLEMENTS="${GITHUB_WORKSPACE}/supports/entitlements-shell.plist"
+              FULL_ENTITLEMENTS="${GITHUB_WORKSPACE}/supports/entitlements.plist"
               if [ ! -f "$ENTITLEMENTS" ]; then
                 echo "::error::Missing $ENTITLEMENTS (SHELL5-proven empty entitlements for iPadOS15.3)"
                 exit 1
@@ -1316,22 +1317,36 @@ jobs:
               if [ -n "$EXE_NAME" ] && [ -f "$APP_COPY/$EXE_NAME" ]; then
                 EXECUTABLE_PATH="$APP_COPY/$EXE_NAME"
               fi
-              # 与 supports/pack_ipa.sh 一致；STEP2/SHELL 剔除 dylib；STEP3 保留并改名
+              # 与 supports/pack_ipa.sh 一致；STEP2/SHELL 剔除；STEP3/4 保留并改名；STEP4 用正式权限
               IS_STEP3=0
+              IS_STEP4=0
               IS_STRIP_SHELL=0
+              if [ -n "${EXECUTABLE_PATH}" ] && strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -q 'STEP4-FULL-ENT'; then
+                IS_STEP4=1
+              fi
               if [ -n "${EXECUTABLE_PATH}" ] && strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -q 'STEP3-DLOPEN-JB'; then
                 IS_STEP3=1
               fi
               if [ -n "${EXECUTABLE_PATH}" ] && strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'STEP2-UI-LIGHT|STEP2-UI-ONLY|SHELL3-NO-DYLIB|SHELL4-MIN-ENT|SHELL5-NOPCH'; then
-                if [ "$IS_STEP3" != "1" ]; then
+                if [ "$IS_STEP3" != "1" ] && [ "$IS_STEP4" != "1" ]; then
                   IS_STRIP_SHELL=1
                 fi
+              fi
+              if [ "$IS_STEP4" = "1" ]; then
+                if [ ! -f "$FULL_ENTITLEMENTS" ]; then
+                  echo "::error::Missing $FULL_ENTITLEMENTS for STEP4 full entitlements"
+                  exit 1
+                fi
+                ENTITLEMENTS="$FULL_ENTITLEMENTS"
+                echo "STEP4 — using entitlements.plist (full)"
               fi
               if [ "$IS_STRIP_SHELL" = "1" ]; then
                 echo "step2/shell marker — stripping embedded dylibs"
                 find "${APP_COPY}" -name '*.dylib' -type f -print -delete 2>/dev/null || true
               else
-                if [ "$IS_STEP3" = "1" ]; then
+                if [ "$IS_STEP4" = "1" ]; then
+                  echo "STEP4 marker — keep/rename embedded dylibs + full entitlements"
+                elif [ "$IS_STEP3" = "1" ]; then
                   echo "STEP3 marker — keep/rename embedded dylibs for deferred dlopen"
                 fi
                 rename_dylib() {
@@ -1373,7 +1388,15 @@ jobs:
                   exit 1
                 fi
                 echo "Verified DRAWFPS_SEG_V1 in binary"
-                if strings "$EXECUTABLE_PATH" | grep -q 'STEP3-DLOPEN-JB'; then
+                if strings "$EXECUTABLE_PATH" | grep -q 'STEP4-FULL-ENT'; then
+                  echo "Verified STEP4 full-entitlements marker"
+                  if [ ! -f "${APP_COPY}/libNHSupport.dylib" ] || [ ! -f "${APP_COPY}/libNHCodec.dylib" ] || [ ! -f "${APP_COPY}/libNHParse.dylib" ]; then
+                    echo "::error::STEP4 IPA missing renamed jailbreak dylibs (libNH*)"
+                    find "$APP_COPY" -name '*.dylib' -print || true
+                    exit 1
+                  fi
+                  echo "Verified STEP4 IPA embeds libNH* and signs with full entitlements"
+                elif strings "$EXECUTABLE_PATH" | grep -q 'STEP3-DLOPEN-JB'; then
                   echo "Verified STEP3 dlopen marker"
                   if [ ! -f "${APP_COPY}/libNHSupport.dylib" ] || [ ! -f "${APP_COPY}/libNHCodec.dylib" ] || [ ! -f "${APP_COPY}/libNHParse.dylib" ]; then
                     echo "::error::STEP3 IPA missing renamed jailbreak dylibs (libNH*)"

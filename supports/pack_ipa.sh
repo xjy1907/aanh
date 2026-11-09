@@ -7,10 +7,10 @@ export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PAT
 
 APP_PATH="${CODESIGNING_FOLDER_PATH}"
 PROJECT_DIR="${SRCROOT:-${PROJECT_DIR}}"
-ENTITLEMENTS_PATH="${PROJECT_DIR}/supports/entitlements-shell.plist"
+ENTITLEMENTS_PATH="${PROJECT_DIR}/supports/entitlements.plist"
 OUTPUT_DIR="${HOME}/Desktop/ipa"
-# SHELL4 诊断：若二进制已带标记，改用极简 entitlements（在签名前再确认一次）
 SHELL_ENTITLEMENTS_PATH="${PROJECT_DIR}/supports/entitlements-shell.plist"
+FULL_ENTITLEMENTS_PATH="${PROJECT_DIR}/supports/entitlements.plist"
 
 echo "[Pack IPA] start"
 echo "[Pack IPA] PROJECT_DIR=${PROJECT_DIR}"
@@ -83,30 +83,47 @@ if [ ! -f "${EXECUTABLE_PATH}" ]; then
   exit 1
 fi
 
-# iOS15：SHELL/STEP2 诊断壳剔除 dylib；STEP3 起保留并改名，仍用空 entitlements
-if [ -f "${PROJECT_DIR}/supports/entitlements-shell.plist" ]; then
-  if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'STEP3-DLOPEN-JB|STEP2-UI-LIGHT|STEP2-UI-ONLY|SHELL3-NO-DYLIB|SHELL4-MIN-ENT|SHELL5-NOPCH'; then
-    ENTITLEMENTS_PATH="${PROJECT_DIR}/supports/entitlements-shell.plist"
+# 选择 entitlements：STEP4 用正式权限；STEP2/3/SHELL 仍用空壳
+HAS_STEP4=0
+HAS_KEEP_DYLIB=0
+HAS_STRIP_SHELL=0
+if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -q 'STEP4-FULL-ENT'; then
+  HAS_STEP4=1
+  HAS_KEEP_DYLIB=1
+fi
+if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'STEP3-DLOPEN-JB'; then
+  HAS_KEEP_DYLIB=1
+fi
+if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'STEP2-UI-LIGHT|STEP2-UI-ONLY|SHELL3-NO-DYLIB|SHELL4-MIN-ENT|SHELL5-NOPCH'; then
+  if [ "$HAS_STEP4" != "1" ] && [ "$HAS_KEEP_DYLIB" != "1" ]; then
+    HAS_STRIP_SHELL=1
+  elif [ "$HAS_STEP4" != "1" ] && ! strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'STEP3-DLOPEN-JB|STEP4-FULL-ENT'; then
+    HAS_STRIP_SHELL=1
+  fi
+fi
+
+if [ "$HAS_STEP4" = "1" ]; then
+  if [ -f "${FULL_ENTITLEMENTS_PATH}" ]; then
+    ENTITLEMENTS_PATH="${FULL_ENTITLEMENTS_PATH}"
+    echo "[Pack IPA] STEP4 — using entitlements.plist (full)"
+  fi
+elif strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'STEP3-DLOPEN-JB|STEP2-UI-LIGHT|STEP2-UI-ONLY|SHELL3-NO-DYLIB|SHELL4-MIN-ENT|SHELL5-NOPCH'; then
+  if [ -f "${SHELL_ENTITLEMENTS_PATH}" ]; then
+    ENTITLEMENTS_PATH="${SHELL_ENTITLEMENTS_PATH}"
     echo "[Pack IPA] using entitlements-shell.plist"
   fi
-elif [ -n "${SHELL_ENTITLEMENTS_PATH:-}" ] && [ -f "${SHELL_ENTITLEMENTS_PATH}" ]; then
-  ENTITLEMENTS_PATH="${SHELL_ENTITLEMENTS_PATH}"
-  echo "[Pack IPA] using ${SHELL_ENTITLEMENTS_PATH}"
 fi
 
-if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'STEP2-UI-LIGHT|STEP2-UI-ONLY|SHELL3-NO-DYLIB|SHELL4-MIN-ENT|SHELL5-NOPCH'; then
-  if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -q 'STEP3-DLOPEN-JB'; then
+if [ "$HAS_STRIP_SHELL" = "1" ]; then
+  echo "[Pack IPA] step2/shell marker — stripping embedded dylibs"
+  find "${COPIED_APP}" -name '*.dylib' -type f -print -delete 2>/dev/null || true
+  find "${COPIED_APP}/Frameworks" -name '*.dylib' -type f -print -delete 2>/dev/null || true
+else
+  if [ "$HAS_STEP4" = "1" ]; then
+    echo "[Pack IPA] STEP4 marker — keep/rename embedded dylibs + full entitlements"
+  elif [ "$HAS_KEEP_DYLIB" = "1" ]; then
     echo "[Pack IPA] STEP3 marker — keep/rename embedded dylibs for deferred dlopen"
-  else
-    echo "[Pack IPA] step2/shell marker — stripping embedded dylibs"
-    find "${COPIED_APP}" -name '*.dylib' -type f -print -delete 2>/dev/null || true
-    find "${COPIED_APP}/Frameworks" -name '*.dylib' -type f -print -delete 2>/dev/null || true
   fi
-fi
-
-if ! strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'STEP2-UI-LIGHT|STEP2-UI-ONLY|SHELL3-NO-DYLIB|SHELL4-MIN-ENT|SHELL5-NOPCH' \
-  || strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -q 'STEP3-DLOPEN-JB'; then
-  # Soften conspicuous dylib filenames inside the shipped IPA only.
   rename_dylib() {
     local old="$1" new="$2"
     local src="${COPIED_APP}/${old}"
@@ -136,7 +153,7 @@ if ! strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'STEP2-UI-LIGHT|STEP2-U
   rename_dylib libxpf.dylib libNHParse.dylib
 fi
 
-echo "[Pack IPA] signing with ldid..."
+echo "[Pack IPA] signing with ldid (${ENTITLEMENTS_PATH})..."
 if ! ldid -S"${ENTITLEMENTS_PATH}" "${COPIED_APP}"; then
   echo "[Pack IPA] WARN: app-level ldid failed, try binary only"
   ldid -S"${ENTITLEMENTS_PATH}" "${EXECUTABLE_PATH}"
