@@ -1,11 +1,19 @@
 //
 //  Step2BusinessViewController.m
-//  验收⑤：仿 JVR 启动页 + 业务按钮；dlopen 后 dlsym 探测越狱符号
+//  验收⑥：正确符号探测 + xpf_start_with_kernel_path / jbclient 实调
 //
 
 #import "Step2BusinessViewController.h"
 #import "JBDylibLoader.h"
 #import <dlfcn.h>
+
+typedef int (*XpfStartFn)(const char *kernelPath);
+typedef void (*XpfStopFn)(void);
+typedef const char *(*XpfGetErrorFn)(void);
+typedef char *(*JbGetBootUuidFn)(void);
+typedef char *(*JbGetJbrootFn)(void);
+typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
+                                  char **sandboxExtensionsOut, bool *fullyDebuggedOut);
 
 @interface Step2BusinessViewController ()
 @property(nonatomic, strong) UILabel *statusLabel;
@@ -14,6 +22,7 @@
 @property(nonatomic, strong) UIButton *readBtn;
 @property(nonatomic, assign) BOOL didTryDlopen;
 @property(nonatomic, assign) BOOL jbReady;
+@property(nonatomic, assign) BOOL xpfStarted;
 @end
 
 @implementation Step2BusinessViewController
@@ -28,6 +37,28 @@
     NSRange end = NSMakeRange(self.logView.text.length - 1, 1);
     [self.logView scrollRangeToVisible:end];
   }
+}
+
+- (void *)sym:(NSString *)name {
+  void *p = dlsym(RTLD_DEFAULT, name.UTF8String);
+  if (!p && name.length > 0 && [name characterAtIndex:0] != '_') {
+    p = dlsym(RTLD_DEFAULT, [@"_" stringByAppendingString:name].UTF8String);
+  }
+  return p;
+}
+
+- (NSString *)kernelcachePath {
+  NSArray<NSString *> *candidates = @[
+    @"/System/Library/Caches/com.apple.kernelcaches/kernelcache",
+    @"/System/Library/Caches/com.apple.kernelcaches/kernelcache.research",
+  ];
+  NSFileManager *fm = [NSFileManager defaultManager];
+  for (NSString *path in candidates) {
+    if ([fm fileExistsAtPath:path]) {
+      return path;
+    }
+  }
+  return candidates.firstObject;
 }
 
 - (void)viewDidLoad {
@@ -62,7 +93,7 @@
 
   UILabel *title = [[UILabel alloc] init];
   title.translatesAutoresizingMaskIntoConstraints = NO;
-  title.text = @"STEP5-BOOT-UI";
+  title.text = @"STEP6-XPF-RUN";
   title.textColor = [UIColor colorWithRed:200.0f / 255.0f
                                     green:120.0f / 255.0f
                                      blue:255.0f / 255.0f
@@ -72,7 +103,7 @@
 
   UILabel *hint = [[UILabel alloc] init];
   hint.translatesAutoresizingMaskIntoConstraints = NO;
-  hint.text = @"仿真实启动/业务面板（纯 UIKit）\n按钮会 dlsym 探测越狱符号\n仍不链 BBZView/PhysX/ImGui\n能看见本页 = 验收⑤亮窗通过";
+  hint.text = @"修正符号名并真正调用 XPF/jbclient\n（xpf_start_with_kernel_path）\n仍不链 BBZView/PhysX/DOJailbreaker\n能看见本页 = 验收⑥亮窗通过";
   hint.textColor = [UIColor colorWithWhite:0.78f alpha:1.0f];
   hint.font = [UIFont systemFontOfSize:13.0f weight:UIFontWeightMedium];
   hint.textAlignment = NSTextAlignmentCenter;
@@ -92,7 +123,7 @@
 
   UIButton *kernelBtn = [UIButton buttonWithType:UIButtonTypeSystem];
   kernelBtn.translatesAutoresizingMaskIntoConstraints = NO;
-  [kernelBtn setTitle:@"初始化内核" forState:UIControlStateNormal];
+  [kernelBtn setTitle:@"初始化内核（XPF）" forState:UIControlStateNormal];
   [kernelBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
   kernelBtn.backgroundColor = [UIColor colorWithRed:200.0f / 255.0f
                                                green:120.0f / 255.0f
@@ -105,7 +136,7 @@
 
   UIButton *readBtn = [UIButton buttonWithType:UIButtonTypeSystem];
   readBtn.translatesAutoresizingMaskIntoConstraints = NO;
-  [readBtn setTitle:@"开始读取" forState:UIControlStateNormal];
+  [readBtn setTitle:@"开始读取（jbclient）" forState:UIControlStateNormal];
   [readBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
   readBtn.backgroundColor = [UIColor colorWithRed:255.0f / 255.0f
                                              green:150.0f / 255.0f
@@ -176,21 +207,21 @@
     [logView.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor constant:-16],
   ]];
 
-  [self appendLog:@"STEP5 面板已加载（未链 BBZView/PhysX）"];
+  [self appendLog:@"STEP6 面板已加载（未链 BBZView/PhysX）"];
 }
 
 - (NSInteger)probeJailbreakSymbols {
-  // 仅探测符号是否可解析，不真正跑 exploit
+  // 使用库内真实导出名（⑤ 误用了 xpf_start / jbdSystemwideLog）
   NSArray<NSString *> *names = @[
-    @"xpf_start",
+    @"xpf_start_with_kernel_path",
     @"xpf_stop",
     @"xpf_get_error",
-    @"jbdSystemwideLog",
+    @"jbclient_get_boot_uuid",
     @"jbclient_process_checkin",
   ];
   NSInteger found = 0;
   for (NSString *name in names) {
-    void *sym = dlsym(RTLD_DEFAULT, name.UTF8String);
+    void *sym = [self sym:name];
     if (sym) {
       found += 1;
       [self appendLog:[NSString stringWithFormat:@"dlsym OK: %@", name]];
@@ -221,7 +252,7 @@
           [UIColor colorWithRed:120.0f / 255.0f green:220.0f / 255.0f blue:160.0f / 255.0f alpha:1.0f];
       [strongSelf appendLog:@"dlopen 成功"];
       NSInteger n = [strongSelf probeJailbreakSymbols];
-      [strongSelf appendLog:[NSString stringWithFormat:@"符号探测 %ld/5，验收⑤通过", (long)n]];
+      [strongSelf appendLog:[NSString stringWithFormat:@"符号探测 %ld/5", (long)n]];
     } else {
       strongSelf.statusLabel.text = @"安全权限已启用，但 dlopen 失败";
       strongSelf.statusLabel.textColor =
@@ -232,45 +263,99 @@
 }
 
 - (void)onInitKernel {
-  [self appendLog:@"点击：初始化内核"];
+  [self appendLog:@"点击：初始化内核（XPF）"];
   if (!self.jbReady) {
-    BOOL ok = JBEnsureJailbreakDylibsLoaded();
-    self.jbReady = ok;
-    [self appendLog:ok ? @"补做 dlopen 成功" : @"补做 dlopen 失败"];
+    self.jbReady = JBEnsureJailbreakDylibsLoaded();
+    [self appendLog:self.jbReady ? @"补做 dlopen 成功" : @"补做 dlopen 失败"];
   }
   if (!self.jbReady) {
-    [self appendLog:@"内核初始化跳过：越狱库未就绪"];
+    [self appendLog:@"跳过：越狱库未就绪"];
     return;
   }
-  NSInteger n = [self probeJailbreakSymbols];
-  if (n > 0) {
-    [self appendLog:[NSString stringWithFormat:@"内核路径探测完成（%ld 个符号可用，本步不跑 exploit）", (long)n]];
-    self.statusLabel.text = @"初始化内核：符号探测通过（验收⑤）";
+
+  XpfStartFn startFn = (XpfStartFn)[self sym:@"xpf_start_with_kernel_path"];
+  XpfStopFn stopFn = (XpfStopFn)[self sym:@"xpf_stop"];
+  XpfGetErrorFn errFn = (XpfGetErrorFn)[self sym:@"xpf_get_error"];
+  if (!startFn) {
+    [self appendLog:@"失败：找不到 xpf_start_with_kernel_path"];
+    return;
+  }
+
+  NSString *path = [self kernelcachePath];
+  BOOL exists = [[NSFileManager defaultManager] fileExistsAtPath:path];
+  [self appendLog:[NSString stringWithFormat:@"kernelcache=%@ exists=%d", path, exists ? 1 : 0]];
+
+  // 若上次已 start，先 stop 再开
+  if (self.xpfStarted && stopFn) {
+    stopFn();
+    self.xpfStarted = NO;
+    [self appendLog:@"已 xpf_stop 旧会话"];
+  }
+
+  int rc = startFn(path.fileSystemRepresentation);
+  const char *err = errFn ? errFn() : NULL;
+  [self appendLog:[NSString stringWithFormat:@"xpf_start_with_kernel_path rc=%d err=%s", rc,
+                                             (err && err[0]) ? err : "(null)"]];
+
+  if (rc == 0) {
+    self.xpfStarted = YES;
+    self.statusLabel.text = @"XPF 启动成功（验收⑥）";
     self.statusLabel.textColor =
         [UIColor colorWithRed:120.0f / 255.0f green:220.0f / 255.0f blue:160.0f / 255.0f alpha:1.0f];
+    [self appendLog:@"验收⑥：XPF 实调通过（未跑 exploit）"];
   } else {
-    [self appendLog:@"初始化内核失败：无可用符号"];
+    self.statusLabel.text = @"XPF 启动失败（见日志）";
+    self.statusLabel.textColor =
+        [UIColor colorWithRed:255.0f / 255.0f green:120.0f / 255.0f blue:120.0f / 255.0f alpha:1.0f];
   }
 }
 
 - (void)onStartRead {
-  [self appendLog:@"点击：开始读取"];
+  [self appendLog:@"点击：开始读取（jbclient）"];
   if (!self.jbReady) {
-    [self appendLog:@"开始读取跳过：请先初始化内核 / 等待 dlopen"];
+    [self appendLog:@"跳过：请先 dlopen / 初始化"];
     return;
   }
-  // 轻量可读性检查：确认关键导出仍在
-  void *xpfStart = dlsym(RTLD_DEFAULT, "xpf_start");
-  void *checkin = dlsym(RTLD_DEFAULT, "jbclient_process_checkin");
-  [self appendLog:[NSString stringWithFormat:@"读取探测 xpf_start=%p checkin=%p", xpfStart, checkin]];
-  if (xpfStart || checkin) {
-    self.statusLabel.text = @"开始读取：符号可读（未链 PhysX）";
-    self.statusLabel.textColor =
-        [UIColor colorWithRed:120.0f / 255.0f green:220.0f / 255.0f blue:160.0f / 255.0f alpha:1.0f];
-    [self appendLog:@"开始读取探测通过（验收⑤业务按钮可用）"];
+
+  JbGetBootUuidFn uuidFn = (JbGetBootUuidFn)[self sym:@"jbclient_get_boot_uuid"];
+  JbGetJbrootFn rootFn = (JbGetJbrootFn)[self sym:@"jbclient_get_jbroot"];
+  JbProcessCheckinFn checkinFn = (JbProcessCheckinFn)[self sym:@"jbclient_process_checkin"];
+
+  if (uuidFn) {
+    char *uuid = uuidFn();
+    [self appendLog:[NSString stringWithFormat:@"boot_uuid=%s", uuid ? uuid : "(null)"]];
   } else {
-    [self appendLog:@"开始读取失败：关键符号不可见"];
+    [self appendLog:@"jbclient_get_boot_uuid 不可用"];
   }
+
+  if (rootFn) {
+    char *root = rootFn();
+    [self appendLog:[NSString stringWithFormat:@"jbroot=%s", root ? root : "(null)"]];
+  } else {
+    [self appendLog:@"jbclient_get_jbroot 不可用"];
+  }
+
+  if (checkinFn) {
+    char *rootOut = NULL;
+    char *bootOut = NULL;
+    char *sandboxOut = NULL;
+    bool fullyDebugged = false;
+    int rc = checkinFn(&rootOut, &bootOut, &sandboxOut, &fullyDebugged);
+    [self appendLog:[NSString stringWithFormat:
+                                  @"process_checkin rc=%d root=%s boot=%s dbg=%d", rc,
+                                  rootOut ? rootOut : "(null)", bootOut ? bootOut : "(null)",
+                                  fullyDebugged ? 1 : 0]];
+    free(rootOut);
+    free(bootOut);
+    free(sandboxOut);
+  } else {
+    [self appendLog:@"jbclient_process_checkin 不可用"];
+  }
+
+  self.statusLabel.text = @"jbclient 读取探测完成（验收⑥）";
+  self.statusLabel.textColor =
+      [UIColor colorWithRed:120.0f / 255.0f green:220.0f / 255.0f blue:160.0f / 255.0f alpha:1.0f];
+  [self appendLog:@"验收⑥：jbclient 实调完成（未链 PhysX）"];
 }
 
 @end

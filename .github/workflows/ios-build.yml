@@ -1318,12 +1318,16 @@ jobs:
               if [ -n "$EXE_NAME" ] && [ -f "$APP_COPY/$EXE_NAME" ]; then
                 EXECUTABLE_PATH="$APP_COPY/$EXE_NAME"
               fi
-              # 与 supports/pack_ipa.sh 一致；STEP2/SHELL 剔除；STEP3/4/4B/5 保留并改名
+              # 与 supports/pack_ipa.sh 一致；STEP2/SHELL 剔除；STEP3/4/4B/5/6 保留并改名
               IS_STEP3=0
               IS_STEP4=0
               IS_STEP4B=0
               IS_STEP5=0
+              IS_STEP6=0
               IS_STRIP_SHELL=0
+              if [ -n "${EXECUTABLE_PATH}" ] && strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -q 'STEP6-XPF-RUN'; then
+                IS_STEP6=1
+              fi
               if [ -n "${EXECUTABLE_PATH}" ] && strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -q 'STEP5-BOOT-UI'; then
                 IS_STEP5=1
               fi
@@ -1337,17 +1341,17 @@ jobs:
                 IS_STEP3=1
               fi
               if [ -n "${EXECUTABLE_PATH}" ] && strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'STEP2-UI-LIGHT|STEP2-UI-ONLY|SHELL3-NO-DYLIB|SHELL4-MIN-ENT|SHELL5-NOPCH'; then
-                if [ "$IS_STEP3" != "1" ] && [ "$IS_STEP4" != "1" ] && [ "$IS_STEP4B" != "1" ] && [ "$IS_STEP5" != "1" ]; then
+                if [ "$IS_STEP3" != "1" ] && [ "$IS_STEP4" != "1" ] && [ "$IS_STEP4B" != "1" ] && [ "$IS_STEP5" != "1" ] && [ "$IS_STEP6" != "1" ]; then
                   IS_STRIP_SHELL=1
                 fi
               fi
-              if [ "$IS_STEP5" = "1" ] || [ "$IS_STEP4B" = "1" ]; then
+              if [ "$IS_STEP6" = "1" ] || [ "$IS_STEP5" = "1" ] || [ "$IS_STEP4B" = "1" ]; then
                 if [ ! -f "$IOS15_ENTITLEMENTS" ]; then
-                  echo "::error::Missing $IOS15_ENTITLEMENTS for STEP5/4B ios15-safe entitlements"
+                  echo "::error::Missing $IOS15_ENTITLEMENTS for STEP6/5/4B ios15-safe entitlements"
                   exit 1
                 fi
                 ENTITLEMENTS="$IOS15_ENTITLEMENTS"
-                echo "STEP5/4B — using entitlements-ios15.plist (no banned keys)"
+                echo "STEP6/5/4B — using entitlements-ios15.plist (no banned keys)"
               elif [ "$IS_STEP4" = "1" ]; then
                 if [ ! -f "$FULL_ENTITLEMENTS" ]; then
                   echo "::error::Missing $FULL_ENTITLEMENTS for STEP4 full entitlements"
@@ -1360,7 +1364,9 @@ jobs:
                 echo "step2/shell marker — stripping embedded dylibs"
                 find "${APP_COPY}" -name '*.dylib' -type f -print -delete 2>/dev/null || true
               else
-                if [ "$IS_STEP5" = "1" ]; then
+                if [ "$IS_STEP6" = "1" ]; then
+                  echo "STEP6 marker — keep/rename dylibs + ios15-safe entitlements"
+                elif [ "$IS_STEP5" = "1" ]; then
                   echo "STEP5 marker — keep/rename dylibs + ios15-safe entitlements"
                 elif [ "$IS_STEP4B" = "1" ]; then
                   echo "STEP4B marker — keep/rename dylibs + ios15-safe entitlements"
@@ -1408,7 +1414,19 @@ jobs:
                   exit 1
                 fi
                 echo "Verified DRAWFPS_SEG_V1 in binary"
-                if strings "$EXECUTABLE_PATH" | grep -q 'STEP5-BOOT-UI'; then
+                if strings "$EXECUTABLE_PATH" | grep -q 'STEP6-XPF-RUN'; then
+                  echo "Verified STEP6 xpf-run marker"
+                  if [ ! -f "${APP_COPY}/libNHSupport.dylib" ] || [ ! -f "${APP_COPY}/libNHCodec.dylib" ] || [ ! -f "${APP_COPY}/libNHParse.dylib" ]; then
+                    echo "::error::STEP6 IPA missing renamed jailbreak dylibs (libNH*)"
+                    find "$APP_COPY" -name '*.dylib' -print || true
+                    exit 1
+                  fi
+                  if grep -q 'skip-library-validation' "$ENTITLEMENTS"; then
+                    echo "::error::STEP6 entitlements still contain banned skip-library-validation"
+                    exit 1
+                  fi
+                  echo "Verified STEP6 IPA embeds libNH* and uses ios15-safe entitlements"
+                elif strings "$EXECUTABLE_PATH" | grep -q 'STEP5-BOOT-UI'; then
                   echo "Verified STEP5 boot-ui marker"
                   if [ ! -f "${APP_COPY}/libNHSupport.dylib" ] || [ ! -f "${APP_COPY}/libNHCodec.dylib" ] || [ ! -f "${APP_COPY}/libNHParse.dylib" ]; then
                     echo "::error::STEP5 IPA missing renamed jailbreak dylibs (libNH*)"

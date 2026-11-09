@@ -1,12 +1,12 @@
 //
-//  MainApplicationDelegate.m — 验收⑤：仿真实启动/业务面板 + 延后 dlopen
+//  MainApplicationDelegate.m — 验收⑥：XPF/jbclient 实调，仍延后 dlopen
 //
 
 #import "MainApplicationDelegate.h"
 #import "Step2BusinessViewController.h"
 
 __attribute__((used)) static const char kDrawFpsSegMarker[] = "DRAWFPS_SEG_V1";
-__attribute__((used)) static const char kStep5Marker[] = "STEP5-BOOT-UI";
+__attribute__((used)) static const char kStep6Marker[] = "STEP6-XPF-RUN";
 
 @implementation MainApplicationDelegate
 
@@ -15,11 +15,10 @@ __attribute__((used)) static const char kStep5Marker[] = "STEP5-BOOT-UI";
   (void)application;
   (void)launchOptions;
   volatile const char *keepFps = kDrawFpsSegMarker;
-  volatile const char *keepStep = kStep5Marker;
+  volatile const char *keepStep = kStep6Marker;
   (void)keepFps[0];
   (void)keepStep[0];
 
-  // 先亮窗（对齐 SHELL5 / Dopamine），避免同步拉起重依赖
   self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
   UIViewController *boot = [[UIViewController alloc] init];
   boot.view.backgroundColor = [UIColor colorWithRed:18.0f / 255.0f
@@ -44,7 +43,6 @@ __attribute__((used)) static const char kStep5Marker[] = "STEP5-BOOT-UI";
   dispatch_async(dispatch_get_main_queue(), ^{
     __strong typeof(weakSelf) strongSelf = weakSelf;
     if (!strongSelf) return;
-    // 验收⑤：仿真实业务面板；仍不链 BBZView/PhysX
     strongSelf.window.rootViewController = [[Step2BusinessViewController alloc] init];
   });
   return YES;

@@ -2416,7 +2416,7 @@
 					"-framework",
 					"CoreGraphics",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step5boot;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step6xpf;
 				PRODUCT_MODULE_NAME = Books;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -2492,7 +2492,7 @@
 					"-framework",
 					"CoreGraphics",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step5boot;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step6xpf;
 				PRODUCT_MODULE_NAME = Books;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

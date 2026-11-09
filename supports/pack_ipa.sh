@@ -84,11 +84,16 @@ if [ ! -f "${EXECUTABLE_PATH}" ]; then
   exit 1
 fi
 
+HAS_STEP6=0
 HAS_STEP5=0
 HAS_STEP4B=0
 HAS_STEP4=0
 HAS_KEEP_DYLIB=0
 HAS_STRIP_SHELL=0
+if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -q 'STEP6-XPF-RUN'; then
+  HAS_STEP6=1
+  HAS_KEEP_DYLIB=1
+fi
 if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -q 'STEP5-BOOT-UI'; then
   HAS_STEP5=1
   HAS_KEEP_DYLIB=1
@@ -105,15 +110,15 @@ if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'STEP3-DLOPEN-JB'; then
   HAS_KEEP_DYLIB=1
 fi
 if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'STEP2-UI-LIGHT|STEP2-UI-ONLY|SHELL3-NO-DYLIB|SHELL4-MIN-ENT|SHELL5-NOPCH'; then
-  if [ "$HAS_STEP5" != "1" ] && [ "$HAS_STEP4B" != "1" ] && [ "$HAS_STEP4" != "1" ] && [ "$HAS_KEEP_DYLIB" != "1" ]; then
+  if [ "$HAS_STEP6" != "1" ] && [ "$HAS_STEP5" != "1" ] && [ "$HAS_STEP4B" != "1" ] && [ "$HAS_STEP4" != "1" ] && [ "$HAS_KEEP_DYLIB" != "1" ]; then
     HAS_STRIP_SHELL=1
   fi
 fi
 
-if [ "$HAS_STEP5" = "1" ] || [ "$HAS_STEP4B" = "1" ]; then
+if [ "$HAS_STEP6" = "1" ] || [ "$HAS_STEP5" = "1" ] || [ "$HAS_STEP4B" = "1" ]; then
   if [ -f "${IOS15_ENTITLEMENTS_PATH}" ]; then
     ENTITLEMENTS_PATH="${IOS15_ENTITLEMENTS_PATH}"
-    echo "[Pack IPA] STEP5/4B — using entitlements-ios15.plist (no banned keys)"
+    echo "[Pack IPA] STEP6/5/4B — using entitlements-ios15.plist (no banned keys)"
   fi
 elif [ "$HAS_STEP4" = "1" ]; then
   if [ -f "${FULL_ENTITLEMENTS_PATH}" ]; then
@@ -132,7 +137,9 @@ if [ "$HAS_STRIP_SHELL" = "1" ]; then
   find "${COPIED_APP}" -name '*.dylib' -type f -print -delete 2>/dev/null || true
   find "${COPIED_APP}/Frameworks" -name '*.dylib' -type f -print -delete 2>/dev/null || true
 else
-  if [ "$HAS_STEP5" = "1" ]; then
+  if [ "$HAS_STEP6" = "1" ]; then
+    echo "[Pack IPA] STEP6 marker — keep/rename dylibs + ios15-safe entitlements"
+  elif [ "$HAS_STEP5" = "1" ]; then
     echo "[Pack IPA] STEP5 marker — keep/rename dylibs + ios15-safe entitlements"
   elif [ "$HAS_STEP4B" = "1" ]; then
     echo "[Pack IPA] STEP4B marker — keep/rename dylibs + ios15-safe entitlements"
