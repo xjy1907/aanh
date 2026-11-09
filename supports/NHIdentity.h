@@ -239,8 +239,9 @@ static inline NSArray<NSString *> *NHDrawExtrasKeys(void) {
         @"曲线目标冻结", @"冻结段长", @"曲线缓动", @"前冲强度",
         @"曲线惯性", @"惯性强度", @"曲线弧线", @"弧线幅度",
         @"切目标粘滞", @"粘滞时间", @"粘滞近距阈值", @"粘滞确认帧",
-        // —— ESP 默认开关迁移标记 ——
-        @"espDefaultsV1",
+        // —— ESP 默认开关迁移标记 / 快捷预设 ——
+        @"espDefaultsV1", @"espDefaultsOffV1",
+        @"quickDrawPreset", @"quickAimPreset",
         @"TouchSenderID", @"TouchSenderIDHex",
     ];
 }
@@ -428,15 +429,19 @@ static inline void NHPrefsWrite(NSDictionary *cfg) {
     [merged writeToFile:path atomically:YES];
 }
 
-/// 人数/血量/信息/距离/手持/背敌/骨骼默认开（一次性迁移，UI 与绘制进程共用）
+/// 功能模块（显示人数～配置落盘）默认全关（一次性迁移，UI 与绘制进程共用）
 static inline void NHEnsureEspDefaultsOnce(void) {
     static dispatch_once_t once;
     dispatch_once(&once, ^{
         NSDictionary *extras = NHDrawExtrasRead();
-        if (extras[@"espDefaultsV1"] != nil) return;
+        if (extras[@"espDefaultsOffV1"] != nil) return;
         NSMutableDictionary *patch = [NSMutableDictionary dictionaryWithDictionary:@{
-            @"count": @YES, @"health": @YES, @"info": @YES,
-            @"dist": @YES, @"weapon": @YES, @"behind": @YES, @"bone": @YES,
+            @"count": @NO, @"line": @NO, @"box": @NO,
+            @"health": @NO, @"info": @NO, @"dist": @NO,
+            @"weapon": @NO, @"behind": @NO, @"loot": @NO, @"bone": @NO,
+            @"hideAi": @NO, @"模型渲染": @NO, @"overlay": @NO,
+            @"dbglog": @NO, @"persist": @NO,
+            @"espDefaultsOffV1": @1,
             @"espDefaultsV1": @1,
         }];
         // 写入 drx + 发布 notify 位，保证开关 UI 与绘制读到一致

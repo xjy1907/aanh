@@ -117,7 +117,7 @@
     [self mkSwitch:@"切目标粘滞" key:@"切目标粘滞"
           subtitle:@"已锁目标短期优先；避免准心电报换人"],
     [self mkSlider:@"粘滞时间" key:@"粘滞时间" subtitle:@"毫秒；期满才允许换人"
-               min:50 max:800 step:10 scale:0],
+               min:50 max:3000 step:10 scale:0],
     [self mkSlider:@"粘滞近距阈值" key:@"粘滞近距阈值" subtitle:@"像素；挑战者须更近出该值"
                min:5 max:60 step:1 scale:0],
     [self mkSlider:@"粘滞确认帧" key:@"粘滞确认帧" subtitle:@"挑战者连续胜出帧数才换人"

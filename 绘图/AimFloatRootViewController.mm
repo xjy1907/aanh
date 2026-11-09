@@ -95,7 +95,7 @@ static NSString * const kAimFloatEnableKey = @"悬浮球";
 
 - (CGFloat)loadButtonSize {
     NSDictionary *settings = NHPrefsRead();
-    CGFloat size = 48.0f;
+    CGFloat size = 90.0f;
     if (settings[kAimFloatSizeKey]) {
         size = [settings[kAimFloatSizeKey] floatValue];
     } else if ([[NSUserDefaults standardUserDefaults] objectForKey:kAimFloatSizeKey]) {
@@ -125,7 +125,7 @@ static NSString * const kAimFloatEnableKey = @"悬浮球";
 }
 
 - (void)setupAimButton {
-    CGFloat size = self.buttonSize > 0 ? self.buttonSize : 48.0;
+    CGFloat size = self.buttonSize > 0 ? self.buttonSize : 90.0;
     self.aimButton = [UIButton buttonWithType:UIButtonTypeCustom];
     self.aimButton.frame = CGRectMake(20, 100, size, size);
     self.aimButton.layer.cornerRadius = size / 2.0;

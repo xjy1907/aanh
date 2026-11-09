@@ -52,7 +52,7 @@ static bool 显示信息 = false;
 static bool 显示骨骼 = false;
 static bool 人机隐藏 = false; // 对标 wasd：静态扫描跳过人机
 static bool 显示手持 = false, 显示距离 = false, 显示背敌 = false, 显示物资 = false;
-static int 手持样式 = 0; // 0=文字 1=图片（对标 wasd 手持图）
+static int 手持样式 = 1; // 0=文字 1=图片；默认图片
 static int 物资大小 = 13;
 static int 信息大小 = 12; // 名字/队号/距离/手持/背敌距离字号
 static int 背敌样式 = 1; // 0雷达 1箭头 2花祭；默认箭头
@@ -506,6 +506,7 @@ static void RefreshDrawPrefs(void) {
     显示背敌 = [[cfg objectForKey:@"behind"] boolValue];
     显示物资 = [[cfg objectForKey:@"loot"] boolValue];
     if (cfg[@"weaponStyle"] != nil) 手持样式 = [cfg[@"weaponStyle"] intValue];
+    else 手持样式 = 1;
     if (cfg[@"lootSize"] != nil) 物资大小 = [cfg[@"lootSize"] intValue];
     else 物资大小 = 13;
     if (cfg[@"infoSize"] != nil) 信息大小 = [cfg[@"infoSize"] intValue];

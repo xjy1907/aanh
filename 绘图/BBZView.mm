@@ -84,14 +84,30 @@ static void JVR_保存开关(NSString* key, BOOL val) {
 }
 
 static BOOL JVR_开关默认开(NSString *key) {
-    // 默认开启：人数/血量/信息/距离/手持/背敌/骨骼（与 NHEnsureEspDefaultsOnce 一致）
-    return [key isEqualToString:@"count"] ||
-           [key isEqualToString:@"health"] ||
-           [key isEqualToString:@"info"] ||
-           [key isEqualToString:@"dist"] ||
-           [key isEqualToString:@"weapon"] ||
-           [key isEqualToString:@"behind"] ||
-           [key isEqualToString:@"bone"];
+    // 功能模块默认全关（与 NHEnsureEspDefaultsOnce / espDefaultsOffV1 一致）
+    (void)key;
+    return NO;
+}
+
+static void JVR_合并写Prefs(NSDictionary *patch) {
+    if (patch.count == 0) return;
+    NSMutableDictionary *cfg = [NSMutableDictionary dictionary];
+    NSDictionary *cur = NHPrefsRead();
+    if (cur) [cfg addEntriesFromDictionary:cur];
+    else [cfg addEntriesFromDictionary:JVR_开关缓存()];
+    [cfg addEntriesFromDictionary:patch];
+    for (NSString *k in patch) {
+        JVR_开关缓存()[k] = patch[k];
+    }
+    NHPrefsWrite(cfg);
+}
+
+static NSArray<NSString *> *JVR_功能模块Keys(void) {
+    return @[
+        @"count", @"line", @"box", @"health", @"info", @"dist",
+        @"weapon", @"behind", @"loot", @"bone", @"hideAi",
+        @"模型渲染", @"overlay", @"dbglog", @"persist",
+    ];
 }
 
 static BOOL JVR_读取开关(NSString* key) {
@@ -242,6 +258,7 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
 @property (nonatomic, strong) UILabel *titleLabel;
 @property (nonatomic, strong) UILabel *statusLabel;
 @property (nonatomic, copy) void (^onToggle)(BOOL);
+- (void)reloadFromPrefs;
 @end
 
 // ========================================
@@ -454,11 +471,150 @@ static void JVR_保存KernelExploit(NSString *ident) {
 
         self.segment = [[UISegmentedControl alloc] initWithItems:@[ @"文字", @"图片" ]];
         self.segment.translatesAutoresizingMaskIntoConstraints = NO;
-        NSInteger cur = 0;
+        NSInteger cur = 1; // 默认图片
         NSDictionary *cfg = NHPrefsRead();
-        if (cfg[@"weaponStyle"]) cur = [cfg[@"weaponStyle"] integerValue];
+        if (cfg[@"weaponStyle"] != nil) cur = [cfg[@"weaponStyle"] integerValue];
         if (cur < 0) cur = 0;
         if (cur > 1) cur = 1;
+        self.segment.selectedSegmentIndex = cur;
+        if (cfg[@"weaponStyle"] == nil) {
+            NSMutableDictionary *save = [NSMutableDictionary dictionary];
+            if (cfg) [save addEntriesFromDictionary:cfg];
+            save[@"weaponStyle"] = @1;
+            JVR_开关缓存()[@"weaponStyle"] = @1;
+            NHPrefsWrite(save);
+        }
+        if (@available(iOS 13.0, *)) {
+            self.segment.selectedSegmentTintColor = [JVR_副色 colorWithAlphaComponent:0.55f];
+            [self.segment setTitleTextAttributes:@{ NSForegroundColorAttributeName: JVR_文字色 } forState:UIControlStateNormal];
+            [self.segment setTitleTextAttributes:@{ NSForegroundColorAttributeName: [UIColor whiteColor] } forState:UIControlStateSelected];
+        }
+        [self.segment addTarget:self action:@selector(onSegment:) forControlEvents:UIControlEventValueChanged];
+        [self addSubview:self.segment];
+
+        [NSLayoutConstraint activateConstraints:@[
+            [accent.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:10],
+            [accent.topAnchor constraintEqualToAnchor:self.topAnchor constant:12],
+            [accent.widthAnchor constraintEqualToConstant:3],
+            [accent.heightAnchor constraintEqualToConstant:18],
+            [self.titleLabel.leadingAnchor constraintEqualToAnchor:accent.trailingAnchor constant:10],
+            [self.titleLabel.centerYAnchor constraintEqualToAnchor:accent.centerYAnchor],
+            [self.segment.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:12],
+            [self.segment.trailingAnchor constraintEqualToAnchor:self.trailingAnchor constant:-12],
+            [self.segment.topAnchor constraintEqualToAnchor:self.titleLabel.bottomAnchor constant:10],
+            [self.segment.heightAnchor constraintEqualToConstant:30],
+            [self.heightAnchor constraintEqualToConstant:72],
+        ]];
+    }
+    return self;
+}
+- (void)onSegment:(UISegmentedControl *)sender {
+    if (self.onChange) self.onChange(sender.selectedSegmentIndex);
+}
+@end
+
+// 快捷绘制：全部关闭 / 单绘制方案1 / 单绘制方案2
+@interface JVRQuickDrawRow : UIView
+@property (nonatomic, strong) UILabel *titleLabel;
+@property (nonatomic, strong) UISegmentedControl *segment;
+@property (nonatomic, copy) void (^onChange)(NSInteger idx); // 0关 1方案1 2方案2
+@end
+
+@implementation JVRQuickDrawRow
+- (instancetype)init {
+    self = [super initWithFrame:CGRectZero];
+    if (self) {
+        self.backgroundColor = [JVR_卡片色 colorWithAlphaComponent:0.6f];
+        self.layer.cornerRadius = 8.0f;
+        self.layer.borderWidth = 1.0f;
+        self.layer.borderColor = JVR_边框色.CGColor;
+
+        UIView *accent = [[UIView alloc] init];
+        accent.translatesAutoresizingMaskIntoConstraints = NO;
+        accent.backgroundColor = JVR_主色;
+        accent.layer.cornerRadius = 1.5f;
+        [self addSubview:accent];
+
+        self.titleLabel = [[UILabel alloc] init];
+        self.titleLabel.translatesAutoresizingMaskIntoConstraints = NO;
+        self.titleLabel.text = @"快捷绘制";
+        self.titleLabel.font = [UIFont systemFontOfSize:14.0f weight:UIFontWeightMedium];
+        self.titleLabel.textColor = JVR_文字色;
+        [self addSubview:self.titleLabel];
+
+        self.segment = [[UISegmentedControl alloc] initWithItems:@[ @"全部关闭", @"方案1", @"方案2" ]];
+        self.segment.translatesAutoresizingMaskIntoConstraints = NO;
+        NSInteger cur = 0;
+        NSDictionary *cfg = NHPrefsRead();
+        if (cfg[@"quickDrawPreset"] != nil) cur = [cfg[@"quickDrawPreset"] integerValue];
+        if (cur < 0) cur = 0;
+        if (cur > 2) cur = 0;
+        self.segment.selectedSegmentIndex = cur;
+        if (@available(iOS 13.0, *)) {
+            self.segment.selectedSegmentTintColor = [JVR_主色 colorWithAlphaComponent:0.55f];
+            [self.segment setTitleTextAttributes:@{ NSForegroundColorAttributeName: JVR_文字色 } forState:UIControlStateNormal];
+            [self.segment setTitleTextAttributes:@{ NSForegroundColorAttributeName: [UIColor whiteColor] } forState:UIControlStateSelected];
+        }
+        [self.segment addTarget:self action:@selector(onSegment:) forControlEvents:UIControlEventValueChanged];
+        [self addSubview:self.segment];
+
+        [NSLayoutConstraint activateConstraints:@[
+            [accent.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:10],
+            [accent.topAnchor constraintEqualToAnchor:self.topAnchor constant:12],
+            [accent.widthAnchor constraintEqualToConstant:3],
+            [accent.heightAnchor constraintEqualToConstant:18],
+            [self.titleLabel.leadingAnchor constraintEqualToAnchor:accent.trailingAnchor constant:10],
+            [self.titleLabel.centerYAnchor constraintEqualToAnchor:accent.centerYAnchor],
+            [self.segment.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:12],
+            [self.segment.trailingAnchor constraintEqualToAnchor:self.trailingAnchor constant:-12],
+            [self.segment.topAnchor constraintEqualToAnchor:self.titleLabel.bottomAnchor constant:10],
+            [self.segment.heightAnchor constraintEqualToConstant:30],
+            [self.heightAnchor constraintEqualToConstant:72],
+        ]];
+    }
+    return self;
+}
+- (void)onSegment:(UISegmentedControl *)sender {
+    if (self.onChange) self.onChange(sender.selectedSegmentIndex);
+}
+@end
+
+// 快捷自瞄：关闭自瞄 / 软锁配置 / 软锁转硬锁配置
+@interface JVRQuickAimRow : UIView
+@property (nonatomic, strong) UILabel *titleLabel;
+@property (nonatomic, strong) UISegmentedControl *segment;
+@property (nonatomic, copy) void (^onChange)(NSInteger idx); // 0关 1软锁 2软硬锁
+@end
+
+@implementation JVRQuickAimRow
+- (instancetype)init {
+    self = [super initWithFrame:CGRectZero];
+    if (self) {
+        self.backgroundColor = [JVR_卡片色 colorWithAlphaComponent:0.6f];
+        self.layer.cornerRadius = 8.0f;
+        self.layer.borderWidth = 1.0f;
+        self.layer.borderColor = JVR_边框色.CGColor;
+
+        UIView *accent = [[UIView alloc] init];
+        accent.translatesAutoresizingMaskIntoConstraints = NO;
+        accent.backgroundColor = JVR_副色;
+        accent.layer.cornerRadius = 1.5f;
+        [self addSubview:accent];
+
+        self.titleLabel = [[UILabel alloc] init];
+        self.titleLabel.translatesAutoresizingMaskIntoConstraints = NO;
+        self.titleLabel.text = @"快捷自瞄";
+        self.titleLabel.font = [UIFont systemFontOfSize:14.0f weight:UIFontWeightMedium];
+        self.titleLabel.textColor = JVR_文字色;
+        [self addSubview:self.titleLabel];
+
+        self.segment = [[UISegmentedControl alloc] initWithItems:@[ @"关闭自瞄", @"软锁配置", @"软硬锁" ]];
+        self.segment.translatesAutoresizingMaskIntoConstraints = NO;
+        NSInteger cur = 0;
+        NSDictionary *cfg = NHPrefsRead();
+        if (cfg[@"quickAimPreset"] != nil) cur = [cfg[@"quickAimPreset"] integerValue];
+        if (cur < 0) cur = 0;
+        if (cur > 2) cur = 0;
         self.segment.selectedSegmentIndex = cur;
         if (@available(iOS 13.0, *)) {
             self.segment.selectedSegmentTintColor = [JVR_副色 colorWithAlphaComponent:0.55f];
@@ -564,6 +720,11 @@ static void JVR_保存KernelExploit(NSString *ident) {
     self.isOn = !self.isOn;
     [self updateUI:YES];
     if (self.onToggle) self.onToggle(self.isOn);
+}
+
+- (void)reloadFromPrefs {
+    self.isOn = JVR_读取开关(self.switchKey);
+    [self updateUI:NO];
 }
 
 - (void)updateUI:(BOOL)animated {
@@ -1042,6 +1203,7 @@ static void JVR_保存KernelExploit(NSString *ident) {
     UIImpactFeedbackGenerator *_impactFeedbackGenerator;
     JVRTerminal *_terminal;
     BOOL _hasEnteredMenu;
+    NSMutableArray<JVRNeonSwitch *> *_featureSwitches;
 }
 
 + (void)setShouldToggleHUDAfterLaunch:(BOOL)flag { _gShouldToggleHUDAfterLaunch = flag; }
@@ -1519,11 +1681,6 @@ static void JVR_保存KernelExploit(NSString *ident) {
         readBtn.label.text = @"停止读取";
         BOOL countOn = JVR_读取开关(@"count");
         BOOL lineOn = JVR_读取开关(@"line");
-        if (!countOn) {
-            JVR_保存开关(@"count", YES);
-            countOn = YES;
-            [strongSelf->_terminal appendLog:@"已自动打开「显示人数」便于验证"];
-        }
         [strongSelf->_terminal appendLog:countOn ? @"显示人数=开" : @"显示人数=关"];
         [strongSelf->_terminal appendLog:lineOn ? @"射线显示=开" : @"射线显示=关"];
         [strongSelf->_terminal appendLog:@"判据：新日志必须出现 HUD: / [绘制]；仅有[7s]说明还在主进程"];
@@ -1696,6 +1853,113 @@ static void JVR_保存KernelExploit(NSString *ident) {
         kfd_log("[UI] weaponStyle=%ld\n", (long)style);
     };
     [stack addArrangedSubview:weaponStyleRow];
+
+    _featureSwitches = [NSMutableArray array];
+
+    void (^refreshFeatureSwitches)(void) = ^{
+        for (JVRNeonSwitch *sw in _featureSwitches) {
+            [sw reloadFromPrefs];
+        }
+    };
+
+    JVRQuickDrawRow *quickDrawRow = [[JVRQuickDrawRow alloc] init];
+    quickDrawRow.translatesAutoresizingMaskIntoConstraints = NO;
+    quickDrawRow.onChange = ^(NSInteger idx) {
+        NSMutableDictionary *patch = [NSMutableDictionary dictionary];
+        patch[@"quickDrawPreset"] = @(idx);
+        if (idx == 0) {
+            for (NSString *key in JVR_功能模块Keys()) {
+                patch[key] = @NO;
+            }
+            JVR_合并写Prefs(patch);
+            NHDebugLogInvalidateCache();
+            refreshFeatureSwitches();
+            KernelLogLine("快捷绘制 = 全部关闭");
+        } else if (idx == 1) {
+            // 单绘制方案1
+            patch[@"count"] = @YES;
+            patch[@"health"] = @YES;
+            patch[@"info"] = @YES;
+            patch[@"dist"] = @YES;
+            patch[@"weapon"] = @YES;
+            patch[@"behind"] = @YES;
+            patch[@"bone"] = @YES;
+            JVR_合并写Prefs(patch);
+            refreshFeatureSwitches();
+            KernelLogLine("快捷绘制 = 单绘制方案1");
+        } else {
+            // 单绘制方案2：方案1 + 射线 + 方框（请求截断处按此补齐）
+            patch[@"count"] = @YES;
+            patch[@"health"] = @YES;
+            patch[@"info"] = @YES;
+            patch[@"dist"] = @YES;
+            patch[@"weapon"] = @YES;
+            patch[@"behind"] = @YES;
+            patch[@"bone"] = @YES;
+            patch[@"line"] = @YES;
+            patch[@"box"] = @YES;
+            JVR_合并写Prefs(patch);
+            refreshFeatureSwitches();
+            KernelLogLine("快捷绘制 = 单绘制方案2（方案1+射线+方框）");
+        }
+        kfd_log("[UI] quickDrawPreset=%ld\n", (long)idx);
+    };
+    [stack addArrangedSubview:quickDrawRow];
+
+    JVRQuickAimRow *quickAimRow = [[JVRQuickAimRow alloc] init];
+    quickAimRow.translatesAutoresizingMaskIntoConstraints = NO;
+    quickAimRow.onChange = ^(NSInteger idx) {
+        NSMutableDictionary *patch = [NSMutableDictionary dictionary];
+        patch[@"quickAimPreset"] = @(idx);
+        if (idx == 0) {
+            patch[@"开启自瞄"] = @NO;
+            JVR_合并写Prefs(patch);
+            KernelLogLine("快捷自瞄 = 关闭自瞄");
+        } else if (idx == 1 || idx == 2) {
+            // 软锁配置基础
+            patch[@"开启自瞄"] = @YES;
+            patch[@"自瞄连线"] = @YES;
+            patch[@"显示范围"] = @YES;
+            patch[@"动态圈"] = @YES;
+            patch[@"动态圈最小"] = @0;
+            patch[@"动态圈插值方式"] = @0; // 固定步长
+            patch[@"自瞄大小"] = @80;
+            patch[@"开镜自瞄范围"] = @60;
+            patch[@"开镜动态圈"] = @YES;
+            patch[@"显示开镜自瞄范围"] = @YES;
+            patch[@"烟雾不瞄"] = @YES;
+            // 拟人
+            patch[@"吸附曲线"] = @YES;
+            patch[@"外圈速度"] = @42;
+            patch[@"内圈速度"] = @46;
+            patch[@"变速过渡宽"] = @40;
+            // 贝塞尔
+            patch[@"曲线缓动"] = @YES;
+            patch[@"曲线弧线"] = @YES;
+            patch[@"切目标粘滞"] = @YES;
+            patch[@"粘滞时间"] = @1000;
+            // 模型 / 性能2
+            patch[@"模型渲染"] = @YES;
+            patch[@"实验-模型性能2"] = @YES;
+            patch[@"遮挡圈范围"] = @150;
+
+            if (idx == 2) {
+                // 软锁转硬锁：在软锁基础上覆盖
+                patch[@"动态圈"] = @NO;
+                patch[@"开镜动态圈"] = @YES;
+                patch[@"自瞄速度"] = @20;
+                patch[@"自瞄大小"] = @150;
+                patch[@"开镜自瞄范围"] = @80;
+                patch[@"内圈大小"] = @0;
+                patch[@"吸附曲线"] = @NO;
+            }
+            JVR_合并写Prefs(patch);
+            refreshFeatureSwitches();
+            KernelLogLine(idx == 1 ? "快捷自瞄 = 软锁配置" : "快捷自瞄 = 软锁转硬锁配置");
+        }
+        kfd_log("[UI] quickAimPreset=%ld\n", (long)idx);
+    };
+    [stack addArrangedSubview:quickAimRow];
     
     NSArray *configs = @[
         @{@"title": @"显示人数", @"key": @"count"},
@@ -1729,6 +1993,7 @@ static void JVR_保存KernelExploit(NSString *ident) {
             kfd_log("[UI] 开关 %s = %d\n", [cfg[@"key"] UTF8String], (int)on);
             KernelLogLine([[NSString stringWithFormat:@"开关 %@ = %@", cfg[@"key"], on ? @"开" : @"关"] UTF8String]);
         };
+        [_featureSwitches addObject:sw];
         [stack addArrangedSubview:sw];
     }
 
