@@ -11,6 +11,7 @@ ENTITLEMENTS_PATH="${PROJECT_DIR}/supports/entitlements.plist"
 OUTPUT_DIR="${HOME}/Desktop/ipa"
 SHELL_ENTITLEMENTS_PATH="${PROJECT_DIR}/supports/entitlements-shell.plist"
 FULL_ENTITLEMENTS_PATH="${PROJECT_DIR}/supports/entitlements.plist"
+IOS15_ENTITLEMENTS_PATH="${PROJECT_DIR}/supports/entitlements-ios15.plist"
 
 echo "[Pack IPA] start"
 echo "[Pack IPA] PROJECT_DIR=${PROJECT_DIR}"
@@ -83,10 +84,14 @@ if [ ! -f "${EXECUTABLE_PATH}" ]; then
   exit 1
 fi
 
-# 选择 entitlements：STEP4 用正式权限；STEP2/3/SHELL 仍用空壳
+HAS_STEP4B=0
 HAS_STEP4=0
 HAS_KEEP_DYLIB=0
 HAS_STRIP_SHELL=0
+if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -q 'STEP4B-SAFE-ENT'; then
+  HAS_STEP4B=1
+  HAS_KEEP_DYLIB=1
+fi
 if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -q 'STEP4-FULL-ENT'; then
   HAS_STEP4=1
   HAS_KEEP_DYLIB=1
@@ -95,14 +100,17 @@ if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'STEP3-DLOPEN-JB'; then
   HAS_KEEP_DYLIB=1
 fi
 if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'STEP2-UI-LIGHT|STEP2-UI-ONLY|SHELL3-NO-DYLIB|SHELL4-MIN-ENT|SHELL5-NOPCH'; then
-  if [ "$HAS_STEP4" != "1" ] && [ "$HAS_KEEP_DYLIB" != "1" ]; then
-    HAS_STRIP_SHELL=1
-  elif [ "$HAS_STEP4" != "1" ] && ! strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'STEP3-DLOPEN-JB|STEP4-FULL-ENT'; then
+  if [ "$HAS_STEP4B" != "1" ] && [ "$HAS_STEP4" != "1" ] && [ "$HAS_KEEP_DYLIB" != "1" ]; then
     HAS_STRIP_SHELL=1
   fi
 fi
 
-if [ "$HAS_STEP4" = "1" ]; then
+if [ "$HAS_STEP4B" = "1" ]; then
+  if [ -f "${IOS15_ENTITLEMENTS_PATH}" ]; then
+    ENTITLEMENTS_PATH="${IOS15_ENTITLEMENTS_PATH}"
+    echo "[Pack IPA] STEP4B — using entitlements-ios15.plist (no banned keys)"
+  fi
+elif [ "$HAS_STEP4" = "1" ]; then
   if [ -f "${FULL_ENTITLEMENTS_PATH}" ]; then
     ENTITLEMENTS_PATH="${FULL_ENTITLEMENTS_PATH}"
     echo "[Pack IPA] STEP4 — using entitlements.plist (full)"
@@ -119,7 +127,9 @@ if [ "$HAS_STRIP_SHELL" = "1" ]; then
   find "${COPIED_APP}" -name '*.dylib' -type f -print -delete 2>/dev/null || true
   find "${COPIED_APP}/Frameworks" -name '*.dylib' -type f -print -delete 2>/dev/null || true
 else
-  if [ "$HAS_STEP4" = "1" ]; then
+  if [ "$HAS_STEP4B" = "1" ]; then
+    echo "[Pack IPA] STEP4B marker — keep/rename dylibs + ios15-safe entitlements"
+  elif [ "$HAS_STEP4" = "1" ]; then
     echo "[Pack IPA] STEP4 marker — keep/rename embedded dylibs + full entitlements"
   elif [ "$HAS_KEEP_DYLIB" = "1" ]; then
     echo "[Pack IPA] STEP3 marker — keep/rename embedded dylibs for deferred dlopen"

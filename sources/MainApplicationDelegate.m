@@ -1,12 +1,12 @@
 //
-//  MainApplicationDelegate.m — 验收④：正式 entitlements + 轻量 UI + 延后 dlopen
+//  MainApplicationDelegate.m — 验收④B：去掉 iOS15 禁用权限，保留 HUD/HID
 //
 
 #import "MainApplicationDelegate.h"
 #import "Step2BusinessViewController.h"
 
 __attribute__((used)) static const char kDrawFpsSegMarker[] = "DRAWFPS_SEG_V1";
-__attribute__((used)) static const char kStep4Marker[] = "STEP4-FULL-ENT";
+__attribute__((used)) static const char kStep4bMarker[] = "STEP4B-SAFE-ENT";
 
 @implementation MainApplicationDelegate
 
@@ -15,7 +15,7 @@ __attribute__((used)) static const char kStep4Marker[] = "STEP4-FULL-ENT";
   (void)application;
   (void)launchOptions;
   volatile const char *keepFps = kDrawFpsSegMarker;
-  volatile const char *keepStep = kStep4Marker;
+  volatile const char *keepStep = kStep4bMarker;
   (void)keepFps[0];
   (void)keepStep[0];
 
@@ -44,7 +44,7 @@ __attribute__((used)) static const char kStep4Marker[] = "STEP4-FULL-ENT";
   dispatch_async(dispatch_get_main_queue(), ^{
     __strong typeof(weakSelf) strongSelf = weakSelf;
     if (!strongSelf) return;
-    // 验收④：轻量面板 + 延后 dlopen；本步只换正式 entitlements
+    // 验收④B：轻量面板 + 延后 dlopen；本步只用 iOS15 安全 entitlements
     strongSelf.window.rootViewController = [[Step2BusinessViewController alloc] init];
   });
   return YES;

@@ -1,6 +1,6 @@
 //
 //  Step2BusinessViewController.m
-//  验收④：轻量面板 + 延后 dlopen；本步验证正式 entitlements 不秒退
+//  验收④B：验证去掉 skip-library-validation / run-unsigned-code 后可亮
 //
 
 #import "Step2BusinessViewController.h"
@@ -23,7 +23,7 @@
 
   UILabel *title = [[UILabel alloc] init];
   title.translatesAutoresizingMaskIntoConstraints = NO;
-  title.text = @"STEP4-FULL-ENT";
+  title.text = @"STEP4B-SAFE-ENT";
   title.textColor = [UIColor colorWithRed:200.0f / 255.0f
                                     green:120.0f / 255.0f
                                      blue:255.0f / 255.0f
@@ -33,7 +33,7 @@
 
   UILabel *hint = [[UILabel alloc] init];
   hint.translatesAutoresizingMaskIntoConstraints = NO;
-  hint.text = @"正式 entitlements.plist（含 HUD/HID 私有权限）\n轻量 UI + 延后 dlopen，仍不链 BBZView/PhysX\n能看见本页 = 验收④通过";
+  hint.text = @"iOS15 安全 entitlements（已去掉禁用键）\n去掉 skip-library-validation / run-unsigned-code\n保留 HUD/HID；仍不链 BBZView/PhysX\n能看见本页 = 验收④B通过";
   hint.textColor = [UIColor colorWithWhite:0.78f alpha:1.0f];
   hint.font = [UIFont systemFontOfSize:14.0f weight:UIFontWeightMedium];
   hint.textAlignment = NSTextAlignmentCenter;
@@ -87,7 +87,7 @@
 
   [NSLayoutConstraint activateConstraints:@[
     [title.centerXAnchor constraintEqualToAnchor:self.view.centerXAnchor],
-    [title.centerYAnchor constraintEqualToAnchor:self.view.centerYAnchor constant:-96],
+    [title.centerYAnchor constraintEqualToAnchor:self.view.centerYAnchor constant:-110],
     [hint.centerXAnchor constraintEqualToAnchor:self.view.centerXAnchor],
     [hint.topAnchor constraintEqualToAnchor:title.bottomAnchor constant:12],
     [hint.leadingAnchor constraintGreaterThanOrEqualToAnchor:self.view.leadingAnchor constant:24],
@@ -120,11 +120,11 @@
     if (!strongSelf) return;
     BOOL ok = JBEnsureJailbreakDylibsLoaded();
     if (ok) {
-      strongSelf.statusLabel.text = @"正式权限 + dlopen 成功（验收④通过）";
+      strongSelf.statusLabel.text = @"安全权限 + dlopen 成功（验收④B通过）";
       strongSelf.statusLabel.textColor =
           [UIColor colorWithRed:120.0f / 255.0f green:220.0f / 255.0f blue:160.0f / 255.0f alpha:1.0f];
     } else {
-      strongSelf.statusLabel.text = @"正式权限已启用，但 dlopen 失败";
+      strongSelf.statusLabel.text = @"安全权限已启用，但 dlopen 失败";
       strongSelf.statusLabel.textColor =
           [UIColor colorWithRed:255.0f / 255.0f green:120.0f / 255.0f blue:120.0f / 255.0f alpha:1.0f];
     }
@@ -134,7 +134,7 @@
 - (void)onPlaceholderTap:(UIButton *)sender {
   NSString *name = sender.currentTitle ?: @"操作";
   UIAlertController *alert = [UIAlertController
-      alertControllerWithTitle:@"验收④"
+      alertControllerWithTitle:@"验收④B"
                        message:[NSString stringWithFormat:@"「%@」仅为 UI 占位，未调用 PhysX/BBZView。", name]
                 preferredStyle:UIAlertControllerStyleAlert];
   [alert addAction:[UIAlertAction actionWithTitle:@"好" style:UIAlertActionStyleDefault handler:nil]];

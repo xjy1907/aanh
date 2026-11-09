@@ -1,6 +1,6 @@
 //
 //  Step2BusinessViewController.h
-//  验收④：轻量业务 UI + 延后 dlopen + 正式 entitlements（不链 BBZView/PhysX）
+//  验收④B：轻量 UI + 延后 dlopen + iOS15 安全 entitlements（去掉禁用键）
 //
 
 #import <UIKit/UIKit.h>
