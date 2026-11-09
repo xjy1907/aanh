@@ -1,12 +1,12 @@
 //
-//  MainApplicationDelegate.m — 验收⑥：XPF/jbclient 实调，仍延后 dlopen
+//  MainApplicationDelegate.m — 验收⑦：可读 kernelcache + XPF
 //
 
 #import "MainApplicationDelegate.h"
 #import "Step2BusinessViewController.h"
 
 __attribute__((used)) static const char kDrawFpsSegMarker[] = "DRAWFPS_SEG_V1";
-__attribute__((used)) static const char kStep6Marker[] = "STEP6-XPF-RUN";
+__attribute__((used)) static const char kStep7Marker[] = "STEP7-KERNELCACHE";
 
 @implementation MainApplicationDelegate
 
@@ -15,7 +15,7 @@ __attribute__((used)) static const char kStep6Marker[] = "STEP6-XPF-RUN";
   (void)application;
   (void)launchOptions;
   volatile const char *keepFps = kDrawFpsSegMarker;
-  volatile const char *keepStep = kStep6Marker;
+  volatile const char *keepStep = kStep7Marker;
   (void)keepFps[0];
   (void)keepStep[0];
 

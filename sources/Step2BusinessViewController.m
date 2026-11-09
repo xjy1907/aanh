@@ -1,10 +1,11 @@
 //
 //  Step2BusinessViewController.m
-//  验收⑥：正确符号探测 + xpf_start_with_kernel_path / jbclient 实调
+//  验收⑦：用 Dopamine 方式拿可读 kernelcache，再调 XPF
 //
 
 #import "Step2BusinessViewController.h"
 #import "JBDylibLoader.h"
+#import "KernelcacheLocator.h"
 #import <dlfcn.h>
 
 typedef int (*XpfStartFn)(const char *kernelPath);
@@ -47,20 +48,6 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
   return p;
 }
 
-- (NSString *)kernelcachePath {
-  NSArray<NSString *> *candidates = @[
-    @"/System/Library/Caches/com.apple.kernelcaches/kernelcache",
-    @"/System/Library/Caches/com.apple.kernelcaches/kernelcache.research",
-  ];
-  NSFileManager *fm = [NSFileManager defaultManager];
-  for (NSString *path in candidates) {
-    if ([fm fileExistsAtPath:path]) {
-      return path;
-    }
-  }
-  return candidates.firstObject;
-}
-
 - (void)viewDidLoad {
   [super viewDidLoad];
 
@@ -93,7 +80,7 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
 
   UILabel *title = [[UILabel alloc] init];
   title.translatesAutoresizingMaskIntoConstraints = NO;
-  title.text = @"STEP6-XPF-RUN";
+  title.text = @"STEP7-KERNELCACHE";
   title.textColor = [UIColor colorWithRed:200.0f / 255.0f
                                     green:120.0f / 255.0f
                                      blue:255.0f / 255.0f
@@ -103,7 +90,7 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
 
   UILabel *hint = [[UILabel alloc] init];
   hint.translatesAutoresizingMaskIntoConstraints = NO;
-  hint.text = @"修正符号名并真正调用 XPF/jbclient\n（xpf_start_with_kernel_path）\n仍不链 BBZView/PhysX/DOJailbreaker\n能看见本页 = 验收⑥亮窗通过";
+  hint.text = @"对齐 Dopamine 取可读 kernelcache\npreboot/可读检测/grab 下载回退\n仍不链 BBZView/PhysX/DOJailbreaker\n能看见本页 = 验收⑦亮窗通过";
   hint.textColor = [UIColor colorWithWhite:0.78f alpha:1.0f];
   hint.font = [UIFont systemFontOfSize:13.0f weight:UIFontWeightMedium];
   hint.textAlignment = NSTextAlignmentCenter;
@@ -207,7 +194,7 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
     [logView.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor constant:-16],
   ]];
 
-  [self appendLog:@"STEP6 面板已加载（未链 BBZView/PhysX）"];
+  [self appendLog:@"STEP7 面板已加载（未链 BBZView/PhysX）"];
 }
 
 - (NSInteger)probeJailbreakSymbols {
@@ -281,11 +268,20 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
     return;
   }
 
-  NSString *path = [self kernelcachePath];
-  BOOL exists = [[NSFileManager defaultManager] fileExistsAtPath:path];
-  [self appendLog:[NSString stringWithFormat:@"kernelcache=%@ exists=%d", path, exists ? 1 : 0]];
+  __weak typeof(self) weakSelf = self;
+  NSString *path = [KernelcacheLocator accessibleKernelPathWithLog:^(NSString *line) {
+    __strong typeof(weakSelf) strongSelf = weakSelf;
+    [strongSelf appendLog:line];
+  }];
+  if (!path) {
+    self.statusLabel.text = @"无可用 kernelcache（见日志）";
+    self.statusLabel.textColor =
+        [UIColor colorWithRed:255.0f / 255.0f green:120.0f / 255.0f blue:120.0f / 255.0f alpha:1.0f];
+    [self appendLog:@"验收⑦：未能拿到可读 kernelcache"];
+    return;
+  }
+  [self appendLog:[NSString stringWithFormat:@"最终 kernelcache=%@", path]];
 
-  // 若上次已 start，先 stop 再开
   if (self.xpfStarted && stopFn) {
     stopFn();
     self.xpfStarted = NO;
@@ -299,10 +295,10 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
 
   if (rc == 0) {
     self.xpfStarted = YES;
-    self.statusLabel.text = @"XPF 启动成功（验收⑥）";
+    self.statusLabel.text = @"可读核 + XPF 成功（验收⑦）";
     self.statusLabel.textColor =
         [UIColor colorWithRed:120.0f / 255.0f green:220.0f / 255.0f blue:160.0f / 255.0f alpha:1.0f];
-    [self appendLog:@"验收⑥：XPF 实调通过（未跑 exploit）"];
+    [self appendLog:@"验收⑦：kernelcache 可读且 XPF 启动成功"];
   } else {
     self.statusLabel.text = @"XPF 启动失败（见日志）";
     self.statusLabel.textColor =

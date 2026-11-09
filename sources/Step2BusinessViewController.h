@@ -1,6 +1,6 @@
 //
 //  Step2BusinessViewController.h
-//  验收⑥：修正符号并真正调用 XPF / jbclient（仍不链 BBZView/PhysX）
+//  验收⑦：可读 kernelcache 定位 + XPF（不链 BBZView/PhysX）
 //
 
 #import <UIKit/UIKit.h>
