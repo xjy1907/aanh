@@ -1687,6 +1687,7 @@
 				A1STEP12M11F508F1500FD4A /* MaterialConfigViewController.mm in Sources */,
 				A1STEP12I11F508F1500FD4A /* ItemConfig.mm in Sources */,
 				A1STEP13D11F508F1500FD4A /* Step13DrawSurface.m in Sources */,
+				0F177A7F2F586AAC005AB832 /* 过直播窗口.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2487,7 +2488,7 @@
 					"-lz",
 					"-lcompression",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step13ds;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step14lc;
 				PRODUCT_MODULE_NAME = Books;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -2574,7 +2575,7 @@
 					"-lz",
 					"-lcompression",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step13ds;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step14lc;
 				PRODUCT_MODULE_NAME = Books;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

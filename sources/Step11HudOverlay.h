@@ -1,6 +1,6 @@
 //
 //  Step11HudOverlay.h
-//  验收⑪：进程内 HUD 叠层宿主；不 spawn 子进程、不链 DrawView/PhysX
+//  验收⑭：进程内 HUD + 过直播安全链宿主；不 spawn 子进程、不链 DrawView/PhysX
 //
 
 #import <Foundation/Foundation.h>

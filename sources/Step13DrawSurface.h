@@ -1,6 +1,6 @@
 //
 //  Step13DrawSurface.h
-//  验收⑬：HUD 叠层内轻量绘制面（十字/框/FPS）；不链 DrawView.mm / PhysX
+//  验收⑭：轻量绘制面（十字/框/FPS），由过直播宿主挂载；不链 DrawView.mm / PhysX
 //
 
 #import <UIKit/UIKit.h>

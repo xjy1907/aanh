@@ -1,5 +1,5 @@
 //
-//  MainApplicationDelegate.m — 验收⑬：HUD 叠层轻量绘制面
+//  MainApplicationDelegate.m — 验收⑭：过直播安全链 + 轻量绘制面
 //
 
 #import "MainApplicationDelegate.h"
@@ -7,6 +7,7 @@
 
 __attribute__((used)) static const char kDrawFpsSegMarker[] = "DRAWFPS_SEG_V1";
 __attribute__((used)) static const char kStep13Marker[] = "STEP13-DRAWSURF";
+__attribute__((used)) static const char kStep14Marker[] = "STEP14-LIVECOVER";
 
 @implementation MainApplicationDelegate
 
@@ -15,9 +16,11 @@ __attribute__((used)) static const char kStep13Marker[] = "STEP13-DRAWSURF";
   (void)application;
   (void)launchOptions;
   volatile const char *keepFps = kDrawFpsSegMarker;
-  volatile const char *keepStep = kStep13Marker;
+  volatile const char *keepStep13 = kStep13Marker;
+  volatile const char *keepStep14 = kStep14Marker;
   (void)keepFps[0];
-  (void)keepStep[0];
+  (void)keepStep13[0];
+  (void)keepStep14[0];
 
   self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
   UIViewController *boot = [[UIViewController alloc] init];

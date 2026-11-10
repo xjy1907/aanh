@@ -95,7 +95,7 @@ __attribute__((used)) static const char kStep13Marker[] = "STEP13-DRAWSURF";
   CGContextStrokeRect(ctx, box);
 
   // 角标文字
-  NSString *title = [NSString stringWithFormat:@"STEP13-DRAWSURF  fps=%.0f", self.fps];
+  NSString *title = [NSString stringWithFormat:@"STEP14-LIVECOVER  fps=%.0f", self.fps];
   NSDictionary *attrs = @{
     NSFontAttributeName : [UIFont monospacedSystemFontOfSize:11.0f weight:UIFontWeightBold],
     NSForegroundColorAttributeName : [UIColor colorWithRed:0.6f green:1.0f blue:0.7f alpha:1.0f],
@@ -104,7 +104,7 @@ __attribute__((used)) static const char kStep13Marker[] = "STEP13-DRAWSURF";
   [title drawAtPoint:CGPointMake(16.0f, self.safeAreaInsets.top + 56.0f) withAttributes:attrs];
   (void)sz;
 
-  NSString *sub = @"轻量绘制面（未链 DrawView.mm / PhysX）";
+  NSString *sub = @"过直播宿主 + 轻量绘制面（未链 DrawView.mm / PhysX）";
   NSDictionary *subAttrs = @{
     NSFontAttributeName : [UIFont systemFontOfSize:10.0f weight:UIFontWeightMedium],
     NSForegroundColorAttributeName : [UIColor colorWithWhite:0.85f alpha:0.9f],

@@ -89,7 +89,7 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
 
   UILabel *title = [[UILabel alloc] init];
   title.translatesAutoresizingMaskIntoConstraints = NO;
-  title.text = @"STEP13-DRAWSURF";
+  title.text = @"STEP14-LIVECOVER";
   title.textColor = [UIColor colorWithRed:200.0f / 255.0f
                                     green:120.0f / 255.0f
                                      blue:255.0f / 255.0f
@@ -99,7 +99,7 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
 
   UILabel *hint = [[UILabel alloc] init];
   hint.translatesAutoresizingMaskIntoConstraints = NO;
-  hint.text = @"⑫已过：BBZ 真实设置页可进\n⑬：HUD 叠层轻量绘制面（准星/框/FPS）\n仍不链 DrawView.mm / PhysX\n能看见本页 = 验收⑬亮窗通过";
+  hint.text = @"⑬已过：HUD 轻量绘制面\n⑭：过直播安全宿主挂载绘制面\n仍不链 DrawView.mm / PhysX\n能看见本页 = 验收⑭亮窗通过";
   hint.textColor = [UIColor colorWithWhite:0.78f alpha:1.0f];
   hint.font = [UIFont systemFontOfSize:13.0f weight:UIFontWeightMedium];
   hint.textAlignment = NSTextAlignmentCenter;
@@ -145,7 +145,7 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
 
   UIButton *abPanelBtn = [UIButton buttonWithType:UIButtonTypeSystem];
   abPanelBtn.translatesAutoresizingMaskIntoConstraints = NO;
-  [abPanelBtn setTitle:@"挂载 AB/绘制面板（⑬）" forState:UIControlStateNormal];
+  [abPanelBtn setTitle:@"挂载 AB/绘制面板（⑭）" forState:UIControlStateNormal];
   [abPanelBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
   abPanelBtn.backgroundColor = [UIColor colorWithRed:100.0f / 255.0f
                                                 green:200.0f / 255.0f
@@ -222,7 +222,7 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
     [logView.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor constant:-16],
   ]];
 
-  [self appendLog:@"STEP13 面板已加载（未链 DrawView.mm / PhysX）"];
+  [self appendLog:@"STEP14 面板已加载（过直播宿主，未链 DrawView.mm / PhysX）"];
 }
 
 - (NSInteger)probeJailbreakSymbols {
@@ -473,10 +473,10 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
 
   self.kreadOK = ok;
   if (ok) {
-    self.statusLabel.text = @"kread 成功，可挂 AB/绘制面板（⑬）";
+    self.statusLabel.text = @"kread 成功，可挂 AB/绘制面板（⑭）";
     self.statusLabel.textColor =
         [UIColor colorWithRed:120.0f / 255.0f green:220.0f / 255.0f blue:160.0f / 255.0f alpha:1.0f];
-    [self appendLog:@"下一步点「挂载 AB/绘制面板（⑬）」开 HUD 绘制面"];
+    [self appendLog:@"下一步点「挂载 AB/绘制面板（⑭）」开过直播绘制面"];
   } else {
     self.statusLabel.text = @"kread 探针失败（见日志）";
     self.statusLabel.textColor =
@@ -485,15 +485,15 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
 }
 
 - (void)onMountABPanel {
-  [self appendLog:@"点击：挂载 AB/绘制面板（验收⑬）"];
+  [self appendLog:@"点击：挂载 AB/绘制面板（验收⑭）"];
   if (!self.kreadOK) {
     [self appendLog:@"提示：建议先跑通 kread；仍允许挂载以验收绘制面"];
   }
   Step10ABPanelViewController *panel = [[Step10ABPanelViewController alloc] init];
   panel.modalPresentationStyle = UIModalPresentationFullScreen;
   [self presentViewController:panel animated:YES completion:^{
-    [self appendLog:@"验收⑬：面板已 present；请点「开启 HUD 叠层」看准星/框"];
-    self.statusLabel.text = @"AB/绘制面板已挂载（验收⑬）";
+    [self appendLog:@"验收⑭：面板已 present；请点「开启 HUD 叠层」看过直播+准星/框"];
+    self.statusLabel.text = @"AB/绘制面板已挂载（验收⑭）";
     self.statusLabel.textColor =
         [UIColor colorWithRed:120.0f / 255.0f green:220.0f / 255.0f blue:160.0f / 255.0f alpha:1.0f];
   }];

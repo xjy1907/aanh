@@ -1,16 +1,19 @@
 //
 //  Step11HudOverlay.m
-//  验收⑬：叠层宿主 + 轻量绘制面
+//  验收⑭：叠层宿主 + 过直播安全 TextField 链 + 轻量绘制面
 //
 
 #import "Step11HudOverlay.h"
 #import "Step13DrawSurface.h"
+#import "过直播窗口.h"
 
 __attribute__((used)) static const char kStep11HudMarker[] = "STEP11-HUDHOST";
+__attribute__((used)) static const char kStep14LiveCoverMarker[] = "STEP14-LIVECOVER";
 
 @interface Step11HudOverlay ()
 @property(nonatomic, strong) UIWindow *overlayWindow;
 @property(nonatomic, strong) UILabel *bannerLabel;
+@property(nonatomic, strong) 过直播窗口 *liveCover;
 @property(nonatomic, strong) Step13DrawSurface *drawSurface;
 @property(nonatomic, assign, readwrite, getter=isVisible) BOOL visible;
 @end
@@ -22,8 +25,10 @@ __attribute__((used)) static const char kStep11HudMarker[] = "STEP11-HUDHOST";
   static dispatch_once_t once;
   dispatch_once(&once, ^{
     inst = [[Step11HudOverlay alloc] init];
-    volatile const char *keep = kStep11HudMarker;
-    (void)keep[0];
+    volatile const char *keep11 = kStep11HudMarker;
+    volatile const char *keep14 = kStep14LiveCoverMarker;
+    (void)keep11[0];
+    (void)keep14[0];
   });
   return inst;
 }
@@ -43,9 +48,16 @@ __attribute__((used)) static const char kStep11HudMarker[] = "STEP11-HUDHOST";
   UIViewController *root = [[UIViewController alloc] init];
   root.view.backgroundColor = [UIColor clearColor];
 
+  过直播窗口 *cover = [[过直播窗口 alloc] initWithFrame:bounds];
+  cover.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+  [root.view addSubview:cover];
+  self.liveCover = cover;
+
   Step13DrawSurface *surface = [[Step13DrawSurface alloc] initWithFrame:bounds];
   surface.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-  [root.view addSubview:surface];
+  [cover attachDrawView:surface];
+  // secureTextEntry=YES：走 wasd 过直播链；切换后会重建 canvas 并重挂 drawHost
+  [cover setLiveHidden:YES];
   self.drawSurface = surface;
 
   UIView *banner = [[UIView alloc] init];
@@ -68,7 +80,7 @@ __attribute__((used)) static const char kStep11HudMarker[] = "STEP11-HUDHOST";
   label.font = [UIFont monospacedSystemFontOfSize:12.0f weight:UIFontWeightSemibold];
   label.numberOfLines = 2;
   label.textAlignment = NSTextAlignmentCenter;
-  label.text = @"STEP13-DRAWSURF";
+  label.text = @"STEP14-LIVECOVER";
   self.bannerLabel = label;
 
   [banner addSubview:label];
@@ -94,13 +106,15 @@ __attribute__((used)) static const char kStep11HudMarker[] = "STEP11-HUDHOST";
     [self ensureWindow];
     if (detail.length > 0) {
       self.bannerLabel.text =
-          [NSString stringWithFormat:@"STEP13-DRAWSURF\n%@", detail];
+          [NSString stringWithFormat:@"STEP14-LIVECOVER\n%@", detail];
     } else {
-      self.bannerLabel.text = @"STEP13-DRAWSURF\n轻量绘制面（无 DrawView.mm/PhysX）";
+      self.bannerLabel.text = @"STEP14-LIVECOVER\n过直播宿主 + 轻量绘制面（无 DrawView.mm/PhysX）";
     }
     self.visible = visible;
     self.overlayWindow.hidden = !visible;
     if (visible) {
+      // 再确保 secure 链与 attach 仍在（部分系统会在显示时重建）
+      [self.liveCover setLiveHidden:YES];
       [self.drawSurface startAnimating];
       [self.overlayWindow makeKeyAndVisible];
       UIWindow *appKey = UIApplication.sharedApplication.windows.firstObject;
@@ -128,7 +142,7 @@ __attribute__((used)) static const char kStep11HudMarker[] = "STEP11-HUDHOST";
       return;
     }
     self.bannerLabel.text =
-        [NSString stringWithFormat:@"STEP13-DRAWSURF\n%@", detail ?: @""];
+        [NSString stringWithFormat:@"STEP14-LIVECOVER\n%@", detail ?: @""];
   };
   if ([NSThread isMainThread]) {
     work();
