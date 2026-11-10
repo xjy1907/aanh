@@ -16,6 +16,7 @@
 		A1STEP12S11F508F1500FD4A /* Step12BBZSettingsHost.m in Sources */ = {isa = PBXBuildFile; fileRef = A1STEP12S12F508F1500FD4A /* Step12BBZSettingsHost.m */; };
 		A1STEP12L11F508F1500FD4A /* Step12LFSenderIDStub.m in Sources */ = {isa = PBXBuildFile; fileRef = A1STEP12L12F508F1500FD4A /* Step12LFSenderIDStub.m */; };
 		A1STEP13D11F508F1500FD4A /* Step13DrawSurface.m in Sources */ = {isa = PBXBuildFile; fileRef = A1STEP13D12F508F1500FD4A /* Step13DrawSurface.m */; };
+		A1STEP15M11F508F1500FD4A /* Step15MetalSurface.m in Sources */ = {isa = PBXBuildFile; fileRef = A1STEP15M12F508F1500FD4A /* Step15MetalSurface.m */; };
 		A1STEP12A11F508F1500FD4A /* AimConfigViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = A1M001CFG000000000000002 /* AimConfigViewController.mm */; };
 		A1STEP12H11F508F1500FD4A /* AimHumanizeConfigViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = A1M001HUM000000000000002 /* AimHumanizeConfigViewController.mm */; };
 		A1STEP12B11F508F1500FD4A /* AimBezierConfigViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = A1M001BEZ000000000000002 /* AimBezierConfigViewController.mm */; };
@@ -300,6 +301,8 @@
 		A1STEP12L12F508F1500FD4A /* Step12LFSenderIDStub.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Step12LFSenderIDStub.m; sourceTree = "<group>"; };
 		A1STEP13D12F508F1500FD4A /* Step13DrawSurface.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Step13DrawSurface.m; sourceTree = "<group>"; };
 		A1STEP13D13F508F1500FD4A /* Step13DrawSurface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Step13DrawSurface.h; sourceTree = "<group>"; };
+		A1STEP15M12F508F1500FD4A /* Step15MetalSurface.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Step15MetalSurface.m; sourceTree = "<group>"; };
+		A1STEP15M13F508F1500FD4A /* Step15MetalSurface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Step15MetalSurface.h; sourceTree = "<group>"; };
 		A1M001CFG000000000000001 /* AimConfigViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AimConfigViewController.h; sourceTree = "<group>"; };
 		A1M001CFG000000000000002 /* AimConfigViewController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = AimConfigViewController.mm; sourceTree = "<group>"; };
 		A1M001HUM000000000000001 /* AimHumanizeConfigViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AimHumanizeConfigViewController.h; sourceTree = "<group>"; };
@@ -654,6 +657,8 @@
 				A1CG001F508F1500FD4AFC /* CoreGraphics.framework in Frameworks */,
 				A1CI001F508F1500FD4AFC /* CoreImage.framework in Frameworks */,
 				A1QC001F508F1500FD4AFC /* QuartzCore.framework in Frameworks */,
+				1F0BD9182D6DB7AA008151DA /* Metal.framework in Frameworks */,
+				1F0BD91A2D6DB7B9008151DA /* MetalKit.framework in Frameworks */,
 				A1IOKITB01F508F1500FD4A /* IOKit.framework in Frameworks */,
 				A1GRABKB01F508F1500FD4A /* libgrabkernel2.a in Frameworks */,
 				A1PARTB01F508F1500FD4A /* libpartial.a in Frameworks */,
@@ -1029,6 +1034,8 @@
 				A1STEP12L12F508F1500FD4A /* Step12LFSenderIDStub.m */,
 				A1STEP13D13F508F1500FD4A /* Step13DrawSurface.h */,
 				A1STEP13D12F508F1500FD4A /* Step13DrawSurface.m */,
+				A1STEP15M13F508F1500FD4A /* Step15MetalSurface.h */,
+				A1STEP15M12F508F1500FD4A /* Step15MetalSurface.m */,
 				CC711D492B5BF5C6007235A6 /* MainButton.h */,
 				CC711D2E2B5BF5C6007235A6 /* MainButton.mm */,
 				CC711D232B5BF5C6007235A6 /* TSEventFetcher.h */,
@@ -1687,6 +1694,7 @@
 				A1STEP12M11F508F1500FD4A /* MaterialConfigViewController.mm in Sources */,
 				A1STEP12I11F508F1500FD4A /* ItemConfig.mm in Sources */,
 				A1STEP13D11F508F1500FD4A /* Step13DrawSurface.m in Sources */,
+				A1STEP15M11F508F1500FD4A /* Step15MetalSurface.m in Sources */,
 				0F177A7F2F586AAC005AB832 /* 过直播窗口.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2484,11 +2492,15 @@
 					"-framework",
 					"QuartzCore",
 					"-framework",
+					"Metal",
+					"-framework",
+					"MetalKit",
+					"-framework",
 					"IOKit",
 					"-lz",
 					"-lcompression",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step14lc;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step15mt;
 				PRODUCT_MODULE_NAME = Books;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -2571,11 +2583,15 @@
 					"-framework",
 					"QuartzCore",
 					"-framework",
+					"Metal",
+					"-framework",
+					"MetalKit",
+					"-framework",
 					"IOKit",
 					"-lz",
 					"-lcompression",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step14lc;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step15mt;
 				PRODUCT_MODULE_NAME = Books;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

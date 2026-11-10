@@ -60,12 +60,12 @@
 
 - (NSString *)hudDetailText {
   if (self.reading) {
-    return @"reading=1 · 过直播绘制面";
+    return @"reading=1 · Metal 绘制面";
   }
   if (self.kernelReady) {
-    return @"kread OK · 过直播绘制面";
+    return @"kread OK · Metal 绘制面";
   }
-  return @"过直播宿主 + 轻量绘制面（无 DrawView.mm/PhysX）";
+  return @"过直播 + Metal/MTKView（无 DrawView.mm/PhysX/ImGui）";
 }
 
 - (void)viewDidLoad {
@@ -78,7 +78,7 @@
 
   UILabel *title = [[UILabel alloc] init];
   title.translatesAutoresizingMaskIntoConstraints = NO;
-  title.text = @"STEP14-过直播面板";
+  title.text = @"STEP15-Metal 面板";
   title.textColor = [UIColor colorWithRed:200.0f / 255.0f
                                     green:120.0f / 255.0f
                                      blue:255.0f / 255.0f
@@ -88,7 +88,7 @@
 
   UILabel *hint = [[UILabel alloc] init];
   hint.translatesAutoresizingMaskIntoConstraints = NO;
-  hint.text = @"⑬已过：轻量准星/框/FPS\n⑭：开启 HUD 应走 过直播 安全链\n仍不链 DrawView.mm / PhysX\n点「开启 HUD 叠层」= 验收⑭";
+  hint.text = @"⑭已过：过直播安全链\n⑮：开启 HUD 应见 Metal/MTKView 面\n仍不链 DrawView.mm / PhysX / ImGui\n点「开启 HUD 叠层」= 验收⑮";
   hint.textColor = [UIColor colorWithWhite:0.78f alpha:1.0f];
   hint.font = [UIFont systemFontOfSize:13.0f weight:UIFontWeightMedium];
   hint.textAlignment = NSTextAlignmentCenter;
@@ -137,7 +137,7 @@
                                                       alpha:0.30f]
                                action:@selector(onOpenBBZSettings)];
 
-  UIButton *backBtn = [self makeButton:@"返回 STEP14 诊断页"
+  UIButton *backBtn = [self makeButton:@"返回 STEP15 诊断页"
                                  color:[UIColor colorWithWhite:0.25f alpha:0.9f]
                                 action:@selector(onBack)];
 
@@ -219,8 +219,8 @@
 
   [self refreshReadButtonTitle];
   [self refreshHudButtonTitle];
-  [self appendLog:@"STEP14 面板已挂载（过直播宿主，未链 DrawView.mm / PhysX）"];
-  [self appendLog:@"验收⑭：点「开启 HUD 叠层」应出现 STEP14-LIVECOVER + 准星/框"];
+  [self appendLog:@"STEP15 面板已挂载（过直播+Metal，未链 DrawView.mm / PhysX / ImGui）"];
+  [self appendLog:@"验收⑮：点「开启 HUD 叠层」应出现 STEP15-METAL + 准星/框"];
 }
 
 - (void)onInitKernel {
@@ -292,7 +292,7 @@
       self.hudOn = YES;
       [self refreshHudButtonTitle];
       [[Step11HudOverlay shared] setVisible:YES detail:[self hudDetailText]];
-      [self appendLog:@"auto HUD 叠层=ON（验收⑭）"];
+      [self appendLog:@"auto HUD 叠层=ON（验收⑮）"];
     } else {
       [[Step11HudOverlay shared] updateDetail:[self hudDetailText]];
     }
@@ -315,8 +315,8 @@
   [self refreshHudButtonTitle];
   if (self.hudOn) {
     [[Step11HudOverlay shared] setVisible:YES detail:[self hudDetailText]];
-    [self appendLog:@"HUD 叠层开启（过直播+准星/框/FPS，验收⑭）"];
-    self.statusLabel.text = @"过直播绘制面=ON（验收⑭）";
+    [self appendLog:@"HUD 叠层开启（过直播+Metal，验收⑮）"];
+    self.statusLabel.text = @"Metal 绘制面=ON（验收⑮）";
   } else {
     [[Step11HudOverlay shared] setVisible:NO detail:nil];
     [self appendLog:@"HUD 叠层关闭"];

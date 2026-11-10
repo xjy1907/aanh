@@ -1330,9 +1330,13 @@ jobs:
               IS_STEP10=0
               IS_STEP11=0
               IS_STEP12=0
+              IS_STEP15=0
               IS_STEP14=0
               IS_STEP13=0
               IS_STRIP_SHELL=0
+              if [ -n "${EXECUTABLE_PATH}" ] && strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -q 'STEP15-METAL'; then
+                IS_STEP15=1
+              fi
               if [ -n "${EXECUTABLE_PATH}" ] && strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -q 'STEP14-LIVECOVER'; then
                 IS_STEP14=1
               fi
@@ -1373,17 +1377,17 @@ jobs:
                 IS_STEP3=1
               fi
               if [ -n "${EXECUTABLE_PATH}" ] && strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'STEP2-UI-LIGHT|STEP2-UI-ONLY|SHELL3-NO-DYLIB|SHELL4-MIN-ENT|SHELL5-NOPCH'; then
-                if [ "$IS_STEP3" != "1" ] && [ "$IS_STEP4" != "1" ] && [ "$IS_STEP4B" != "1" ] && [ "$IS_STEP5" != "1" ] && [ "$IS_STEP6" != "1" ] && [ "$IS_STEP7" != "1" ] && [ "$IS_STEP8" != "1" ] && [ "$IS_STEP9" != "1" ] && [ "$IS_STEP10" != "1" ] && [ "$IS_STEP11" != "1" ] && [ "$IS_STEP12" != "1" ] && [ "$IS_STEP13" != "1" ] && [ "$IS_STEP14" != "1" ]; then
+                if [ "$IS_STEP3" != "1" ] && [ "$IS_STEP4" != "1" ] && [ "$IS_STEP4B" != "1" ] && [ "$IS_STEP5" != "1" ] && [ "$IS_STEP6" != "1" ] && [ "$IS_STEP7" != "1" ] && [ "$IS_STEP8" != "1" ] && [ "$IS_STEP9" != "1" ] && [ "$IS_STEP10" != "1" ] && [ "$IS_STEP11" != "1" ] && [ "$IS_STEP12" != "1" ] && [ "$IS_STEP13" != "1" ] && [ "$IS_STEP14" != "1" ] && [ "$IS_STEP15" != "1" ]; then
                   IS_STRIP_SHELL=1
                 fi
               fi
-              if [ "$IS_STEP14" = "1" ] || [ "$IS_STEP13" = "1" ] || [ "$IS_STEP12" = "1" ] || [ "$IS_STEP11" = "1" ] || [ "$IS_STEP10" = "1" ] || [ "$IS_STEP9" = "1" ] || [ "$IS_STEP8" = "1" ] || [ "$IS_STEP7" = "1" ] || [ "$IS_STEP6" = "1" ] || [ "$IS_STEP5" = "1" ] || [ "$IS_STEP4B" = "1" ]; then
+              if [ "$IS_STEP15" = "1" ] || [ "$IS_STEP14" = "1" ] || [ "$IS_STEP13" = "1" ] || [ "$IS_STEP12" = "1" ] || [ "$IS_STEP11" = "1" ] || [ "$IS_STEP10" = "1" ] || [ "$IS_STEP9" = "1" ] || [ "$IS_STEP8" = "1" ] || [ "$IS_STEP7" = "1" ] || [ "$IS_STEP6" = "1" ] || [ "$IS_STEP5" = "1" ] || [ "$IS_STEP4B" = "1" ]; then
                 if [ ! -f "$IOS15_ENTITLEMENTS" ]; then
-                  echo "::error::Missing $IOS15_ENTITLEMENTS for STEP14/13/12/11/10/9/8/7/6/5/4B ios15-safe entitlements"
+                  echo "::error::Missing $IOS15_ENTITLEMENTS for STEP15/14/13/12/11/10/9/8/7/6/5/4B ios15-safe entitlements"
                   exit 1
                 fi
                 ENTITLEMENTS="$IOS15_ENTITLEMENTS"
-                echo "STEP14/13/12/11/10/9/8/7/6/5/4B — using entitlements-ios15.plist (no banned keys)"
+                echo "STEP15/14/13/12/11/10/9/8/7/6/5/4B — using entitlements-ios15.plist (no banned keys)"
               elif [ "$IS_STEP4" = "1" ]; then
                 if [ ! -f "$FULL_ENTITLEMENTS" ]; then
                   echo "::error::Missing $FULL_ENTITLEMENTS for STEP4 full entitlements"
@@ -1396,7 +1400,9 @@ jobs:
                 echo "step2/shell marker — stripping embedded dylibs"
                 find "${APP_COPY}" -name '*.dylib' -type f -print -delete 2>/dev/null || true
               else
-                if [ "$IS_STEP14" = "1" ]; then
+                if [ "$IS_STEP15" = "1" ]; then
+                  echo "STEP15 marker — keep/rename dylibs + ios15-safe entitlements"
+                elif [ "$IS_STEP14" = "1" ]; then
                   echo "STEP14 marker — keep/rename dylibs + ios15-safe entitlements"
                 elif [ "$IS_STEP13" = "1" ]; then
                   echo "STEP13 marker — keep/rename dylibs + ios15-safe entitlements"
@@ -1462,7 +1468,24 @@ jobs:
                   exit 1
                 fi
                 echo "Verified DRAWFPS_SEG_V1 in binary"
-                if strings "$EXECUTABLE_PATH" | grep -q 'STEP14-LIVECOVER'; then
+                if strings "$EXECUTABLE_PATH" | grep -q 'STEP15-METAL'; then
+                  echo "Verified STEP15 METAL marker"
+                  if [ ! -f "${APP_COPY}/libNHSupport.dylib" ] || [ ! -f "${APP_COPY}/libNHCodec.dylib" ] || [ ! -f "${APP_COPY}/libNHParse.dylib" ]; then
+                    echo "::error::STEP15 IPA missing renamed jailbreak dylibs (libNH*)"
+                    find "$APP_COPY" -name '*.dylib' -print || true
+                    exit 1
+                  fi
+                  if [ ! -d "${APP_COPY}/Frameworks/NHKit.framework" ] || [ ! -d "${APP_COPY}/Frameworks/NHDraw.framework" ]; then
+                    echo "::error::STEP15 IPA missing NHKit/NHDraw exploit frameworks"
+                    find "${APP_COPY}/Frameworks" -maxdepth 2 -type d -print || true
+                    exit 1
+                  fi
+                  if grep -q 'skip-library-validation' "$ENTITLEMENTS"; then
+                    echo "::error::STEP15 entitlements still contain banned skip-library-validation"
+                    exit 1
+                  fi
+                  echo "Verified STEP15 IPA embeds libNH* + NHKit/NHDraw and uses ios15-safe entitlements"
+                elif strings "$EXECUTABLE_PATH" | grep -q 'STEP14-LIVECOVER'; then
                   echo "Verified STEP14 LIVECOVER marker"
                   if [ ! -f "${APP_COPY}/libNHSupport.dylib" ] || [ ! -f "${APP_COPY}/libNHCodec.dylib" ] || [ ! -f "${APP_COPY}/libNHParse.dylib" ]; then
                     echo "::error::STEP14 IPA missing renamed jailbreak dylibs (libNH*)"

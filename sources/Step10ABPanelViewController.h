@@ -1,6 +1,6 @@
 //
 //  Step10ABPanelViewController.h
-//  验收⑭：AB 三按钮 + 过直播 HUD 叠层；不链 BBZView.mm / PhysX / DrawView
+//  验收⑮：AB 三按钮 + 过直播 Metal HUD；不链 BBZView.mm / PhysX / DrawView / ImGui
 //
 
 #import <UIKit/UIKit.h>
