@@ -1,12 +1,12 @@
 //
-//  MainApplicationDelegate.m — 验收⑦：可读 kernelcache + XPF
+//  MainApplicationDelegate.m — 验收⑧：XPF patchfinding
 //
 
 #import "MainApplicationDelegate.h"
 #import "Step2BusinessViewController.h"
 
 __attribute__((used)) static const char kDrawFpsSegMarker[] = "DRAWFPS_SEG_V1";
-__attribute__((used)) static const char kStep7Marker[] = "STEP7-KERNELCACHE";
+__attribute__((used)) static const char kStep8Marker[] = "STEP8-PATCHFIND";
 
 @implementation MainApplicationDelegate
 
@@ -15,7 +15,7 @@ __attribute__((used)) static const char kStep7Marker[] = "STEP7-KERNELCACHE";
   (void)application;
   (void)launchOptions;
   volatile const char *keepFps = kDrawFpsSegMarker;
-  volatile const char *keepStep = kStep7Marker;
+  volatile const char *keepStep = kStep8Marker;
   (void)keepFps[0];
   (void)keepStep[0];
 

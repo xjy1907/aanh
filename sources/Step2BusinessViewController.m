@@ -1,16 +1,19 @@
 //
 //  Step2BusinessViewController.m
-//  验收⑦：用 Dopamine 方式拿可读 kernelcache，再调 XPF
+//  验收⑧：XPF 启动后构造偏移字典（patchfinding），仍不跑 exploit / 不链 PhysX
 //
 
 #import "Step2BusinessViewController.h"
 #import "JBDylibLoader.h"
 #import "KernelcacheLocator.h"
 #import <dlfcn.h>
+#import <xpc/xpc.h>
 
 typedef int (*XpfStartFn)(const char *kernelPath);
 typedef void (*XpfStopFn)(void);
 typedef const char *(*XpfGetErrorFn)(void);
+typedef bool (*XpfSetSupportedFn)(const char *name);
+typedef xpc_object_t (*XpfConstructFn)(const char *sets[]);
 typedef char *(*JbGetBootUuidFn)(void);
 typedef char *(*JbGetJbrootFn)(void);
 typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
@@ -24,6 +27,8 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
 @property(nonatomic, assign) BOOL didTryDlopen;
 @property(nonatomic, assign) BOOL jbReady;
 @property(nonatomic, assign) BOOL xpfStarted;
+@property(nonatomic, assign) BOOL patchfindOK;
+@property(nonatomic, copy) NSString *lastKernelPath;
 @end
 
 @implementation Step2BusinessViewController
@@ -80,7 +85,7 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
 
   UILabel *title = [[UILabel alloc] init];
   title.translatesAutoresizingMaskIntoConstraints = NO;
-  title.text = @"STEP7-KERNELCACHE";
+  title.text = @"STEP8-PATCHFIND";
   title.textColor = [UIColor colorWithRed:200.0f / 255.0f
                                     green:120.0f / 255.0f
                                      blue:255.0f / 255.0f
@@ -90,7 +95,7 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
 
   UILabel *hint = [[UILabel alloc] init];
   hint.translatesAutoresizingMaskIntoConstraints = NO;
-  hint.text = @"对齐 Dopamine 取可读 kernelcache\npreboot/可读检测/grab 下载回退\n仍不链 BBZView/PhysX/DOJailbreaker\n能看见本页 = 验收⑦亮窗通过";
+  hint.text = @"⑦已过：可读核 + XPF rc=0\n⑧：对齐 DOJailbreaker 构造偏移字典\n仍不跑 exploit / 不链 BBZView/PhysX\n能看见本页 = 验收⑧亮窗通过";
   hint.textColor = [UIColor colorWithWhite:0.78f alpha:1.0f];
   hint.font = [UIFont systemFontOfSize:13.0f weight:UIFontWeightMedium];
   hint.textAlignment = NSTextAlignmentCenter;
@@ -123,7 +128,7 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
 
   UIButton *readBtn = [UIButton buttonWithType:UIButtonTypeSystem];
   readBtn.translatesAutoresizingMaskIntoConstraints = NO;
-  [readBtn setTitle:@"开始读取（jbclient）" forState:UIControlStateNormal];
+  [readBtn setTitle:@"构造偏移（patchfinding）" forState:UIControlStateNormal];
   [readBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
   readBtn.backgroundColor = [UIColor colorWithRed:255.0f / 255.0f
                                              green:150.0f / 255.0f
@@ -131,7 +136,7 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
                                              alpha:0.30f];
   readBtn.layer.cornerRadius = 10.0;
   readBtn.titleLabel.font = [UIFont systemFontOfSize:16.0f weight:UIFontWeightSemibold];
-  [readBtn addTarget:self action:@selector(onStartRead) forControlEvents:UIControlEventTouchUpInside];
+  [readBtn addTarget:self action:@selector(onPatchfind) forControlEvents:UIControlEventTouchUpInside];
   self.readBtn = readBtn;
 
   UITextView *logView = [[UITextView alloc] init];
@@ -194,15 +199,16 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
     [logView.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor constant:-16],
   ]];
 
-  [self appendLog:@"STEP7 面板已加载（未链 BBZView/PhysX）"];
+  [self appendLog:@"STEP8 面板已加载（未链 BBZView/PhysX/DOJailbreaker）"];
 }
 
 - (NSInteger)probeJailbreakSymbols {
-  // 使用库内真实导出名（⑤ 误用了 xpf_start / jbdSystemwideLog）
   NSArray<NSString *> *names = @[
     @"xpf_start_with_kernel_path",
     @"xpf_stop",
     @"xpf_get_error",
+    @"xpf_set_is_supported",
+    @"xpf_construct_offset_dictionary",
     @"jbclient_get_boot_uuid",
     @"jbclient_process_checkin",
   ];
@@ -239,7 +245,7 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
           [UIColor colorWithRed:120.0f / 255.0f green:220.0f / 255.0f blue:160.0f / 255.0f alpha:1.0f];
       [strongSelf appendLog:@"dlopen 成功"];
       NSInteger n = [strongSelf probeJailbreakSymbols];
-      [strongSelf appendLog:[NSString stringWithFormat:@"符号探测 %ld/5", (long)n]];
+      [strongSelf appendLog:[NSString stringWithFormat:@"符号探测 %ld/7", (long)n]];
     } else {
       strongSelf.statusLabel.text = @"安全权限已启用，但 dlopen 失败";
       strongSelf.statusLabel.textColor =
@@ -249,8 +255,18 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
   });
 }
 
+- (BOOL)ensureXpfStarted {
+  if (self.xpfStarted) {
+    return YES;
+  }
+  [self appendLog:@"XPF 未启动，先走初始化…"];
+  [self onInitKernel];
+  return self.xpfStarted;
+}
+
 - (void)onInitKernel {
   [self appendLog:@"点击：初始化内核（XPF）"];
+  self.patchfindOK = NO;
   if (!self.jbReady) {
     self.jbReady = JBEnsureJailbreakDylibsLoaded();
     [self appendLog:self.jbReady ? @"补做 dlopen 成功" : @"补做 dlopen 失败"];
@@ -277,9 +293,10 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
     self.statusLabel.text = @"无可用 kernelcache（见日志）";
     self.statusLabel.textColor =
         [UIColor colorWithRed:255.0f / 255.0f green:120.0f / 255.0f blue:120.0f / 255.0f alpha:1.0f];
-    [self appendLog:@"验收⑦：未能拿到可读 kernelcache"];
+    [self appendLog:@"未能拿到可读 kernelcache"];
     return;
   }
+  self.lastKernelPath = path;
   [self appendLog:[NSString stringWithFormat:@"最终 kernelcache=%@", path]];
 
   if (self.xpfStarted && stopFn) {
@@ -295,63 +312,119 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
 
   if (rc == 0) {
     self.xpfStarted = YES;
-    self.statusLabel.text = @"可读核 + XPF 成功（验收⑦）";
+    self.statusLabel.text = @"XPF 已启动，可点构造偏移";
     self.statusLabel.textColor =
         [UIColor colorWithRed:120.0f / 255.0f green:220.0f / 255.0f blue:160.0f / 255.0f alpha:1.0f];
-    [self appendLog:@"验收⑦：kernelcache 可读且 XPF 启动成功"];
+    [self appendLog:@"XPF 启动成功（保持会话供 patchfinding）"];
   } else {
+    self.xpfStarted = NO;
     self.statusLabel.text = @"XPF 启动失败（见日志）";
     self.statusLabel.textColor =
         [UIColor colorWithRed:255.0f / 255.0f green:120.0f / 255.0f blue:120.0f / 255.0f alpha:1.0f];
   }
 }
 
-- (void)onStartRead {
-  [self appendLog:@"点击：开始读取（jbclient）"];
+- (void)onPatchfind {
+  [self appendLog:@"点击：构造偏移（patchfinding）"];
   if (!self.jbReady) {
-    [self appendLog:@"跳过：请先 dlopen / 初始化"];
+    [self appendLog:@"跳过：请先 dlopen"];
+    return;
+  }
+  if (![self ensureXpfStarted]) {
+    [self appendLog:@"跳过：XPF 未就绪"];
     return;
   }
 
-  JbGetBootUuidFn uuidFn = (JbGetBootUuidFn)[self sym:@"jbclient_get_boot_uuid"];
-  JbGetJbrootFn rootFn = (JbGetJbrootFn)[self sym:@"jbclient_get_jbroot"];
-  JbProcessCheckinFn checkinFn = (JbProcessCheckinFn)[self sym:@"jbclient_process_checkin"];
-
-  if (uuidFn) {
-    char *uuid = uuidFn();
-    [self appendLog:[NSString stringWithFormat:@"boot_uuid=%s", uuid ? uuid : "(null)"]];
-  } else {
-    [self appendLog:@"jbclient_get_boot_uuid 不可用"];
+  XpfSetSupportedFn setFn = (XpfSetSupportedFn)[self sym:@"xpf_set_is_supported"];
+  XpfConstructFn constructFn = (XpfConstructFn)[self sym:@"xpf_construct_offset_dictionary"];
+  XpfGetErrorFn errFn = (XpfGetErrorFn)[self sym:@"xpf_get_error"];
+  XpfStopFn stopFn = (XpfStopFn)[self sym:@"xpf_stop"];
+  if (!constructFn) {
+    [self appendLog:@"失败：找不到 xpf_construct_offset_dictionary"];
+    return;
   }
 
-  if (rootFn) {
-    char *root = rootFn();
-    [self appendLog:[NSString stringWithFormat:@"jbroot=%s", root ? root : "(null)"]];
+  // 对齐 DOJailbreaker gatherSystemInformation 的 sets
+  const char *sets[12] = {
+      "translation", "trustcache", "sandbox", "physmap", "struct", "physrw", "perfkrw",
+      NULL,          NULL,         NULL,      NULL,      NULL,
+  };
+  uint32_t idx = 7;
+  if (setFn) {
+    if (setFn("devmode")) {
+      sets[idx++] = "devmode";
+      [self appendLog:@"set supported: devmode"];
+    }
+    if (setFn("badRecovery")) {
+      sets[idx++] = "badRecovery";
+      [self appendLog:@"set supported: badRecovery"];
+    }
+    if (setFn("arm64kcall")) {
+      sets[idx++] = "arm64kcall";
+      [self appendLog:@"set supported: arm64kcall"];
+    }
   } else {
-    [self appendLog:@"jbclient_get_jbroot 不可用"];
+    [self appendLog:@"xpf_set_is_supported 不可用，仅用基础 sets"];
+  }
+  [self appendLog:[NSString stringWithFormat:@"开始 xpf_construct_offset_dictionary（sets=%u）", idx]];
+
+  xpc_object_t dict = constructFn((const char **)sets);
+  const char *err = errFn ? errFn() : NULL;
+  if (!dict) {
+    self.patchfindOK = NO;
+    self.statusLabel.text = @"patchfinding 失败（见日志）";
+    self.statusLabel.textColor =
+        [UIColor colorWithRed:255.0f / 255.0f green:120.0f / 255.0f blue:120.0f / 255.0f alpha:1.0f];
+    [self appendLog:[NSString stringWithFormat:@"construct 返回 NULL err=%s",
+                                               (err && err[0]) ? err : "(null)"]];
+    if (stopFn) {
+      stopFn();
+      self.xpfStarted = NO;
+    }
+    return;
   }
 
-  if (checkinFn) {
-    char *rootOut = NULL;
-    char *bootOut = NULL;
-    char *sandboxOut = NULL;
-    bool fullyDebugged = false;
-    int rc = checkinFn(&rootOut, &bootOut, &sandboxOut, &fullyDebugged);
-    [self appendLog:[NSString stringWithFormat:
-                                  @"process_checkin rc=%d root=%s boot=%s dbg=%d", rc,
-                                  rootOut ? rootOut : "(null)", bootOut ? bootOut : "(null)",
-                                  fullyDebugged ? 1 : 0]];
-    free(rootOut);
-    free(bootOut);
-    free(sandboxOut);
+  __block NSUInteger total = 0;
+  __block NSUInteger nonzero = 0;
+  __block NSUInteger logged = 0;
+  xpc_dictionary_apply(dict, ^bool(const char *key, xpc_object_t value) {
+    total += 1;
+    if (xpc_get_type(value) == XPC_TYPE_UINT64) {
+      uint64_t v = xpc_uint64_get_value(value);
+      if (v != 0) {
+        nonzero += 1;
+      }
+      if (logged < 10) {
+        logged += 1;
+        [self appendLog:[NSString stringWithFormat:@"  %s = 0x%llx", key, (unsigned long long)v]];
+      }
+    }
+    return true;
+  });
+
+  [self appendLog:[NSString stringWithFormat:@"偏移字典 keys=%lu nonzero=%lu", (unsigned long)total,
+                                             (unsigned long)nonzero]];
+
+  if (total > 0 && nonzero > 0) {
+    self.patchfindOK = YES;
+    self.statusLabel.text = @"偏移字典构造成功（验收⑧）";
+    self.statusLabel.textColor =
+        [UIColor colorWithRed:120.0f / 255.0f green:220.0f / 255.0f blue:160.0f / 255.0f alpha:1.0f];
+    [self appendLog:@"验收⑧：patchfinding 成功（未跑 exploit / 未链 PhysX）"];
   } else {
-    [self appendLog:@"jbclient_process_checkin 不可用"];
+    self.patchfindOK = NO;
+    self.statusLabel.text = @"偏移字典为空（见日志）";
+    self.statusLabel.textColor =
+        [UIColor colorWithRed:255.0f / 255.0f green:120.0f / 255.0f blue:120.0f / 255.0f alpha:1.0f];
+    [self appendLog:@"验收⑧：字典为空或全 0"];
   }
 
-  self.statusLabel.text = @"jbclient 读取探测完成（验收⑥）";
-  self.statusLabel.textColor =
-      [UIColor colorWithRed:120.0f / 255.0f green:220.0f / 255.0f blue:160.0f / 255.0f alpha:1.0f];
-  [self appendLog:@"验收⑥：jbclient 实调完成（未链 PhysX）"];
+  // 与 DOJailbreaker 一致：收集完即 stop，避免占着映射
+  if (stopFn) {
+    stopFn();
+    self.xpfStarted = NO;
+    [self appendLog:@"已 xpf_stop（patchfinding 结束）"];
+  }
 }
 
 @end
