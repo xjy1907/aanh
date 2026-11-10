@@ -1,6 +1,6 @@
 //
 //  Step2BusinessViewController.h
-//  验收⑧：XPF patchfinding 偏移字典（不链 BBZView/PhysX/DOJailbreaker）
+//  验收⑨：exploit + kread 探针（不链 BBZView/PhysX）
 //
 
 #import <UIKit/UIKit.h>

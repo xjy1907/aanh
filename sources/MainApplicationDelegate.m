@@ -1,12 +1,12 @@
 //
-//  MainApplicationDelegate.m — 验收⑧：XPF patchfinding
+//  MainApplicationDelegate.m — 验收⑨：exploit + kread 探针
 //
 
 #import "MainApplicationDelegate.h"
 #import "Step2BusinessViewController.h"
 
 __attribute__((used)) static const char kDrawFpsSegMarker[] = "DRAWFPS_SEG_V1";
-__attribute__((used)) static const char kStep8Marker[] = "STEP8-PATCHFIND";
+__attribute__((used)) static const char kStep9Marker[] = "STEP9-KREAD";
 
 @implementation MainApplicationDelegate
 
@@ -15,7 +15,7 @@ __attribute__((used)) static const char kStep8Marker[] = "STEP8-PATCHFIND";
   (void)application;
   (void)launchOptions;
   volatile const char *keepFps = kDrawFpsSegMarker;
-  volatile const char *keepStep = kStep8Marker;
+  volatile const char *keepStep = kStep9Marker;
   (void)keepFps[0];
   (void)keepStep[0];
 

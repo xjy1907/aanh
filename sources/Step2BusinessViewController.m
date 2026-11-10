@@ -1,11 +1,12 @@
 //
 //  Step2BusinessViewController.m
-//  验收⑧：XPF 启动后构造偏移字典（patchfinding），仍不跑 exploit / 不链 PhysX
+//  验收⑨：⑧ 已过后跑 kfd/PPL exploit 并 kread 探针；仍不链 BBZView/PhysX
 //
 
 #import "Step2BusinessViewController.h"
 #import "JBDylibLoader.h"
 #import "KernelcacheLocator.h"
+#import "Step9KreadRunner.h"
 #import <dlfcn.h>
 #import <xpc/xpc.h>
 
@@ -85,7 +86,7 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
 
   UILabel *title = [[UILabel alloc] init];
   title.translatesAutoresizingMaskIntoConstraints = NO;
-  title.text = @"STEP8-PATCHFIND";
+  title.text = @"STEP9-KREAD";
   title.textColor = [UIColor colorWithRed:200.0f / 255.0f
                                     green:120.0f / 255.0f
                                      blue:255.0f / 255.0f
@@ -95,7 +96,7 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
 
   UILabel *hint = [[UILabel alloc] init];
   hint.translatesAutoresizingMaskIntoConstraints = NO;
-  hint.text = @"⑦已过：可读核 + XPF rc=0\n⑧：对齐 DOJailbreaker 构造偏移字典\n仍不跑 exploit / 不链 BBZView/PhysX\n能看见本页 = 验收⑧亮窗通过";
+  hint.text = @"⑧已过：偏移字典 keys/nonzero 齐全\n⑨：dlopen NHKit/NHDraw → exploit → kread\n仍不链 BBZView/PhysX/DOJailbreaker\n能看见本页 = 验收⑨亮窗通过";
   hint.textColor = [UIColor colorWithWhite:0.78f alpha:1.0f];
   hint.font = [UIFont systemFontOfSize:13.0f weight:UIFontWeightMedium];
   hint.textAlignment = NSTextAlignmentCenter;
@@ -128,7 +129,7 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
 
   UIButton *readBtn = [UIButton buttonWithType:UIButtonTypeSystem];
   readBtn.translatesAutoresizingMaskIntoConstraints = NO;
-  [readBtn setTitle:@"构造偏移（patchfinding）" forState:UIControlStateNormal];
+  [readBtn setTitle:@"跑 exploit + kread（⑨）" forState:UIControlStateNormal];
   [readBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
   readBtn.backgroundColor = [UIColor colorWithRed:255.0f / 255.0f
                                              green:150.0f / 255.0f
@@ -136,7 +137,7 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
                                              alpha:0.30f];
   readBtn.layer.cornerRadius = 10.0;
   readBtn.titleLabel.font = [UIFont systemFontOfSize:16.0f weight:UIFontWeightSemibold];
-  [readBtn addTarget:self action:@selector(onPatchfind) forControlEvents:UIControlEventTouchUpInside];
+  [readBtn addTarget:self action:@selector(onKreadProbe) forControlEvents:UIControlEventTouchUpInside];
   self.readBtn = readBtn;
 
   UITextView *logView = [[UITextView alloc] init];
@@ -199,7 +200,7 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
     [logView.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor constant:-16],
   ]];
 
-  [self appendLog:@"STEP8 面板已加载（未链 BBZView/PhysX/DOJailbreaker）"];
+  [self appendLog:@"STEP9 面板已加载（未链 BBZView/PhysX/DOJailbreaker）"];
 }
 
 - (NSInteger)probeJailbreakSymbols {
@@ -424,6 +425,38 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
     stopFn();
     self.xpfStarted = NO;
     [self appendLog:@"已 xpf_stop（patchfinding 结束）"];
+  }
+}
+
+- (void)onKreadProbe {
+  [self appendLog:@"点击：跑 exploit + kread（验收⑨）"];
+  if (!self.jbReady) {
+    self.jbReady = JBEnsureJailbreakDylibsLoaded();
+    [self appendLog:self.jbReady ? @"补做 dlopen 成功" : @"补做 dlopen 失败"];
+  }
+  if (!self.jbReady) {
+    [self appendLog:@"跳过：越狱库未就绪"];
+    return;
+  }
+
+  self.statusLabel.text = @"正在跑 exploit / kread…";
+  self.statusLabel.textColor =
+      [UIColor colorWithRed:255.0f / 255.0f green:210.0f / 255.0f blue:120.0f / 255.0f alpha:1.0f];
+
+  __weak typeof(self) weakSelf = self;
+  BOOL ok = [Step9KreadRunner runExploitAndProbeKreadWithLog:^(NSString *line) {
+    __strong typeof(weakSelf) strongSelf = weakSelf;
+    [strongSelf appendLog:line];
+  }];
+
+  if (ok) {
+    self.statusLabel.text = @"kread 探针成功（验收⑨）";
+    self.statusLabel.textColor =
+        [UIColor colorWithRed:120.0f / 255.0f green:220.0f / 255.0f blue:160.0f / 255.0f alpha:1.0f];
+  } else {
+    self.statusLabel.text = @"kread 探针失败（见日志）";
+    self.statusLabel.textColor =
+        [UIColor colorWithRed:255.0f / 255.0f green:120.0f / 255.0f blue:120.0f / 255.0f alpha:1.0f];
   }
 }
 
