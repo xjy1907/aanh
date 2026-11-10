@@ -7,6 +7,7 @@
 #import "JBDylibLoader.h"
 #import "Step9KreadRunner.h"
 #import "Step11HudOverlay.h"
+#import "Step12BBZSettingsHost.h"
 
 @interface Step10ABPanelViewController ()
 @property(nonatomic, strong) UILabel *statusLabel;
@@ -15,6 +16,7 @@
 @property(nonatomic, strong) UIButton *resetBtn;
 @property(nonatomic, strong) UIButton *readBtn;
 @property(nonatomic, strong) UIButton *hudBtn;
+@property(nonatomic, strong) UIButton *settingsBtn;
 @property(nonatomic, assign) BOOL kernelReady;
 @property(nonatomic, assign) BOOL reading;
 @property(nonatomic, assign) BOOL hudOn;
@@ -76,7 +78,7 @@
 
   UILabel *title = [[UILabel alloc] init];
   title.translatesAutoresizingMaskIntoConstraints = NO;
-  title.text = @"STEP11-HUD 面板";
+  title.text = @"STEP12-BBZ 面板";
   title.textColor = [UIColor colorWithRed:200.0f / 255.0f
                                     green:120.0f / 255.0f
                                      blue:255.0f / 255.0f
@@ -86,7 +88,7 @@
 
   UILabel *hint = [[UILabel alloc] init];
   hint.translatesAutoresizingMaskIntoConstraints = NO;
-  hint.text = @"⑩已过：延后挂 AB 三按钮\n⑪：进程内真实 HUD 叠层宿主\n仍不链 BBZView.mm / PhysX / DrawView\n点「开启 HUD 叠层」应看到顶条 = 验收⑪";
+  hint.text = @"⑪已过：进程内 HUD 叠层顶条\n⑫：挂载 BBZ 真实设置页\n仍不链 BBZView.mm / PhysX / DrawView\n点「打开 BBZ 设置（⑫）」= 验收⑫";
   hint.textColor = [UIColor colorWithWhite:0.78f alpha:1.0f];
   hint.font = [UIFont systemFontOfSize:13.0f weight:UIFontWeightMedium];
   hint.textAlignment = NSTextAlignmentCenter;
@@ -128,8 +130,14 @@
                                                   blue:180.0f / 255.0f
                                                  alpha:0.28f]
                           action:@selector(onToggleHud)];
+  self.settingsBtn = [self makeButton:@"打开 BBZ 设置（⑫）"
+                                color:[UIColor colorWithRed:255.0f / 255.0f
+                                                      green:180.0f / 255.0f
+                                                       blue:80.0f / 255.0f
+                                                      alpha:0.30f]
+                               action:@selector(onOpenBBZSettings)];
 
-  UIButton *backBtn = [self makeButton:@"返回 STEP11 诊断页"
+  UIButton *backBtn = [self makeButton:@"返回 STEP12 诊断页"
                                  color:[UIColor colorWithWhite:0.25f alpha:0.9f]
                                 action:@selector(onBack)];
 
@@ -155,6 +163,7 @@
   [self.view addSubview:self.resetBtn];
   [self.view addSubview:self.readBtn];
   [self.view addSubview:self.hudBtn];
+  [self.view addSubview:self.settingsBtn];
   [self.view addSubview:backBtn];
   [self.view addSubview:logView];
 
@@ -190,12 +199,17 @@
     [self.hudBtn.leadingAnchor constraintEqualToAnchor:self.kernelBtn.leadingAnchor],
     [self.hudBtn.trailingAnchor constraintEqualToAnchor:self.kernelBtn.trailingAnchor],
     [self.hudBtn.topAnchor constraintEqualToAnchor:self.readBtn.bottomAnchor constant:10],
-    [self.hudBtn.heightAnchor constraintEqualToConstant:44],
+    [self.hudBtn.heightAnchor constraintEqualToConstant:40],
+
+    [self.settingsBtn.leadingAnchor constraintEqualToAnchor:self.kernelBtn.leadingAnchor],
+    [self.settingsBtn.trailingAnchor constraintEqualToAnchor:self.kernelBtn.trailingAnchor],
+    [self.settingsBtn.topAnchor constraintEqualToAnchor:self.hudBtn.bottomAnchor constant:8],
+    [self.settingsBtn.heightAnchor constraintEqualToConstant:40],
 
     [backBtn.leadingAnchor constraintEqualToAnchor:self.kernelBtn.leadingAnchor],
     [backBtn.trailingAnchor constraintEqualToAnchor:self.kernelBtn.trailingAnchor],
-    [backBtn.topAnchor constraintEqualToAnchor:self.hudBtn.bottomAnchor constant:10],
-    [backBtn.heightAnchor constraintEqualToConstant:40],
+    [backBtn.topAnchor constraintEqualToAnchor:self.settingsBtn.bottomAnchor constant:8],
+    [backBtn.heightAnchor constraintEqualToConstant:36],
 
     [logView.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor constant:24],
     [logView.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor constant:-24],
@@ -205,8 +219,8 @@
 
   [self refreshReadButtonTitle];
   [self refreshHudButtonTitle];
-  [self appendLog:@"STEP11 面板已挂载（未链 BBZView.mm / PhysX / DrawView）"];
-  [self appendLog:@"验收⑪：点「开启 HUD 叠层」应出现顶条 STEP11-HUDHOST"];
+  [self appendLog:@"STEP12 面板已挂载（未链 BBZView.mm / PhysX / DrawView）"];
+  [self appendLog:@"验收⑫：点「打开 BBZ 设置（⑫）」应进入真实设置页"];
 }
 
 - (void)onInitKernel {
@@ -315,6 +329,20 @@
   }
   self.statusLabel.textColor =
       [UIColor colorWithRed:120.0f / 255.0f green:220.0f / 255.0f blue:160.0f / 255.0f alpha:1.0f];
+}
+
+- (void)onOpenBBZSettings {
+  [self appendLog:@"点击：打开 BBZ 设置（验收⑫）"];
+  Step12BBZSettingsHost *host = [[Step12BBZSettingsHost alloc] init];
+  UINavigationController *nav =
+      [[UINavigationController alloc] initWithRootViewController:host];
+  nav.modalPresentationStyle = UIModalPresentationFullScreen;
+  [self presentViewController:nav animated:YES completion:^{
+    [self appendLog:@"验收⑫：BBZ 设置宿主已 present（真实 VC，未链 PhysX）"];
+    self.statusLabel.text = @"BBZ 设置已打开（验收⑫）";
+    self.statusLabel.textColor =
+        [UIColor colorWithRed:120.0f / 255.0f green:220.0f / 255.0f blue:160.0f / 255.0f alpha:1.0f];
+  }];
 }
 
 - (void)onBack {

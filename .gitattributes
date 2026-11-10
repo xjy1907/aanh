@@ -1,0 +1,2 @@
+*.sh text eol=lf
+supports/pack_ipa.sh text eol=lf

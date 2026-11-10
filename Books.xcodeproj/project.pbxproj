@@ -13,6 +13,14 @@
 		A1STEP9KR11F508F1500FD4A /* Step9KreadRunner.m in Sources */ = {isa = PBXBuildFile; fileRef = A1STEP9KR12F508F1500FD4A /* Step9KreadRunner.m */; };
 		A1STEP10P11F508F1500FD4A /* Step10ABPanelViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A1STEP10P12F508F1500FD4A /* Step10ABPanelViewController.m */; };
 		A1STEP11H11F508F1500FD4A /* Step11HudOverlay.m in Sources */ = {isa = PBXBuildFile; fileRef = A1STEP11H12F508F1500FD4A /* Step11HudOverlay.m */; };
+		A1STEP12S11F508F1500FD4A /* Step12BBZSettingsHost.m in Sources */ = {isa = PBXBuildFile; fileRef = A1STEP12S12F508F1500FD4A /* Step12BBZSettingsHost.m */; };
+		A1STEP12L11F508F1500FD4A /* Step12LFSenderIDStub.m in Sources */ = {isa = PBXBuildFile; fileRef = A1STEP12L12F508F1500FD4A /* Step12LFSenderIDStub.m */; };
+		A1STEP12A11F508F1500FD4A /* AimConfigViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = A1M001CFG000000000000002 /* AimConfigViewController.mm */; };
+		A1STEP12H11F508F1500FD4A /* AimHumanizeConfigViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = A1M001HUM000000000000002 /* AimHumanizeConfigViewController.mm */; };
+		A1STEP12B11F508F1500FD4A /* AimBezierConfigViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = A1M001BEZ000000000000002 /* AimBezierConfigViewController.mm */; };
+		A1STEP12D11F508F1500FD4A /* DrawSettingsViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = EB75F96552FF49C5B5543956 /* DrawSettingsViewController.mm */; };
+		A1STEP12M11F508F1500FD4A /* MaterialConfigViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = B5BDB540911244279018928C /* MaterialConfigViewController.mm */; };
+		A1STEP12I11F508F1500FD4A /* ItemConfig.mm in Sources */ = {isa = PBXBuildFile; fileRef = DFB07DA9967C4ED5AAF82D6E /* ItemConfig.mm */; };
 		A1IOKITB01F508F1500FD4A /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8862E18D774008B33B6 /* IOKit.framework */; };
 		A1GRABKB01F508F1500FD4A /* libgrabkernel2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8912E18D83A008B33B6 /* libgrabkernel2.a */; };
 		A1PARTB01F508F1500FD4A /* libpartial.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8902E18D83A008B33B6 /* libpartial.a */; };
@@ -286,6 +294,9 @@
 		A1STEP10P13F508F1500FD4A /* Step10ABPanelViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Step10ABPanelViewController.h; sourceTree = "<group>"; };
 		A1STEP11H12F508F1500FD4A /* Step11HudOverlay.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Step11HudOverlay.m; sourceTree = "<group>"; };
 		A1STEP11H13F508F1500FD4A /* Step11HudOverlay.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Step11HudOverlay.h; sourceTree = "<group>"; };
+		A1STEP12S12F508F1500FD4A /* Step12BBZSettingsHost.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Step12BBZSettingsHost.m; sourceTree = "<group>"; };
+		A1STEP12S13F508F1500FD4A /* Step12BBZSettingsHost.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Step12BBZSettingsHost.h; sourceTree = "<group>"; };
+		A1STEP12L12F508F1500FD4A /* Step12LFSenderIDStub.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Step12LFSenderIDStub.m; sourceTree = "<group>"; };
 		A1M001CFG000000000000001 /* AimConfigViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AimConfigViewController.h; sourceTree = "<group>"; };
 		A1M001CFG000000000000002 /* AimConfigViewController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = AimConfigViewController.mm; sourceTree = "<group>"; };
 		A1M001HUM000000000000001 /* AimHumanizeConfigViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AimHumanizeConfigViewController.h; sourceTree = "<group>"; };
@@ -1008,6 +1019,9 @@
 				A1STEP10P12F508F1500FD4A /* Step10ABPanelViewController.m */,
 				A1STEP11H13F508F1500FD4A /* Step11HudOverlay.h */,
 				A1STEP11H12F508F1500FD4A /* Step11HudOverlay.m */,
+				A1STEP12S13F508F1500FD4A /* Step12BBZSettingsHost.h */,
+				A1STEP12S12F508F1500FD4A /* Step12BBZSettingsHost.m */,
+				A1STEP12L12F508F1500FD4A /* Step12LFSenderIDStub.m */,
 				CC711D492B5BF5C6007235A6 /* MainButton.h */,
 				CC711D2E2B5BF5C6007235A6 /* MainButton.mm */,
 				CC711D232B5BF5C6007235A6 /* TSEventFetcher.h */,
@@ -1657,6 +1671,14 @@
 				A1STEP9KR11F508F1500FD4A /* Step9KreadRunner.m in Sources */,
 				A1STEP10P11F508F1500FD4A /* Step10ABPanelViewController.m in Sources */,
 				A1STEP11H11F508F1500FD4A /* Step11HudOverlay.m in Sources */,
+				A1STEP12S11F508F1500FD4A /* Step12BBZSettingsHost.m in Sources */,
+				A1STEP12L11F508F1500FD4A /* Step12LFSenderIDStub.m in Sources */,
+				A1STEP12A11F508F1500FD4A /* AimConfigViewController.mm in Sources */,
+				A1STEP12H11F508F1500FD4A /* AimHumanizeConfigViewController.mm in Sources */,
+				A1STEP12B11F508F1500FD4A /* AimBezierConfigViewController.mm in Sources */,
+				A1STEP12D11F508F1500FD4A /* DrawSettingsViewController.mm in Sources */,
+				A1STEP12M11F508F1500FD4A /* MaterialConfigViewController.mm in Sources */,
+				A1STEP12I11F508F1500FD4A /* ItemConfig.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2412,6 +2434,9 @@
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/supports",
 					"$(PROJECT_DIR)/sources",
+					"$(PROJECT_DIR)/HID",
+					"$(PROJECT_DIR)/绘图",
+					"$(PROJECT_DIR)/绘图/游戏",
 					"$(PROJECT_DIR)/Embree/include",
 					"$(PROJECT_DIR)/绘图/Aim",
 					"$(PROJECT_DIR)/dependencies/include",
@@ -2450,7 +2475,7 @@
 					"-lz",
 					"-lcompression",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step11hud;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step12bz;
 				PRODUCT_MODULE_NAME = Books;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -2492,6 +2517,9 @@
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/supports",
 					"$(PROJECT_DIR)/sources",
+					"$(PROJECT_DIR)/HID",
+					"$(PROJECT_DIR)/绘图",
+					"$(PROJECT_DIR)/绘图/游戏",
 					"$(PROJECT_DIR)/Embree/include",
 					"$(PROJECT_DIR)/绘图/Aim",
 					"$(PROJECT_DIR)/dependencies/include",
@@ -2530,7 +2558,7 @@
 					"-lz",
 					"-lcompression",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step11hud;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step12bz;
 				PRODUCT_MODULE_NAME = Books;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
