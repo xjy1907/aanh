@@ -84,6 +84,7 @@ if [ ! -f "${EXECUTABLE_PATH}" ]; then
   exit 1
 fi
 
+HAS_STEP10=0
 HAS_STEP9=0
 HAS_STEP8=0
 HAS_STEP7=0
@@ -93,6 +94,10 @@ HAS_STEP4B=0
 HAS_STEP4=0
 HAS_KEEP_DYLIB=0
 HAS_STRIP_SHELL=0
+if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -q 'STEP10-BBZHOST'; then
+  HAS_STEP10=1
+  HAS_KEEP_DYLIB=1
+fi
 if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -q 'STEP9-KREAD'; then
   HAS_STEP9=1
   HAS_KEEP_DYLIB=1
@@ -125,15 +130,15 @@ if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'STEP3-DLOPEN-JB'; then
   HAS_KEEP_DYLIB=1
 fi
 if strings "${EXECUTABLE_PATH}" 2>/dev/null | grep -qE 'STEP2-UI-LIGHT|STEP2-UI-ONLY|SHELL3-NO-DYLIB|SHELL4-MIN-ENT|SHELL5-NOPCH'; then
-  if [ "$HAS_STEP9" != "1" ] && [ "$HAS_STEP8" != "1" ] && [ "$HAS_STEP7" != "1" ] && [ "$HAS_STEP6" != "1" ] && [ "$HAS_STEP5" != "1" ] && [ "$HAS_STEP4B" != "1" ] && [ "$HAS_STEP4" != "1" ] && [ "$HAS_KEEP_DYLIB" != "1" ]; then
+  if [ "$HAS_STEP10" != "1" ] && [ "$HAS_STEP9" != "1" ] && [ "$HAS_STEP8" != "1" ] && [ "$HAS_STEP7" != "1" ] && [ "$HAS_STEP6" != "1" ] && [ "$HAS_STEP5" != "1" ] && [ "$HAS_STEP4B" != "1" ] && [ "$HAS_STEP4" != "1" ] && [ "$HAS_KEEP_DYLIB" != "1" ]; then
     HAS_STRIP_SHELL=1
   fi
 fi
 
-if [ "$HAS_STEP9" = "1" ] || [ "$HAS_STEP8" = "1" ] || [ "$HAS_STEP7" = "1" ] || [ "$HAS_STEP6" = "1" ] || [ "$HAS_STEP5" = "1" ] || [ "$HAS_STEP4B" = "1" ]; then
+if [ "$HAS_STEP10" = "1" ] || [ "$HAS_STEP9" = "1" ] || [ "$HAS_STEP8" = "1" ] || [ "$HAS_STEP7" = "1" ] || [ "$HAS_STEP6" = "1" ] || [ "$HAS_STEP5" = "1" ] || [ "$HAS_STEP4B" = "1" ]; then
   if [ -f "${IOS15_ENTITLEMENTS_PATH}" ]; then
     ENTITLEMENTS_PATH="${IOS15_ENTITLEMENTS_PATH}"
-    echo "[Pack IPA] STEP9/8/7/6/5/4B — using entitlements-ios15.plist (no banned keys)"
+    echo "[Pack IPA] STEP10/9/8/7/6/5/4B — using entitlements-ios15.plist (no banned keys)"
   fi
 elif [ "$HAS_STEP4" = "1" ]; then
   if [ -f "${FULL_ENTITLEMENTS_PATH}" ]; then
@@ -152,7 +157,9 @@ if [ "$HAS_STRIP_SHELL" = "1" ]; then
   find "${COPIED_APP}" -name '*.dylib' -type f -print -delete 2>/dev/null || true
   find "${COPIED_APP}/Frameworks" -name '*.dylib' -type f -print -delete 2>/dev/null || true
 else
-  if [ "$HAS_STEP9" = "1" ]; then
+  if [ "$HAS_STEP10" = "1" ]; then
+    echo "[Pack IPA] STEP10 marker — keep/rename dylibs + ios15-safe entitlements"
+  elif [ "$HAS_STEP9" = "1" ]; then
     echo "[Pack IPA] STEP9 marker — keep/rename dylibs + ios15-safe entitlements"
   elif [ "$HAS_STEP8" = "1" ]; then
     echo "[Pack IPA] STEP8 marker — keep/rename dylibs + ios15-safe entitlements"

@@ -1,12 +1,13 @@
 //
 //  Step2BusinessViewController.m
-//  验收⑨：⑧ 已过后跑 kfd/PPL exploit 并 kread 探针；仍不链 BBZView/PhysX
+//  验收⑩：⑨ 已过后延后挂 AB 面板；仍不链 BBZView.mm / PhysX / DrawView
 //
 
 #import "Step2BusinessViewController.h"
 #import "JBDylibLoader.h"
 #import "KernelcacheLocator.h"
 #import "Step9KreadRunner.h"
+#import "Step10ABPanelViewController.h"
 #import <dlfcn.h>
 #import <xpc/xpc.h>
 
@@ -25,10 +26,12 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
 @property(nonatomic, strong) UITextView *logView;
 @property(nonatomic, strong) UIButton *kernelBtn;
 @property(nonatomic, strong) UIButton *readBtn;
+@property(nonatomic, strong) UIButton *abPanelBtn;
 @property(nonatomic, assign) BOOL didTryDlopen;
 @property(nonatomic, assign) BOOL jbReady;
 @property(nonatomic, assign) BOOL xpfStarted;
 @property(nonatomic, assign) BOOL patchfindOK;
+@property(nonatomic, assign) BOOL kreadOK;
 @property(nonatomic, copy) NSString *lastKernelPath;
 @end
 
@@ -86,7 +89,7 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
 
   UILabel *title = [[UILabel alloc] init];
   title.translatesAutoresizingMaskIntoConstraints = NO;
-  title.text = @"STEP9-KREAD";
+  title.text = @"STEP10-BBZHOST";
   title.textColor = [UIColor colorWithRed:200.0f / 255.0f
                                     green:120.0f / 255.0f
                                      blue:255.0f / 255.0f
@@ -96,7 +99,7 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
 
   UILabel *hint = [[UILabel alloc] init];
   hint.translatesAutoresizingMaskIntoConstraints = NO;
-  hint.text = @"⑧已过：偏移字典 keys/nonzero 齐全\n⑨：dlopen NHKit/NHDraw → exploit → kread\n仍不链 BBZView/PhysX/DOJailbreaker\n能看见本页 = 验收⑨亮窗通过";
+  hint.text = @"⑨已过：physpuppet + PPL + kread magic\n⑩：首屏后延后挂 AB 三按钮面板\n仍不链 BBZView.mm / PhysX / DrawView\n能看见本页 = 验收⑩亮窗通过";
   hint.textColor = [UIColor colorWithWhite:0.78f alpha:1.0f];
   hint.font = [UIFont systemFontOfSize:13.0f weight:UIFontWeightMedium];
   hint.textAlignment = NSTextAlignmentCenter;
@@ -140,6 +143,19 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
   [readBtn addTarget:self action:@selector(onKreadProbe) forControlEvents:UIControlEventTouchUpInside];
   self.readBtn = readBtn;
 
+  UIButton *abPanelBtn = [UIButton buttonWithType:UIButtonTypeSystem];
+  abPanelBtn.translatesAutoresizingMaskIntoConstraints = NO;
+  [abPanelBtn setTitle:@"挂载 AB 面板（⑩）" forState:UIControlStateNormal];
+  [abPanelBtn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+  abPanelBtn.backgroundColor = [UIColor colorWithRed:100.0f / 255.0f
+                                                green:200.0f / 255.0f
+                                                 blue:180.0f / 255.0f
+                                                alpha:0.30f];
+  abPanelBtn.layer.cornerRadius = 10.0;
+  abPanelBtn.titleLabel.font = [UIFont systemFontOfSize:16.0f weight:UIFontWeightSemibold];
+  [abPanelBtn addTarget:self action:@selector(onMountABPanel) forControlEvents:UIControlEventTouchUpInside];
+  self.abPanelBtn = abPanelBtn;
+
   UITextView *logView = [[UITextView alloc] init];
   logView.translatesAutoresizingMaskIntoConstraints = NO;
   logView.editable = NO;
@@ -161,6 +177,7 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
   [self.view addSubview:status];
   [self.view addSubview:kernelBtn];
   [self.view addSubview:readBtn];
+  [self.view addSubview:abPanelBtn];
   [self.view addSubview:logView];
 
   [NSLayoutConstraint activateConstraints:@[
@@ -194,13 +211,18 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
     [readBtn.topAnchor constraintEqualToAnchor:kernelBtn.bottomAnchor constant:12],
     [readBtn.heightAnchor constraintEqualToConstant:46],
 
+    [abPanelBtn.leadingAnchor constraintEqualToAnchor:kernelBtn.leadingAnchor],
+    [abPanelBtn.trailingAnchor constraintEqualToAnchor:kernelBtn.trailingAnchor],
+    [abPanelBtn.topAnchor constraintEqualToAnchor:readBtn.bottomAnchor constant:12],
+    [abPanelBtn.heightAnchor constraintEqualToConstant:46],
+
     [logView.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor constant:24],
     [logView.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor constant:-24],
-    [logView.topAnchor constraintEqualToAnchor:readBtn.bottomAnchor constant:16],
+    [logView.topAnchor constraintEqualToAnchor:abPanelBtn.bottomAnchor constant:16],
     [logView.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor constant:-16],
   ]];
 
-  [self appendLog:@"STEP9 面板已加载（未链 BBZView/PhysX/DOJailbreaker）"];
+  [self appendLog:@"STEP10 面板已加载（未链 BBZView.mm / PhysX / DrawView）"];
 }
 
 - (NSInteger)probeJailbreakSymbols {
@@ -449,15 +471,32 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
     [strongSelf appendLog:line];
   }];
 
+  self.kreadOK = ok;
   if (ok) {
-    self.statusLabel.text = @"kread 探针成功（验收⑨）";
+    self.statusLabel.text = @"kread 探针成功，可挂 AB 面板（⑩）";
     self.statusLabel.textColor =
         [UIColor colorWithRed:120.0f / 255.0f green:220.0f / 255.0f blue:160.0f / 255.0f alpha:1.0f];
+    [self appendLog:@"验收⑨仍有效；下一步点「挂载 AB 面板（⑩）」"];
   } else {
     self.statusLabel.text = @"kread 探针失败（见日志）";
     self.statusLabel.textColor =
         [UIColor colorWithRed:255.0f / 255.0f green:120.0f / 255.0f blue:120.0f / 255.0f alpha:1.0f];
   }
+}
+
+- (void)onMountABPanel {
+  [self appendLog:@"点击：挂载 AB 面板（验收⑩）"];
+  if (!self.kreadOK) {
+    [self appendLog:@"提示：建议先跑通 kread；仍允许挂载以验收亮窗"];
+  }
+  Step10ABPanelViewController *panel = [[Step10ABPanelViewController alloc] init];
+  panel.modalPresentationStyle = UIModalPresentationFullScreen;
+  [self presentViewController:panel animated:YES completion:^{
+    [self appendLog:@"验收⑩：AB 面板已 present（延后挂载）"];
+    self.statusLabel.text = @"AB 面板已挂载（验收⑩）";
+    self.statusLabel.textColor =
+        [UIColor colorWithRed:120.0f / 255.0f green:220.0f / 255.0f blue:160.0f / 255.0f alpha:1.0f];
+  }];
 }
 
 @end

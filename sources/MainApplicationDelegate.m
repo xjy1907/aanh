@@ -1,12 +1,12 @@
 //
-//  MainApplicationDelegate.m — 验收⑨：exploit + kread 探针
+//  MainApplicationDelegate.m — 验收⑩：延后挂 AB 面板宿主
 //
 
 #import "MainApplicationDelegate.h"
 #import "Step2BusinessViewController.h"
 
 __attribute__((used)) static const char kDrawFpsSegMarker[] = "DRAWFPS_SEG_V1";
-__attribute__((used)) static const char kStep9Marker[] = "STEP9-KREAD";
+__attribute__((used)) static const char kStep10Marker[] = "STEP10-BBZHOST";
 
 @implementation MainApplicationDelegate
 
@@ -15,7 +15,7 @@ __attribute__((used)) static const char kStep9Marker[] = "STEP9-KREAD";
   (void)application;
   (void)launchOptions;
   volatile const char *keepFps = kDrawFpsSegMarker;
-  volatile const char *keepStep = kStep9Marker;
+  volatile const char *keepStep = kStep10Marker;
   (void)keepFps[0];
   (void)keepStep[0];
 
