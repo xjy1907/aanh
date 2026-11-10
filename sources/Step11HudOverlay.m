@@ -1,14 +1,17 @@
 //
 //  Step11HudOverlay.m
+//  验收⑬：叠层宿主 + 轻量绘制面
 //
 
 #import "Step11HudOverlay.h"
+#import "Step13DrawSurface.h"
 
 __attribute__((used)) static const char kStep11HudMarker[] = "STEP11-HUDHOST";
 
 @interface Step11HudOverlay ()
 @property(nonatomic, strong) UIWindow *overlayWindow;
 @property(nonatomic, strong) UILabel *bannerLabel;
+@property(nonatomic, strong) Step13DrawSurface *drawSurface;
 @property(nonatomic, assign, readwrite, getter=isVisible) BOOL visible;
 @end
 
@@ -40,6 +43,11 @@ __attribute__((used)) static const char kStep11HudMarker[] = "STEP11-HUDHOST";
   UIViewController *root = [[UIViewController alloc] init];
   root.view.backgroundColor = [UIColor clearColor];
 
+  Step13DrawSurface *surface = [[Step13DrawSurface alloc] initWithFrame:bounds];
+  surface.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+  [root.view addSubview:surface];
+  self.drawSurface = surface;
+
   UIView *banner = [[UIView alloc] init];
   banner.translatesAutoresizingMaskIntoConstraints = NO;
   banner.backgroundColor = [[UIColor colorWithRed:18.0f / 255.0f
@@ -60,7 +68,7 @@ __attribute__((used)) static const char kStep11HudMarker[] = "STEP11-HUDHOST";
   label.font = [UIFont monospacedSystemFontOfSize:12.0f weight:UIFontWeightSemibold];
   label.numberOfLines = 2;
   label.textAlignment = NSTextAlignmentCenter;
-  label.text = @"STEP11-HUDHOST";
+  label.text = @"STEP13-DRAWSURF";
   self.bannerLabel = label;
 
   [banner addSubview:label];
@@ -86,15 +94,15 @@ __attribute__((used)) static const char kStep11HudMarker[] = "STEP11-HUDHOST";
     [self ensureWindow];
     if (detail.length > 0) {
       self.bannerLabel.text =
-          [NSString stringWithFormat:@"STEP11-HUDHOST\n%@", detail];
+          [NSString stringWithFormat:@"STEP13-DRAWSURF\n%@", detail];
     } else {
-      self.bannerLabel.text = @"STEP11-HUDHOST\n进程内叠层（无 DrawView/PhysX）";
+      self.bannerLabel.text = @"STEP13-DRAWSURF\n轻量绘制面（无 DrawView.mm/PhysX）";
     }
     self.visible = visible;
     self.overlayWindow.hidden = !visible;
     if (visible) {
+      [self.drawSurface startAnimating];
       [self.overlayWindow makeKeyAndVisible];
-      // 不抢主窗 key：立刻把 key 还回去，避免打断 AB 面板输入
       UIWindow *appKey = UIApplication.sharedApplication.windows.firstObject;
       for (UIWindow *w in UIApplication.sharedApplication.windows) {
         if (w != self.overlayWindow && !w.hidden) {
@@ -103,6 +111,8 @@ __attribute__((used)) static const char kStep11HudMarker[] = "STEP11-HUDHOST";
         }
       }
       [appKey makeKeyWindow];
+    } else {
+      [self.drawSurface stopAnimating];
     }
   };
   if ([NSThread isMainThread]) {
@@ -118,7 +128,7 @@ __attribute__((used)) static const char kStep11HudMarker[] = "STEP11-HUDHOST";
       return;
     }
     self.bannerLabel.text =
-        [NSString stringWithFormat:@"STEP11-HUDHOST\n%@", detail ?: @""];
+        [NSString stringWithFormat:@"STEP13-DRAWSURF\n%@", detail ?: @""];
   };
   if ([NSThread isMainThread]) {
     work();

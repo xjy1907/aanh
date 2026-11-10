@@ -15,6 +15,7 @@
 		A1STEP11H11F508F1500FD4A /* Step11HudOverlay.m in Sources */ = {isa = PBXBuildFile; fileRef = A1STEP11H12F508F1500FD4A /* Step11HudOverlay.m */; };
 		A1STEP12S11F508F1500FD4A /* Step12BBZSettingsHost.m in Sources */ = {isa = PBXBuildFile; fileRef = A1STEP12S12F508F1500FD4A /* Step12BBZSettingsHost.m */; };
 		A1STEP12L11F508F1500FD4A /* Step12LFSenderIDStub.m in Sources */ = {isa = PBXBuildFile; fileRef = A1STEP12L12F508F1500FD4A /* Step12LFSenderIDStub.m */; };
+		A1STEP13D11F508F1500FD4A /* Step13DrawSurface.m in Sources */ = {isa = PBXBuildFile; fileRef = A1STEP13D12F508F1500FD4A /* Step13DrawSurface.m */; };
 		A1STEP12A11F508F1500FD4A /* AimConfigViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = A1M001CFG000000000000002 /* AimConfigViewController.mm */; };
 		A1STEP12H11F508F1500FD4A /* AimHumanizeConfigViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = A1M001HUM000000000000002 /* AimHumanizeConfigViewController.mm */; };
 		A1STEP12B11F508F1500FD4A /* AimBezierConfigViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = A1M001BEZ000000000000002 /* AimBezierConfigViewController.mm */; };
@@ -297,6 +298,8 @@
 		A1STEP12S12F508F1500FD4A /* Step12BBZSettingsHost.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Step12BBZSettingsHost.m; sourceTree = "<group>"; };
 		A1STEP12S13F508F1500FD4A /* Step12BBZSettingsHost.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Step12BBZSettingsHost.h; sourceTree = "<group>"; };
 		A1STEP12L12F508F1500FD4A /* Step12LFSenderIDStub.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Step12LFSenderIDStub.m; sourceTree = "<group>"; };
+		A1STEP13D12F508F1500FD4A /* Step13DrawSurface.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Step13DrawSurface.m; sourceTree = "<group>"; };
+		A1STEP13D13F508F1500FD4A /* Step13DrawSurface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Step13DrawSurface.h; sourceTree = "<group>"; };
 		A1M001CFG000000000000001 /* AimConfigViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AimConfigViewController.h; sourceTree = "<group>"; };
 		A1M001CFG000000000000002 /* AimConfigViewController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = AimConfigViewController.mm; sourceTree = "<group>"; };
 		A1M001HUM000000000000001 /* AimHumanizeConfigViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AimHumanizeConfigViewController.h; sourceTree = "<group>"; };
@@ -1023,6 +1026,8 @@
 				A1STEP12S13F508F1500FD4A /* Step12BBZSettingsHost.h */,
 				A1STEP12S12F508F1500FD4A /* Step12BBZSettingsHost.m */,
 				A1STEP12L12F508F1500FD4A /* Step12LFSenderIDStub.m */,
+				A1STEP13D13F508F1500FD4A /* Step13DrawSurface.h */,
+				A1STEP13D12F508F1500FD4A /* Step13DrawSurface.m */,
 				CC711D492B5BF5C6007235A6 /* MainButton.h */,
 				CC711D2E2B5BF5C6007235A6 /* MainButton.mm */,
 				CC711D232B5BF5C6007235A6 /* TSEventFetcher.h */,
@@ -1680,6 +1685,7 @@
 				A1STEP12D11F508F1500FD4A /* DrawSettingsViewController.mm in Sources */,
 				A1STEP12M11F508F1500FD4A /* MaterialConfigViewController.mm in Sources */,
 				A1STEP12I11F508F1500FD4A /* ItemConfig.mm in Sources */,
+				A1STEP13D11F508F1500FD4A /* Step13DrawSurface.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2478,7 +2484,7 @@
 					"-lz",
 					"-lcompression",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step12bz;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step13ds;
 				PRODUCT_MODULE_NAME = Books;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -2563,7 +2569,7 @@
 					"-lz",
 					"-lcompression",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step12bz;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step13ds;
 				PRODUCT_MODULE_NAME = Books;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

@@ -60,12 +60,12 @@
 
 - (NSString *)hudDetailText {
   if (self.reading) {
-    return @"reading=1 · 进程内叠层";
+    return @"reading=1 · 轻量绘制面";
   }
   if (self.kernelReady) {
-    return @"kread OK · 进程内叠层";
+    return @"kread OK · 轻量绘制面";
   }
-  return @"进程内叠层（无 DrawView/PhysX）";
+  return @"轻量绘制面（无 DrawView.mm/PhysX）";
 }
 
 - (void)viewDidLoad {
@@ -78,7 +78,7 @@
 
   UILabel *title = [[UILabel alloc] init];
   title.translatesAutoresizingMaskIntoConstraints = NO;
-  title.text = @"STEP12-BBZ 面板";
+  title.text = @"STEP13-绘制面板";
   title.textColor = [UIColor colorWithRed:200.0f / 255.0f
                                     green:120.0f / 255.0f
                                      blue:255.0f / 255.0f
@@ -88,7 +88,7 @@
 
   UILabel *hint = [[UILabel alloc] init];
   hint.translatesAutoresizingMaskIntoConstraints = NO;
-  hint.text = @"⑪已过：进程内 HUD 叠层顶条\n⑫：挂载 BBZ 真实设置页\n仍不链 BBZView.mm / PhysX / DrawView\n点「打开 BBZ 设置（⑫）」= 验收⑫";
+  hint.text = @"⑫已过：BBZ 设置页可进\n⑬：开启 HUD 应见准星/框/FPS 绘制面\n仍不链 DrawView.mm / PhysX\n点「开启 HUD 叠层」= 验收⑬";
   hint.textColor = [UIColor colorWithWhite:0.78f alpha:1.0f];
   hint.font = [UIFont systemFontOfSize:13.0f weight:UIFontWeightMedium];
   hint.textAlignment = NSTextAlignmentCenter;
@@ -137,7 +137,7 @@
                                                       alpha:0.30f]
                                action:@selector(onOpenBBZSettings)];
 
-  UIButton *backBtn = [self makeButton:@"返回 STEP12 诊断页"
+  UIButton *backBtn = [self makeButton:@"返回 STEP13 诊断页"
                                  color:[UIColor colorWithWhite:0.25f alpha:0.9f]
                                 action:@selector(onBack)];
 
@@ -219,8 +219,8 @@
 
   [self refreshReadButtonTitle];
   [self refreshHudButtonTitle];
-  [self appendLog:@"STEP12 面板已挂载（未链 BBZView.mm / PhysX / DrawView）"];
-  [self appendLog:@"验收⑫：点「打开 BBZ 设置（⑫）」应进入真实设置页"];
+  [self appendLog:@"STEP13 面板已挂载（未链 DrawView.mm / PhysX）"];
+  [self appendLog:@"验收⑬：点「开启 HUD 叠层」应出现准星/框/STEP13-DRAWSURF"];
 }
 
 - (void)onInitKernel {
@@ -315,8 +315,8 @@
   [self refreshHudButtonTitle];
   if (self.hudOn) {
     [[Step11HudOverlay shared] setVisible:YES detail:[self hudDetailText]];
-    [self appendLog:@"HUD 叠层开启（进程内 UIWindow，不 spawn / 不链 DrawView）"];
-    self.statusLabel.text = @"HUD 叠层=ON（验收⑪）";
+    [self appendLog:@"HUD 叠层开启（应见准星/框/FPS，验收⑬）"];
+    self.statusLabel.text = @"绘制面=ON（验收⑬）";
   } else {
     [[Step11HudOverlay shared] setVisible:NO detail:nil];
     [self appendLog:@"HUD 叠层关闭"];
@@ -325,7 +325,7 @@
       [self refreshReadButtonTitle];
       [self appendLog:@"连带停止读取"];
     }
-    self.statusLabel.text = @"HUD 叠层=OFF";
+    self.statusLabel.text = @"绘制面=OFF";
   }
   self.statusLabel.textColor =
       [UIColor colorWithRed:120.0f / 255.0f green:220.0f / 255.0f blue:160.0f / 255.0f alpha:1.0f];

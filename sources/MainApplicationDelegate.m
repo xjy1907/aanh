@@ -1,12 +1,12 @@
 //
-//  MainApplicationDelegate.m — 验收⑫：延后挂 BBZ 真实设置页
+//  MainApplicationDelegate.m — 验收⑬：HUD 叠层轻量绘制面
 //
 
 #import "MainApplicationDelegate.h"
 #import "Step2BusinessViewController.h"
 
 __attribute__((used)) static const char kDrawFpsSegMarker[] = "DRAWFPS_SEG_V1";
-__attribute__((used)) static const char kStep12Marker[] = "STEP12-BBZVCS";
+__attribute__((used)) static const char kStep13Marker[] = "STEP13-DRAWSURF";
 
 @implementation MainApplicationDelegate
 
@@ -15,7 +15,7 @@ __attribute__((used)) static const char kStep12Marker[] = "STEP12-BBZVCS";
   (void)application;
   (void)launchOptions;
   volatile const char *keepFps = kDrawFpsSegMarker;
-  volatile const char *keepStep = kStep12Marker;
+  volatile const char *keepStep = kStep13Marker;
   (void)keepFps[0];
   (void)keepStep[0];
 
