@@ -10,7 +10,7 @@
 @interface Step10ABPanelViewController ()
 @property(nonatomic, strong) UILabel *statusLabel;
 @property(nonatomic, strong) UITextView *logView;
-@property(nonatomic, strong) UIButton *initBtn;
+@property(nonatomic, strong) UIButton *kernelBtn;
 @property(nonatomic, strong) UIButton *resetBtn;
 @property(nonatomic, strong) UIButton *readBtn;
 @property(nonatomic, strong) UIButton *hudBtn;
@@ -93,7 +93,7 @@
   status.numberOfLines = 0;
   self.statusLabel = status;
 
-  self.initBtn = [self makeButton:@"初始化内核"
+  self.kernelBtn = [self makeButton:@"初始化内核"
                             color:[UIColor colorWithRed:200.0f / 255.0f
                                                   green:120.0f / 255.0f
                                                    blue:255.0f / 255.0f
@@ -140,7 +140,7 @@
   [self.view addSubview:title];
   [self.view addSubview:hint];
   [self.view addSubview:status];
-  [self.view addSubview:self.initBtn];
+  [self.view addSubview:self.kernelBtn];
   [self.view addSubview:self.resetBtn];
   [self.view addSubview:self.readBtn];
   [self.view addSubview:self.hudBtn];
@@ -161,28 +161,28 @@
     [status.leadingAnchor constraintGreaterThanOrEqualToAnchor:self.view.leadingAnchor constant:24],
     [status.trailingAnchor constraintLessThanOrEqualToAnchor:self.view.trailingAnchor constant:-24],
 
-    [self.initBtn.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor constant:40],
-    [self.initBtn.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor constant:-40],
-    [self.initBtn.topAnchor constraintEqualToAnchor:status.bottomAnchor constant:14],
-    [self.initBtn.heightAnchor constraintEqualToConstant:44],
+    [self.kernelBtn.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor constant:40],
+    [self.kernelBtn.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor constant:-40],
+    [self.kernelBtn.topAnchor constraintEqualToAnchor:status.bottomAnchor constant:14],
+    [self.kernelBtn.heightAnchor constraintEqualToConstant:44],
 
-    [self.resetBtn.leadingAnchor constraintEqualToAnchor:self.initBtn.leadingAnchor],
-    [self.resetBtn.trailingAnchor constraintEqualToAnchor:self.initBtn.trailingAnchor],
-    [self.resetBtn.topAnchor constraintEqualToAnchor:self.initBtn.bottomAnchor constant:10],
+    [self.resetBtn.leadingAnchor constraintEqualToAnchor:self.kernelBtn.leadingAnchor],
+    [self.resetBtn.trailingAnchor constraintEqualToAnchor:self.kernelBtn.trailingAnchor],
+    [self.resetBtn.topAnchor constraintEqualToAnchor:self.kernelBtn.bottomAnchor constant:10],
     [self.resetBtn.heightAnchor constraintEqualToConstant:44],
 
-    [self.readBtn.leadingAnchor constraintEqualToAnchor:self.initBtn.leadingAnchor],
-    [self.readBtn.trailingAnchor constraintEqualToAnchor:self.initBtn.trailingAnchor],
+    [self.readBtn.leadingAnchor constraintEqualToAnchor:self.kernelBtn.leadingAnchor],
+    [self.readBtn.trailingAnchor constraintEqualToAnchor:self.kernelBtn.trailingAnchor],
     [self.readBtn.topAnchor constraintEqualToAnchor:self.resetBtn.bottomAnchor constant:10],
     [self.readBtn.heightAnchor constraintEqualToConstant:44],
 
-    [self.hudBtn.leadingAnchor constraintEqualToAnchor:self.initBtn.leadingAnchor],
-    [self.hudBtn.trailingAnchor constraintEqualToAnchor:self.initBtn.trailingAnchor],
+    [self.hudBtn.leadingAnchor constraintEqualToAnchor:self.kernelBtn.leadingAnchor],
+    [self.hudBtn.trailingAnchor constraintEqualToAnchor:self.kernelBtn.trailingAnchor],
     [self.hudBtn.topAnchor constraintEqualToAnchor:self.readBtn.bottomAnchor constant:10],
     [self.hudBtn.heightAnchor constraintEqualToConstant:44],
 
-    [backBtn.leadingAnchor constraintEqualToAnchor:self.initBtn.leadingAnchor],
-    [backBtn.trailingAnchor constraintEqualToAnchor:self.initBtn.trailingAnchor],
+    [backBtn.leadingAnchor constraintEqualToAnchor:self.kernelBtn.leadingAnchor],
+    [backBtn.trailingAnchor constraintEqualToAnchor:self.kernelBtn.trailingAnchor],
     [backBtn.topAnchor constraintEqualToAnchor:self.hudBtn.bottomAnchor constant:10],
     [backBtn.heightAnchor constraintEqualToConstant:40],
 
