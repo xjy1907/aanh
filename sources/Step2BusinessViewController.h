@@ -1,6 +1,6 @@
 //
 //  Step2BusinessViewController.h
-//  验收⑩：⑨ 过后延后挂 AB 面板（不链 BBZView.mm / PhysX）
+//  验收⑪：⑩ 过后接进程内 HUD 叠层（不链 BBZView.mm / PhysX / DrawView）
 //
 
 #import <UIKit/UIKit.h>

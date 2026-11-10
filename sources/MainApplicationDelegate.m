@@ -1,12 +1,12 @@
 //
-//  MainApplicationDelegate.m — 验收⑩：延后挂 AB 面板宿主
+//  MainApplicationDelegate.m — 验收⑪：进程内 HUD 叠层宿主
 //
 
 #import "MainApplicationDelegate.h"
 #import "Step2BusinessViewController.h"
 
 __attribute__((used)) static const char kDrawFpsSegMarker[] = "DRAWFPS_SEG_V1";
-__attribute__((used)) static const char kStep10Marker[] = "STEP10-BBZHOST";
+__attribute__((used)) static const char kStep11Marker[] = "STEP11-HUDHOST";
 
 @implementation MainApplicationDelegate
 
@@ -15,7 +15,7 @@ __attribute__((used)) static const char kStep10Marker[] = "STEP10-BBZHOST";
   (void)application;
   (void)launchOptions;
   volatile const char *keepFps = kDrawFpsSegMarker;
-  volatile const char *keepStep = kStep10Marker;
+  volatile const char *keepStep = kStep11Marker;
   (void)keepFps[0];
   (void)keepStep[0];
 

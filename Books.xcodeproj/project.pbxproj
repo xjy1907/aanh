@@ -12,6 +12,7 @@
 		A1KCACHE11F508F1500FD4A /* KernelcacheLocator.m in Sources */ = {isa = PBXBuildFile; fileRef = A1KCACHE12F508F1500FD4A /* KernelcacheLocator.m */; };
 		A1STEP9KR11F508F1500FD4A /* Step9KreadRunner.m in Sources */ = {isa = PBXBuildFile; fileRef = A1STEP9KR12F508F1500FD4A /* Step9KreadRunner.m */; };
 		A1STEP10P11F508F1500FD4A /* Step10ABPanelViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = A1STEP10P12F508F1500FD4A /* Step10ABPanelViewController.m */; };
+		A1STEP11H11F508F1500FD4A /* Step11HudOverlay.m in Sources */ = {isa = PBXBuildFile; fileRef = A1STEP11H12F508F1500FD4A /* Step11HudOverlay.m */; };
 		A1IOKITB01F508F1500FD4A /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8862E18D774008B33B6 /* IOKit.framework */; };
 		A1GRABKB01F508F1500FD4A /* libgrabkernel2.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8912E18D83A008B33B6 /* libgrabkernel2.a */; };
 		A1PARTB01F508F1500FD4A /* libpartial.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8902E18D83A008B33B6 /* libpartial.a */; };
@@ -283,6 +284,8 @@
 		A1STEP9KR12F508F1500FD4A /* Step9KreadRunner.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Step9KreadRunner.m; sourceTree = "<group>"; };
 		A1STEP10P12F508F1500FD4A /* Step10ABPanelViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Step10ABPanelViewController.m; sourceTree = "<group>"; };
 		A1STEP10P13F508F1500FD4A /* Step10ABPanelViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Step10ABPanelViewController.h; sourceTree = "<group>"; };
+		A1STEP11H12F508F1500FD4A /* Step11HudOverlay.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Step11HudOverlay.m; sourceTree = "<group>"; };
+		A1STEP11H13F508F1500FD4A /* Step11HudOverlay.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Step11HudOverlay.h; sourceTree = "<group>"; };
 		A1M001CFG000000000000001 /* AimConfigViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AimConfigViewController.h; sourceTree = "<group>"; };
 		A1M001CFG000000000000002 /* AimConfigViewController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = AimConfigViewController.mm; sourceTree = "<group>"; };
 		A1M001HUM000000000000001 /* AimHumanizeConfigViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AimHumanizeConfigViewController.h; sourceTree = "<group>"; };
@@ -1003,6 +1006,8 @@
 				A1STEP9KR12F508F1500FD4A /* Step9KreadRunner.m */,
 				A1STEP10P13F508F1500FD4A /* Step10ABPanelViewController.h */,
 				A1STEP10P12F508F1500FD4A /* Step10ABPanelViewController.m */,
+				A1STEP11H13F508F1500FD4A /* Step11HudOverlay.h */,
+				A1STEP11H12F508F1500FD4A /* Step11HudOverlay.m */,
 				CC711D492B5BF5C6007235A6 /* MainButton.h */,
 				CC711D2E2B5BF5C6007235A6 /* MainButton.mm */,
 				CC711D232B5BF5C6007235A6 /* TSEventFetcher.h */,
@@ -1651,6 +1656,7 @@
 				A1KCACHE11F508F1500FD4A /* KernelcacheLocator.m in Sources */,
 				A1STEP9KR11F508F1500FD4A /* Step9KreadRunner.m in Sources */,
 				A1STEP10P11F508F1500FD4A /* Step10ABPanelViewController.m in Sources */,
+				A1STEP11H11F508F1500FD4A /* Step11HudOverlay.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2444,7 +2450,7 @@
 					"-lz",
 					"-lcompression",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step10ab;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step11hud;
 				PRODUCT_MODULE_NAME = Books;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -2524,7 +2530,7 @@
 					"-lz",
 					"-lcompression",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step10ab;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step11hud;
 				PRODUCT_MODULE_NAME = Books;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

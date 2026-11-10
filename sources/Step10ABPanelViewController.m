@@ -1,11 +1,12 @@
 //
 //  Step10ABPanelViewController.m
-//  验收⑩：对齐 BBZView 三大内核按钮的轻量面板；HUD 仅进程内桩，不 spawn DrawView/PhysX
+//  验收⑪：AB 三按钮 + 进程内真实 HUD 叠层；仍不链 BBZView.mm / PhysX / DrawView
 //
 
 #import "Step10ABPanelViewController.h"
 #import "JBDylibLoader.h"
 #import "Step9KreadRunner.h"
+#import "Step11HudOverlay.h"
 
 @interface Step10ABPanelViewController ()
 @property(nonatomic, strong) UILabel *statusLabel;
@@ -51,8 +52,18 @@
 }
 
 - (void)refreshHudButtonTitle {
-  NSString *t = self.hudOn ? @"关闭 HUD（桩）" : @"开启 HUD（桩）";
+  NSString *t = self.hudOn ? @"关闭 HUD 叠层" : @"开启 HUD 叠层";
   [self.hudBtn setTitle:t forState:UIControlStateNormal];
+}
+
+- (NSString *)hudDetailText {
+  if (self.reading) {
+    return @"reading=1 · 进程内叠层";
+  }
+  if (self.kernelReady) {
+    return @"kread OK · 进程内叠层";
+  }
+  return @"进程内叠层（无 DrawView/PhysX）";
 }
 
 - (void)viewDidLoad {
@@ -65,7 +76,7 @@
 
   UILabel *title = [[UILabel alloc] init];
   title.translatesAutoresizingMaskIntoConstraints = NO;
-  title.text = @"STEP10-AB 面板";
+  title.text = @"STEP11-HUD 面板";
   title.textColor = [UIColor colorWithRed:200.0f / 255.0f
                                     green:120.0f / 255.0f
                                      blue:255.0f / 255.0f
@@ -75,7 +86,7 @@
 
   UILabel *hint = [[UILabel alloc] init];
   hint.translatesAutoresizingMaskIntoConstraints = NO;
-  hint.text = @"延后挂载 AB 三按钮（对齐 BBZView 入口）\n仍不链 BBZView.mm / PhysX / DrawView\nHUD 为进程内桩，不 spawn 叠层";
+  hint.text = @"⑩已过：延后挂 AB 三按钮\n⑪：进程内真实 HUD 叠层宿主\n仍不链 BBZView.mm / PhysX / DrawView\n点「开启 HUD 叠层」应看到顶条 = 验收⑪";
   hint.textColor = [UIColor colorWithWhite:0.78f alpha:1.0f];
   hint.font = [UIFont systemFontOfSize:13.0f weight:UIFontWeightMedium];
   hint.textAlignment = NSTextAlignmentCenter;
@@ -111,14 +122,14 @@
                                                    blue:200.0f / 255.0f
                                                   alpha:0.30f]
                            action:@selector(onToggleReading)];
-  self.hudBtn = [self makeButton:@"开启 HUD（桩）"
+  self.hudBtn = [self makeButton:@"开启 HUD 叠层"
                            color:[UIColor colorWithRed:100.0f / 255.0f
                                                  green:200.0f / 255.0f
                                                   blue:180.0f / 255.0f
                                                  alpha:0.28f]
                           action:@selector(onToggleHud)];
 
-  UIButton *backBtn = [self makeButton:@"返回 STEP10 诊断页"
+  UIButton *backBtn = [self makeButton:@"返回 STEP11 诊断页"
                                  color:[UIColor colorWithWhite:0.25f alpha:0.9f]
                                 action:@selector(onBack)];
 
@@ -194,8 +205,8 @@
 
   [self refreshReadButtonTitle];
   [self refreshHudButtonTitle];
-  [self appendLog:@"STEP10 AB 面板已挂载（未链 BBZView.mm / PhysX / DrawView）"];
-  [self appendLog:@"验收⑩：能看见本页 = 延后挂载通过"];
+  [self appendLog:@"STEP11 面板已挂载（未链 BBZView.mm / PhysX / DrawView）"];
+  [self appendLog:@"验收⑪：点「开启 HUD 叠层」应出现顶条 STEP11-HUDHOST"];
 }
 
 - (void)onInitKernel {
@@ -222,7 +233,10 @@
     self.statusLabel.text = @"内核就绪（kread OK）";
     self.statusLabel.textColor =
         [UIColor colorWithRed:120.0f / 255.0f green:220.0f / 255.0f blue:160.0f / 255.0f alpha:1.0f];
-    [self appendLog:@"初始化内核：成功（验收⑩）"];
+    [self appendLog:@"初始化内核：成功"];
+    if (self.hudOn) {
+      [[Step11HudOverlay shared] updateDetail:[self hudDetailText]];
+    }
   } else {
     self.statusLabel.text = @"初始化失败（见日志）";
     self.statusLabel.textColor =
@@ -237,7 +251,8 @@
   self.reading = NO;
   if (self.hudOn) {
     self.hudOn = NO;
-    [self appendLog:@"HUD 桩已关（重置）"];
+    [[Step11HudOverlay shared] setVisible:NO detail:nil];
+    [self appendLog:@"HUD 叠层已关（重置）"];
   }
   [self refreshReadButtonTitle];
   [self refreshHudButtonTitle];
@@ -258,17 +273,23 @@
   self.reading = !self.reading;
   [self refreshReadButtonTitle];
   if (self.reading) {
-    [self appendLog:@"开始读取：reading=1（未链 DrawView，仅状态）"];
+    [self appendLog:@"开始读取：reading=1（未链 DrawView）"];
     if (!self.hudOn) {
       self.hudOn = YES;
       [self refreshHudButtonTitle];
-      [self appendLog:@"auto HUD 桩=ON（不 spawn 叠层）"];
+      [[Step11HudOverlay shared] setVisible:YES detail:[self hudDetailText]];
+      [self appendLog:@"auto HUD 叠层=ON（验收⑪）"];
+    } else {
+      [[Step11HudOverlay shared] updateDetail:[self hudDetailText]];
     }
-    self.statusLabel.text = @"读取中（无 PhysX 绘制）";
+    self.statusLabel.text = @"读取中 + HUD 叠层";
     self.statusLabel.textColor =
         [UIColor colorWithRed:120.0f / 255.0f green:220.0f / 255.0f blue:160.0f / 255.0f alpha:1.0f];
   } else {
     [self appendLog:@"停止读取：reading=0"];
+    if (self.hudOn) {
+      [[Step11HudOverlay shared] updateDetail:[self hudDetailText]];
+    }
     self.statusLabel.text = @"已停止读取";
     self.statusLabel.textColor =
         [UIColor colorWithRed:255.0f / 255.0f green:210.0f / 255.0f blue:120.0f / 255.0f alpha:1.0f];
@@ -279,16 +300,18 @@
   self.hudOn = !self.hudOn;
   [self refreshHudButtonTitle];
   if (self.hudOn) {
-    [self appendLog:@"HUD 桩开启（不调用 SetHUDEnabled / 不链 DrawView）"];
-    self.statusLabel.text = @"HUD 桩=ON（验收⑩）";
+    [[Step11HudOverlay shared] setVisible:YES detail:[self hudDetailText]];
+    [self appendLog:@"HUD 叠层开启（进程内 UIWindow，不 spawn / 不链 DrawView）"];
+    self.statusLabel.text = @"HUD 叠层=ON（验收⑪）";
   } else {
-    [self appendLog:@"HUD 桩关闭"];
+    [[Step11HudOverlay shared] setVisible:NO detail:nil];
+    [self appendLog:@"HUD 叠层关闭"];
     if (self.reading) {
       self.reading = NO;
       [self refreshReadButtonTitle];
       [self appendLog:@"连带停止读取"];
     }
-    self.statusLabel.text = @"HUD 桩=OFF";
+    self.statusLabel.text = @"HUD 叠层=OFF";
   }
   self.statusLabel.textColor =
       [UIColor colorWithRed:120.0f / 255.0f green:220.0f / 255.0f blue:160.0f / 255.0f alpha:1.0f];
@@ -296,6 +319,10 @@
 
 - (void)onBack {
   [self appendLog:@"返回诊断页"];
+  if (self.hudOn) {
+    self.hudOn = NO;
+    [[Step11HudOverlay shared] setVisible:NO detail:nil];
+  }
   if (self.presentingViewController) {
     [self dismissViewControllerAnimated:YES completion:nil];
   } else if (self.navigationController) {
