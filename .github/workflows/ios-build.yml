@@ -66,8 +66,8 @@ on:
 
 jobs:
   build:
-    # iOS15 启动兼容：用 macos-15 + Xcode 16.4（Xcode 26 工具链易带入不兼容依赖）
-    runs-on: macos-15
+    # macos-latest + Xcode 26.6.0（runner 镜像默认亦为 26.6）
+    runs-on: macos-latest
     permissions:
       contents: write # deletes the trigger tag
     timeout-minutes: 90 # a cold React Native/Expo build on the free runner takes 30-60 minutes
@@ -195,7 +195,7 @@ jobs:
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '16.4'
+          xcode-version: '26.6'
 
       - name: Restore DerivedData cache
         uses: actions/cache/restore@v6
