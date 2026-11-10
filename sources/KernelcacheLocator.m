@@ -5,10 +5,14 @@
 #import "KernelcacheLocator.h"
 #import <libgrabkernel2/libgrabkernel2.h>
 #import <IOKit/IOKitLib.h>
+#import <mach/mach.h>
 #import <stdio.h>
 
+// iOS SDK 将 kIOMasterPortDefault 标为 unavailable；#ifndef 挡不住 const 符号，
+// 误宏成 kIOMasterPortDefault 会在 Xcode 16 / iPhoneOS18 SDK 上编译失败。
+// MACH_PORT_NULL 对 IORegistryEntryFromPath 等价于默认主端口。
 #ifndef kIOMainPortDefault
-#define kIOMainPortDefault kIOMasterPortDefault
+#define kIOMainPortDefault MACH_PORT_NULL
 #endif
 
 @implementation KernelcacheLocator
