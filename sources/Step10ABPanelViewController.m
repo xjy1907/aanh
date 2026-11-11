@@ -21,6 +21,7 @@
 @property(nonatomic, assign) BOOL kernelReady;
 @property(nonatomic, assign) BOOL reading;
 @property(nonatomic, assign) BOOL hudOn;
+@property(nonatomic, assign) BOOL kernelBusy;
 @end
 
 @implementation Step10ABPanelViewController
@@ -225,7 +226,11 @@
 }
 
 - (void)onInitKernel {
-  [self appendLog:@"点击：初始化内核（复用 Step9KreadRunner）"];
+  if (self.kernelBusy) {
+    [self appendLog:@"初始化内核：已在进行中，忽略重复点击"];
+    return;
+  }
+  [self appendLog:@"点击：初始化内核（后台跑 Step9KreadRunner，避免主线程卡死）"];
   if (!JBEnsureJailbreakDylibsLoaded()) {
     self.statusLabel.text = @"越狱库未就绪";
     self.statusLabel.textColor =
@@ -234,30 +239,47 @@
     return;
   }
 
-  self.statusLabel.text = @"正在 exploit / kread…";
+  self.kernelBusy = YES;
+  self.kernelBtn.enabled = NO;
+  self.readBtn.enabled = NO;
+  self.statusLabel.text = @"正在 exploit / kread…（后台）";
   self.statusLabel.textColor =
       [UIColor colorWithRed:255.0f / 255.0f green:210.0f / 255.0f blue:120.0f / 255.0f alpha:1.0f];
+  [self appendLog:@"已切后台：日志会陆续刷出；卡在某行即该步耗时/挂起"];
 
   __weak typeof(self) weakSelf = self;
-  BOOL ok = [Step9KreadRunner runExploitAndProbeKreadWithLog:^(NSString *line) {
-    __strong typeof(weakSelf) strongSelf = weakSelf;
-    [strongSelf appendLog:line];
-  }];
-  self.kernelReady = ok;
-  if (ok) {
-    self.statusLabel.text = @"内核就绪（kread OK）";
-    self.statusLabel.textColor =
-        [UIColor colorWithRed:120.0f / 255.0f green:220.0f / 255.0f blue:160.0f / 255.0f alpha:1.0f];
-    [self appendLog:@"初始化内核：成功"];
-    if (self.hudOn) {
-      [[Step11HudOverlay shared] updateDetail:[self hudDetailText]];
-    }
-  } else {
-    self.statusLabel.text = @"初始化失败（见日志）";
-    self.statusLabel.textColor =
-        [UIColor colorWithRed:255.0f / 255.0f green:120.0f / 255.0f blue:120.0f / 255.0f alpha:1.0f];
-    [self appendLog:@"初始化内核：失败"];
-  }
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    BOOL ok = [Step9KreadRunner runExploitAndProbeKreadWithLog:^(NSString *line) {
+      dispatch_async(dispatch_get_main_queue(), ^{
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        [strongSelf appendLog:line];
+      });
+    }];
+    dispatch_async(dispatch_get_main_queue(), ^{
+      __strong typeof(weakSelf) strongSelf = weakSelf;
+      if (!strongSelf) {
+        return;
+      }
+      strongSelf.kernelBusy = NO;
+      strongSelf.kernelBtn.enabled = YES;
+      strongSelf.readBtn.enabled = YES;
+      strongSelf.kernelReady = ok;
+      if (ok) {
+        strongSelf.statusLabel.text = @"内核就绪（kread OK）";
+        strongSelf.statusLabel.textColor =
+            [UIColor colorWithRed:120.0f / 255.0f green:220.0f / 255.0f blue:160.0f / 255.0f alpha:1.0f];
+        [strongSelf appendLog:@"初始化内核：成功"];
+        if (strongSelf.hudOn) {
+          [[Step11HudOverlay shared] updateDetail:[strongSelf hudDetailText]];
+        }
+      } else {
+        strongSelf.statusLabel.text = @"初始化失败（见日志）";
+        strongSelf.statusLabel.textColor =
+            [UIColor colorWithRed:255.0f / 255.0f green:120.0f / 255.0f blue:120.0f / 255.0f alpha:1.0f];
+        [strongSelf appendLog:@"初始化内核：失败"];
+      }
+    });
+  });
 }
 
 - (void)onResetKernel {

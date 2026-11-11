@@ -451,7 +451,7 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
 }
 
 - (void)onKreadProbe {
-  [self appendLog:@"点击：跑 exploit + kread（验收⑨）"];
+  [self appendLog:@"点击：跑 exploit + kread（验收⑨，后台执行）"];
   if (!self.jbReady) {
     self.jbReady = JBEnsureJailbreakDylibsLoaded();
     [self appendLog:self.jbReady ? @"补做 dlopen 成功" : @"补做 dlopen 失败"];
@@ -461,27 +461,37 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
     return;
   }
 
-  self.statusLabel.text = @"正在跑 exploit / kread…";
+  self.statusLabel.text = @"正在跑 exploit / kread…（后台）";
   self.statusLabel.textColor =
       [UIColor colorWithRed:255.0f / 255.0f green:210.0f / 255.0f blue:120.0f / 255.0f alpha:1.0f];
+  [self appendLog:@"已切后台：日志会陆续刷出"];
 
   __weak typeof(self) weakSelf = self;
-  BOOL ok = [Step9KreadRunner runExploitAndProbeKreadWithLog:^(NSString *line) {
-    __strong typeof(weakSelf) strongSelf = weakSelf;
-    [strongSelf appendLog:line];
-  }];
-
-  self.kreadOK = ok;
-  if (ok) {
-    self.statusLabel.text = @"kread 成功，可挂 AB/绘制面板（⑰）";
-    self.statusLabel.textColor =
-        [UIColor colorWithRed:120.0f / 255.0f green:220.0f / 255.0f blue:160.0f / 255.0f alpha:1.0f];
-    [self appendLog:@"下一步点「挂载 AB/绘制面板（⑰）」开 BBZGUI 绘制面"];
-  } else {
-    self.statusLabel.text = @"kread 探针失败（见日志）";
-    self.statusLabel.textColor =
-        [UIColor colorWithRed:255.0f / 255.0f green:120.0f / 255.0f blue:120.0f / 255.0f alpha:1.0f];
-  }
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    BOOL ok = [Step9KreadRunner runExploitAndProbeKreadWithLog:^(NSString *line) {
+      dispatch_async(dispatch_get_main_queue(), ^{
+        __strong typeof(weakSelf) strongSelf = weakSelf;
+        [strongSelf appendLog:line];
+      });
+    }];
+    dispatch_async(dispatch_get_main_queue(), ^{
+      __strong typeof(weakSelf) strongSelf = weakSelf;
+      if (!strongSelf) {
+        return;
+      }
+      strongSelf.kreadOK = ok;
+      if (ok) {
+        strongSelf.statusLabel.text = @"kread 成功，可挂 AB/绘制面板（⑱）";
+        strongSelf.statusLabel.textColor =
+            [UIColor colorWithRed:120.0f / 255.0f green:220.0f / 255.0f blue:160.0f / 255.0f alpha:1.0f];
+        [strongSelf appendLog:@"下一步点「挂载 AB/绘制面板」开读取探针面板"];
+      } else {
+        strongSelf.statusLabel.text = @"kread 探针失败（见日志）";
+        strongSelf.statusLabel.textColor =
+            [UIColor colorWithRed:255.0f / 255.0f green:120.0f / 255.0f blue:120.0f / 255.0f alpha:1.0f];
+      }
+    });
+  });
 }
 
 - (void)onMountABPanel {
