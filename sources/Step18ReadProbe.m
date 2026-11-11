@@ -19,8 +19,11 @@ static NSString *const kReadingDefaultsKey = @"NH.Step18.ReadingEnabled";
 
 typedef uint64_t (*ProcFindFn)(pid_t);
 typedef uint64_t (*ProcTaskFn)(uint64_t);
+typedef uint64_t (*KreadPtrFn)(uint64_t);
+typedef uint64_t (*Kread64Fn)(uint64_t);
 typedef int (*KreadbufFn)(uint64_t, void *, size_t);
 typedef int (*VreadbufFn)(uint64_t, uint64_t, void *, size_t);
+typedef int (*ProcVreadFn)(uint64_t, const void *, void *, size_t);
 
 static BOOL gReadingEnabled = NO;
 static pid_t gGamePid = -1;
@@ -30,8 +33,8 @@ static BOOL gScanBusy = NO;
 static dispatch_source_t gPollTimer = nil;
 static void (^gPollLog)(NSString *) = nil;
 
-// 缓存跨页读会话，避免每页重建 proc→task→pmap→ttep
 static pid_t gSessPid = -1;
+static uint64_t gSessProc = 0;
 static uint64_t gSessTtep = 0;
 static uint64_t gSessVmap = 0;
 
@@ -45,42 +48,79 @@ static void *step18_sym(const char *name) {
   return p;
 }
 
-static uint64_t step18_unsign(uint64_t p) {
-  if ((p & (1ULL << 55)) != 0) {
-    return p | 0xFFFFFF8000000000ULL;
-  }
-  return p & 0x0000007FFFFFFFFFULL;
+static struct system_info *step18_gs(void) {
+  return (struct system_info *)step18_sym("gSystemInfo");
 }
 
-static struct system_info *step18_gs(void) {
-  void *gs = step18_sym("gSystemInfo");
-  return (struct system_info *)gs;
+// 与 libjailbreak UNSIGN_PTR 一致：用 gSystemInfo.pointer_mask
+static uint64_t step18_unsign(uint64_t p) {
+  struct system_info *info = step18_gs();
+  uint64_t pacMask = info ? info->kernelConstant.pointer_mask : 0xFFFFFF8000000000ULL;
+  if (!pacMask) {
+    pacMask = 0xFFFFFF8000000000ULL;
+  }
+  if ((p & (1ULL << 55)) != 0) {
+    return p | pacMask;
+  }
+  return p & ~pacMask;
+}
+
+static uint64_t step18_kread_ptr(uint64_t va) {
+  KreadPtrFn kreadPtr = (KreadPtrFn)step18_sym("kread_ptr");
+  if (kreadPtr) {
+    return kreadPtr(va);
+  }
+  Kread64Fn kread64 = (Kread64Fn)step18_sym("kread64");
+  if (kread64) {
+    return step18_unsign(kread64(va));
+  }
+  KreadbufFn kreadbuf = (KreadbufFn)step18_sym("kreadbuf");
+  uint64_t v = 0;
+  if (!kreadbuf || kreadbuf(va, &v, sizeof(v)) != 0) {
+    return 0;
+  }
+  return step18_unsign(v);
+}
+
+static uint64_t step18_kread64_raw(uint64_t va) {
+  Kread64Fn kread64 = (Kread64Fn)step18_sym("kread64");
+  if (kread64) {
+    return kread64(va);
+  }
+  KreadbufFn kreadbuf = (KreadbufFn)step18_sym("kreadbuf");
+  uint64_t v = 0;
+  if (!kreadbuf || kreadbuf(va, &v, sizeof(v)) != 0) {
+    return 0;
+  }
+  return v;
 }
 
 static BOOL step18_open_session(pid_t pid, NSString *__autoreleasing *errOut) {
-  if (pid > 1 && pid == gSessPid && gSessTtep != 0) {
+  if (pid > 1 && pid == gSessPid && (gSessTtep != 0 || gSessProc != 0)) {
     return YES;
   }
   gSessPid = -1;
+  gSessProc = 0;
   gSessTtep = 0;
   gSessVmap = 0;
 
   ProcFindFn procFind = (ProcFindFn)step18_sym("proc_find");
   ProcTaskFn procTask = (ProcTaskFn)step18_sym("proc_task");
-  KreadbufFn kreadbuf = (KreadbufFn)step18_sym("kreadbuf");
   struct system_info *info = step18_gs();
-  if (!procFind || !procTask || !kreadbuf || !info) {
+  if (!procFind || !procTask || !info) {
     if (errOut) {
-      *errOut = @"缺 proc_find/proc_task/kreadbuf/gSystemInfo";
+      *errOut = @"缺 proc_find/proc_task/gSystemInfo";
     }
     return NO;
   }
+
   uint32_t task_map = info->kernelStruct.task.map;
   uint32_t vm_pmap = info->kernelStruct.vm_map.pmap;
   uint32_t pmap_ttep = info->kernelStruct.pmap.ttep;
+  uint64_t pacMask = info->kernelConstant.pointer_mask;
   if (task_map == 0 || vm_pmap == 0) {
     if (errOut) {
-      *errOut = @"gSystemInfo 偏移未灌入";
+      *errOut = [NSString stringWithFormat:@"偏移未灌入 map=0x%x pmap=0x%x", task_map, vm_pmap];
     }
     return NO;
   }
@@ -100,72 +140,89 @@ static BOOL step18_open_session(pid_t pid, NSString *__autoreleasing *errOut) {
     return NO;
   }
 
-  uint64_t vmap = 0;
-  if (kreadbuf(task + task_map, &vmap, sizeof(vmap)) != 0) {
-    if (errOut) {
-      *errOut = @"读 task.map 失败";
+  // 优先库内 kread_ptr（与 DOJailbreaker/physrw 同路径）
+  uint64_t vmap = step18_kread_ptr(task + task_map);
+  if (!vmap) {
+    // 少数版本 map 可能是 smr 指针
+    KreadPtrFn smr = (KreadPtrFn)step18_sym("kread_smrptr");
+    if (smr) {
+      vmap = smr(task + task_map);
     }
-    return NO;
   }
-  vmap = step18_unsign(vmap);
   if (!vmap) {
     if (errOut) {
-      *errOut = @"vmap=0";
+      *errOut = [NSString stringWithFormat:@"task.map=0 (off=0x%x pac=0x%llx)", task_map,
+                                           (unsigned long long)pacMask];
     }
     return NO;
   }
 
-  uint64_t pmap = 0;
-  if (kreadbuf(vmap + vm_pmap, &pmap, sizeof(pmap)) != 0) {
-    if (errOut) {
-      *errOut = @"读 vm_map.pmap 失败";
+  uint64_t pmap = step18_kread_ptr(vmap + vm_pmap);
+  if (!pmap) {
+    // 偏移不准时在常见窗口试探可读 pmap
+    for (uint32_t off = 0x30; off <= 0x80 && !pmap; off += 8) {
+      if (off == vm_pmap) {
+        continue;
+      }
+      uint64_t cand = step18_kread_ptr(vmap + off);
+      if (!cand) {
+        continue;
+      }
+      uint64_t ttepTry = step18_kread_ptr(cand + pmap_ttep);
+      if (!ttepTry) {
+        ttepTry = step18_unsign(step18_kread64_raw(cand + pmap_ttep));
+      }
+      if (ttepTry) {
+        pmap = cand;
+        vm_pmap = off;
+        break;
+      }
     }
-    return NO;
   }
-  pmap = step18_unsign(pmap);
   if (!pmap) {
     if (errOut) {
-      *errOut = @"pmap=0";
+      *errOut = [NSString stringWithFormat:@"vm_map.pmap=0 (vmap=0x%llx off=0x%x)",
+                                           (unsigned long long)vmap, vm_pmap];
     }
     return NO;
   }
 
-  uint64_t ttep = 0;
-  if (kreadbuf(pmap + pmap_ttep, &ttep, sizeof(ttep)) != 0) {
-    if (errOut) {
-      *errOut = @"读 pmap.ttep 失败";
-    }
-    return NO;
+  uint64_t ttep = step18_kread_ptr(pmap + pmap_ttep);
+  if (!ttep) {
+    // physrw_pte 路径里对 ttep 有时用 kread64 而非 kread_ptr
+    ttep = step18_unsign(step18_kread64_raw(pmap + pmap_ttep));
   }
-  ttep = step18_unsign(ttep);
   if (!ttep) {
     if (errOut) {
-      *errOut = @"ttep=0";
+      *errOut = [NSString stringWithFormat:@"pmap.ttep=0 (pmap=0x%llx off=0x%x)",
+                                           (unsigned long long)pmap, pmap_ttep];
     }
     return NO;
   }
 
   gSessPid = pid;
+  gSessProc = proc;
   gSessTtep = ttep;
   gSessVmap = vmap;
   return YES;
 }
 
 static BOOL step18_vread(uint64_t addr, void *out, size_t size) {
-  VreadbufFn vreadbuf = (VreadbufFn)step18_sym("vreadbuf");
-  if (!vreadbuf || gSessTtep == 0) {
+  if (!out || size == 0) {
     return NO;
   }
-  return vreadbuf(gSessTtep, addr, out, size) == 0;
-}
-
-static uint64_t step18_kread64(uint64_t kaddr) {
-  KreadbufFn kreadbuf = (KreadbufFn)step18_sym("kreadbuf");
-  uint64_t v = 0;
-  if (!kreadbuf || kreadbuf(kaddr, &v, sizeof(v)) != 0) {
-    return 0;
+  // 优先官方 proc_vreadbuf（内部用 kread_ptr）
+  ProcVreadFn procVread = (ProcVreadFn)step18_sym("proc_vreadbuf");
+  if (procVread && gSessProc) {
+    if (procVread(gSessProc, (const void *)(uintptr_t)addr, out, size) == 0) {
+      return YES;
+    }
   }
-  return step18_unsign(v);
+  VreadbufFn vreadbuf = (VreadbufFn)step18_sym("vreadbuf");
+  if (vreadbuf && gSessTtep) {
+    return vreadbuf(gSessTtep, addr, out, size) == 0;
+  }
+  return NO;
 }
 
 static uint64_t step18_base_via_vm_map(void (^log)(NSString *)) {
@@ -180,29 +237,25 @@ static uint64_t step18_base_via_vm_map(void (^log)(NSString *)) {
   uint32_t link_min = info->kernelStruct.vm_map_links.min;
   uint32_t link_max = info->kernelStruct.vm_map_links.max;
   if (log) {
-    log([NSString stringWithFormat:@"[基址] vm_map 走表 hdr=0x%x links=0x%x/0x%x", hdr_off, hdr_links,
-                                   entry_links]);
+    log([NSString stringWithFormat:@"[基址] vm_map 走表 hdr=0x%x entry_links=0x%x", hdr_off, entry_links]);
   }
 
   uint64_t hdr = gSessVmap + hdr_off;
   uint64_t links_base = hdr + hdr_links;
-  uint64_t entry = step18_kread64(links_base + link_next);
+  uint64_t entry = step18_kread_ptr(links_base + link_next);
   uint64_t sentinel = links_base;
 
   for (int i = 0; i < 4096 && entry && entry != sentinel; ++i) {
     uint64_t elinks = entry + entry_links;
-    uint64_t start = 0, end = 0;
-    KreadbufFn kreadbuf = (KreadbufFn)step18_sym("kreadbuf");
-    if (!kreadbuf) {
-      break;
+    uint64_t start = step18_kread_ptr(elinks + link_min);
+    if (!start) {
+      start = step18_unsign(step18_kread64_raw(elinks + link_min));
     }
-    if (kreadbuf(elinks + link_min, &start, sizeof(start)) != 0 ||
-        kreadbuf(elinks + link_max, &end, sizeof(end)) != 0) {
-      break;
+    uint64_t end = step18_kread_ptr(elinks + link_max);
+    if (!end) {
+      end = step18_unsign(step18_kread64_raw(elinks + link_max));
     }
-    start = step18_unsign(start);
-    end = step18_unsign(end);
-    uint64_t next = step18_kread64(elinks + link_next);
+    uint64_t next = step18_kread_ptr(elinks + link_next);
 
     if (end > start && start >= 0x100000000ULL && start < 0x300000000ULL) {
       uint32_t magic = 0;
@@ -228,7 +281,6 @@ static uint64_t step18_base_via_vm_map(void (^log)(NSString *)) {
 }
 
 static uint64_t step18_base_via_short_scan(void (^log)(NSString *)) {
-  // 粗扫：1MB 步进，命中附近再 16KB 精扫；整段限时 6s
   CFAbsoluteTime t0 = CFAbsoluteTimeGetCurrent();
   const CFTimeInterval budget = 6.0;
   struct {
@@ -284,6 +336,7 @@ static uint64_t step18_base_via_short_scan(void (^log)(NSString *)) {
     gModuleBase = 0;
     gReady = NO;
     gSessPid = -1;
+    gSessProc = 0;
     gSessTtep = 0;
     gSessVmap = 0;
     [self stopPolling];
@@ -382,8 +435,8 @@ static uint64_t step18_base_via_short_scan(void (^log)(NSString *)) {
     return 0;
   }
   if (log) {
-    log([NSString stringWithFormat:@"[基址] 会话 OK pid=%d ttep=0x%llx", (int)pid,
-                                   (unsigned long long)gSessTtep]);
+    log([NSString stringWithFormat:@"[基址] 会话 OK pid=%d vmap=0x%llx ttep=0x%llx", (int)pid,
+                                   (unsigned long long)gSessVmap, (unsigned long long)gSessTtep]);
   }
   uint64_t base = step18_base_via_vm_map(log);
   if (base != 0) {
@@ -416,6 +469,7 @@ static uint64_t step18_base_via_short_scan(void (^log)(NSString *)) {
       gModuleBase = 0;
       gReady = NO;
       gSessPid = -1;
+      gSessProc = 0;
       gSessTtep = 0;
       gSessVmap = 0;
     }
