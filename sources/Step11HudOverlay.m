@@ -1,11 +1,18 @@
 //
 //  Step11HudOverlay.m
-//  验收⑲：叠层 + 过直播 + 薄 ESP/W2S
+//  验收⑲：SBS 托管叠层 + 过直播 + 薄 ESP/W2S（对齐 753e2e1/BBZ 的系统窗托管，而非仅 App 内 UIWindow）
 //
 
 #import "Step11HudOverlay.h"
 #import "Step19EspHost.h"
 #import "过直播窗口.h"
+
+#import <objc/message.h>
+#import <objc/runtime.h>
+
+@interface UIWindow (Step11Private)
+- (unsigned int)_contextId;
+@end
 
 __attribute__((used)) static const char kStep11HudMarker[] = "STEP11-HUDHOST";
 __attribute__((used)) static const char kStep14LiveCoverMarker[] = "STEP14-LIVECOVER";
@@ -14,12 +21,15 @@ __attribute__((used)) static const char kStep16TfHostMarker[] = "STEP16-TFHOST";
 __attribute__((used)) static const char kStep17ImGuiMarker[] = "STEP17-IMGUI";
 __attribute__((used)) static const char kStep18ReadMarker[] = "STEP18-READPROBE";
 __attribute__((used)) static const char kStep19EspMarker[] = "STEP19-THINESP";
+__attribute__((used)) static const char kStep19SbsMarker[] = "STEP19-SBS-HUD";
 
 @interface Step11HudOverlay ()
 @property(nonatomic, strong) UIWindow *overlayWindow;
 @property(nonatomic, strong) UILabel *bannerLabel;
 @property(nonatomic, strong) 过直播窗口 *liveCover;
 @property(nonatomic, strong) Step19EspHost *drawSurface;
+@property(nonatomic, strong) id sbsHostingController;
+@property(nonatomic, assign) BOOL sbsRegistered;
 @property(nonatomic, assign, readwrite, getter=isVisible) BOOL visible;
 @end
 
@@ -37,6 +47,7 @@ __attribute__((used)) static const char kStep19EspMarker[] = "STEP19-THINESP";
     volatile const char *keep17 = kStep17ImGuiMarker;
     volatile const char *keep18 = kStep18ReadMarker;
     volatile const char *keep19 = kStep19EspMarker;
+    volatile const char *keepSbs = kStep19SbsMarker;
     (void)keep11[0];
     (void)keep14[0];
     (void)keep15[0];
@@ -44,8 +55,33 @@ __attribute__((used)) static const char kStep19EspMarker[] = "STEP19-THINESP";
     (void)keep17[0];
     (void)keep18[0];
     (void)keep19[0];
+    (void)keepSbs[0];
   });
   return inst;
+}
+
+- (void)registerSbsIfNeeded {
+  if (self.sbsRegistered || !self.overlayWindow) {
+    return;
+  }
+  Class cls = objc_getClass("SBSAccessibilityWindowHostingController");
+  if (!cls) {
+    return;
+  }
+  if (!self.sbsHostingController) {
+    self.sbsHostingController = [[cls alloc] init];
+  }
+  if (!self.sbsHostingController) {
+    return;
+  }
+  unsigned int ctx = [self.overlayWindow _contextId];
+  double level = [self.overlayWindow windowLevel];
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+  ((void (*)(id, SEL, unsigned int, double))objc_msgSend)(
+      self.sbsHostingController, NSSelectorFromString(@"registerWindowWithContextID:atLevel:"), ctx, level);
+#pragma clang diagnostic pop
+  self.sbsRegistered = YES;
 }
 
 - (void)ensureWindow {
@@ -55,13 +91,17 @@ __attribute__((used)) static const char kStep19EspMarker[] = "STEP19-THINESP";
 
   CGRect bounds = [UIScreen mainScreen].bounds;
   UIWindow *win = [[UIWindow alloc] initWithFrame:bounds];
-  win.windowLevel = UIWindowLevelStatusBar + 120.0;
+  // 对齐 BBZViewController / 753e2e1：状态栏附近层级 + SBS 托管，而不是 App 内 StatusBar+120 自嗨窗
+  win.windowLevel = UIWindowLevelStatusBar - 1;
   win.backgroundColor = [UIColor clearColor];
+  win.opaque = NO;
   win.userInteractionEnabled = NO;
   win.hidden = YES;
 
   UIViewController *root = [[UIViewController alloc] init];
   root.view.backgroundColor = [UIColor clearColor];
+  root.view.opaque = NO;
+  root.view.userInteractionEnabled = NO;
 
   过直播窗口 *cover = [[过直播窗口 alloc] initWithFrame:bounds];
   cover.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
@@ -122,22 +162,16 @@ __attribute__((used)) static const char kStep19EspMarker[] = "STEP19-THINESP";
       self.bannerLabel.text =
           [NSString stringWithFormat:@"STEP19-THINESP\n%@", detail];
     } else {
-      self.bannerLabel.text = @"STEP19-THINESP\n薄 ESP/W2S（无 PhysX/DrawView.mm）";
+      self.bannerLabel.text = @"STEP19-THINESP\nSBS 托管叠层（对齐正式 HUD）";
     }
     self.visible = visible;
     self.overlayWindow.hidden = !visible;
     if (visible) {
       [self.liveCover setLiveHidden:YES];
       [self.drawSurface startAnimating];
-      [self.overlayWindow makeKeyAndVisible];
-      UIWindow *appKey = UIApplication.sharedApplication.windows.firstObject;
-      for (UIWindow *w in UIApplication.sharedApplication.windows) {
-        if (w != self.overlayWindow && !w.hidden) {
-          appKey = w;
-          break;
-        }
-      }
-      [appKey makeKeyWindow];
+      [self.overlayWindow setHidden:NO];
+      // 不抢 Books 主窗 key；靠 SBS 把绘制窗挂到系统层，切到游戏仍可见
+      [self registerSbsIfNeeded];
     } else {
       [self.drawSurface stopAnimating];
     }

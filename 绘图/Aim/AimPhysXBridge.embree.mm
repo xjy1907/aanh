@@ -86,7 +86,7 @@ static void AimPhysX_InitUnlocked() {
             // 保持 PhysXRemote.mm 默认值
         }
         if (kPhysXPtr == 0) {
-            kPhysXPtr = 0x110ADBA0;
+            kPhysXPtr = 0x1190A3A0;
         }
         char buf[96];
         snprintf(buf, sizeof(buf), "[PhysX] kPhysXPtr=0x%llx", (unsigned long long)kPhysXPtr);
