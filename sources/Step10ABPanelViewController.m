@@ -1,6 +1,6 @@
 //
 //  Step10ABPanelViewController.m
-//  验收⑪：AB 三按钮 + 进程内真实 HUD 叠层；仍不链 BBZView.mm / PhysX / DrawView
+//  验收⑱：读取开关 + 进程/模块探针；仍不链 PhysX / DrawView.mm
 //
 
 #import "Step10ABPanelViewController.h"
@@ -8,6 +8,7 @@
 #import "Step9KreadRunner.h"
 #import "Step11HudOverlay.h"
 #import "Step12BBZSettingsHost.h"
+#import "Step18ReadProbe.h"
 
 @interface Step10ABPanelViewController ()
 @property(nonatomic, strong) UILabel *statusLabel;
@@ -60,12 +61,12 @@
 
 - (NSString *)hudDetailText {
   if (self.reading) {
-    return @"reading=1 · BBZGUI 绘制面";
+    return [Step18ReadProbe statusSummary];
   }
   if (self.kernelReady) {
-    return @"kread OK · BBZGUI 绘制面";
+    return @"kread OK · 等待开始读取";
   }
-  return @"薄 BBZGUI+Metal（无 PhysX/DrawView.mm）";
+  return @"薄读取探针（无 PhysX/DrawView.mm）";
 }
 
 - (void)viewDidLoad {
@@ -78,7 +79,7 @@
 
   UILabel *title = [[UILabel alloc] init];
   title.translatesAutoresizingMaskIntoConstraints = NO;
-  title.text = @"STEP17-IMGUI 面板";
+  title.text = @"STEP18-READPROBE 面板";
   title.textColor = [UIColor colorWithRed:200.0f / 255.0f
                                     green:120.0f / 255.0f
                                      blue:255.0f / 255.0f
@@ -88,7 +89,7 @@
 
   UILabel *hint = [[UILabel alloc] init];
   hint.translatesAutoresizingMaskIntoConstraints = NO;
-  hint.text = @"⑯已过：UITextField+MTKView\n⑰：开启 HUD 应见 BBZGUI 准星/框\n仍不链 PhysX / DrawView.mm\n点「开启 HUD 叠层」= 验收⑰";
+  hint.text = @"⑰已过：薄 BBZGUI 准星/框\n⑱：初始化内核 → 开始读取\n应扫到游戏 pid + 模块基址\n仍不链 PhysX / DrawView.mm";
   hint.textColor = [UIColor colorWithWhite:0.78f alpha:1.0f];
   hint.font = [UIFont systemFontOfSize:13.0f weight:UIFontWeightMedium];
   hint.textAlignment = NSTextAlignmentCenter;
@@ -137,7 +138,7 @@
                                                       alpha:0.30f]
                                action:@selector(onOpenBBZSettings)];
 
-  UIButton *backBtn = [self makeButton:@"返回 STEP17 诊断页"
+  UIButton *backBtn = [self makeButton:@"返回 STEP18 诊断页"
                                  color:[UIColor colorWithWhite:0.25f alpha:0.9f]
                                 action:@selector(onBack)];
 
@@ -219,8 +220,8 @@
 
   [self refreshReadButtonTitle];
   [self refreshHudButtonTitle];
-  [self appendLog:@"STEP17 面板已挂载（薄 BBZGUI+Metal，未链 PhysX / DrawView.mm）"];
-  [self appendLog:@"验收⑰：点「开启 HUD 叠层」应出现 STEP17-IMGUI + 准星/框"];
+  [self appendLog:@"STEP18 面板已挂载（读取开关+进程/模块探针，未链 PhysX / DrawView.mm）"];
+  [self appendLog:@"验收⑱：先初始化内核，再点「开始读取」看 pid/base"];
 }
 
 - (void)onInitKernel {
@@ -263,6 +264,7 @@
   [self appendLog:@"点击：重置内核状态"];
   self.kernelReady = NO;
   self.reading = NO;
+  [Step18ReadProbe setReadingEnabled:NO];
   if (self.hudOn) {
     self.hudOn = NO;
     [[Step11HudOverlay shared] setVisible:NO detail:nil];
@@ -286,20 +288,41 @@
   }
   self.reading = !self.reading;
   [self refreshReadButtonTitle];
+  __weak typeof(self) weakSelf = self;
+  void (^probeLog)(NSString *) = ^(NSString *line) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+      __strong typeof(weakSelf) strongSelf = weakSelf;
+      if (!strongSelf) {
+        return;
+      }
+      [strongSelf appendLog:line];
+      if (strongSelf.hudOn) {
+        [[Step11HudOverlay shared] updateDetail:[strongSelf hudDetailText]];
+      }
+      if ([Step18ReadProbe gamePid] > 0 && [Step18ReadProbe moduleBase] != 0) {
+        strongSelf.statusLabel.text = [Step18ReadProbe statusSummary];
+        strongSelf.statusLabel.textColor =
+            [UIColor colorWithRed:120.0f / 255.0f green:220.0f / 255.0f blue:160.0f / 255.0f alpha:1.0f];
+      }
+    });
+  };
   if (self.reading) {
-    [self appendLog:@"开始读取：reading=1（未链 DrawView）"];
+    [Step18ReadProbe setReadingEnabled:YES];
+    [self appendLog:@"开始读取：reading=1，启动进程/模块探针"];
     if (!self.hudOn) {
       self.hudOn = YES;
       [self refreshHudButtonTitle];
       [[Step11HudOverlay shared] setVisible:YES detail:[self hudDetailText]];
-      [self appendLog:@"auto HUD 叠层=ON（验收⑰）"];
+      [self appendLog:@"auto HUD 叠层=ON（验收⑱）"];
     } else {
       [[Step11HudOverlay shared] updateDetail:[self hudDetailText]];
     }
-    self.statusLabel.text = @"读取中 + HUD 叠层";
+    self.statusLabel.text = @"读取中：扫描 pid/base…";
     self.statusLabel.textColor =
         [UIColor colorWithRed:120.0f / 255.0f green:220.0f / 255.0f blue:160.0f / 255.0f alpha:1.0f];
+    [Step18ReadProbe startPollingWithLog:probeLog];
   } else {
+    [Step18ReadProbe setReadingEnabled:NO];
     [self appendLog:@"停止读取：reading=0"];
     if (self.hudOn) {
       [[Step11HudOverlay shared] updateDetail:[self hudDetailText]];
@@ -315,17 +338,18 @@
   [self refreshHudButtonTitle];
   if (self.hudOn) {
     [[Step11HudOverlay shared] setVisible:YES detail:[self hudDetailText]];
-    [self appendLog:@"HUD 叠层开启（薄 BBZGUI+Metal，验收⑰）"];
-    self.statusLabel.text = @"BBZGUI 绘制面=ON（验收⑰）";
+    [self appendLog:@"HUD 叠层开启（验收⑱ 状态条）"];
+    self.statusLabel.text = @"HUD=ON（验收⑱）";
   } else {
     [[Step11HudOverlay shared] setVisible:NO detail:nil];
     [self appendLog:@"HUD 叠层关闭"];
     if (self.reading) {
       self.reading = NO;
+      [Step18ReadProbe setReadingEnabled:NO];
       [self refreshReadButtonTitle];
       [self appendLog:@"连带停止读取"];
     }
-    self.statusLabel.text = @"绘制面=OFF";
+    self.statusLabel.text = @"HUD=OFF";
   }
   self.statusLabel.textColor =
       [UIColor colorWithRed:120.0f / 255.0f green:220.0f / 255.0f blue:160.0f / 255.0f alpha:1.0f];

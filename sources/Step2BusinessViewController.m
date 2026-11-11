@@ -89,7 +89,7 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
 
   UILabel *title = [[UILabel alloc] init];
   title.translatesAutoresizingMaskIntoConstraints = NO;
-  title.text = @"STEP17-IMGUI";
+  title.text = @"STEP18-READPROBE";
   title.textColor = [UIColor colorWithRed:200.0f / 255.0f
                                     green:120.0f / 255.0f
                                      blue:255.0f / 255.0f
@@ -99,7 +99,7 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
 
   UILabel *hint = [[UILabel alloc] init];
   hint.translatesAutoresizingMaskIntoConstraints = NO;
-  hint.text = @"⑯已过：UITextField+MTKView 宿主\n⑰：薄 BBZGUI 画准星/框/FPS\n仍不链 PhysX / DrawView.mm\n能看见本页 = 验收⑰亮窗通过";
+  hint.text = @"⑰已过：薄 BBZGUI 准星/框\n⑱：读取开关 + 游戏 pid/模块基址\n仍不链 PhysX / DrawView.mm\n能看见本页 = 验收⑱亮窗通过";
   hint.textColor = [UIColor colorWithWhite:0.78f alpha:1.0f];
   hint.font = [UIFont systemFontOfSize:13.0f weight:UIFontWeightMedium];
   hint.textAlignment = NSTextAlignmentCenter;
@@ -222,7 +222,7 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
     [logView.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor constant:-16],
   ]];
 
-  [self appendLog:@"STEP17 面板已加载（薄 BBZGUI+Metal，未链 PhysX / DrawView.mm）"];
+  [self appendLog:@"STEP18 面板已加载（读取开关+进程/模块探针，未链 PhysX / DrawView.mm）"];
 }
 
 - (NSInteger)probeJailbreakSymbols {
@@ -485,15 +485,15 @@ typedef int (*JbProcessCheckinFn)(char **rootPathOut, char **bootUUIDOut,
 }
 
 - (void)onMountABPanel {
-  [self appendLog:@"点击：挂载 AB/绘制面板（验收⑰）"];
+  [self appendLog:@"点击：挂载 AB/绘制面板（验收⑱）"];
   if (!self.kreadOK) {
     [self appendLog:@"提示：建议先跑通 kread；仍允许挂载以验收绘制面"];
   }
   Step10ABPanelViewController *panel = [[Step10ABPanelViewController alloc] init];
   panel.modalPresentationStyle = UIModalPresentationFullScreen;
   [self presentViewController:panel animated:YES completion:^{
-    [self appendLog:@"验收⑰：面板已 present；请点「开启 HUD 叠层」看 STEP17-IMGUI"];
-    self.statusLabel.text = @"AB/绘制面板已挂载（验收⑰）";
+    [self appendLog:@"验收⑱：面板已 present；请初始化内核后点「开始读取」"];
+    self.statusLabel.text = @"AB/绘制面板已挂载（验收⑱）";
     self.statusLabel.textColor =
         [UIColor colorWithRed:120.0f / 255.0f green:220.0f / 255.0f blue:160.0f / 255.0f alpha:1.0f];
   }];

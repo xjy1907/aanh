@@ -1,6 +1,6 @@
 //
 //  Step11HudOverlay.m
-//  验收⑰：叠层 + 过直播 + UITextField + 薄 BBZGUI/Metal
+//  验收⑱：叠层 + 过直播 + 薄 BBZGUI + 读取探针状态
 //
 
 #import "Step11HudOverlay.h"
@@ -12,6 +12,7 @@ __attribute__((used)) static const char kStep14LiveCoverMarker[] = "STEP14-LIVEC
 __attribute__((used)) static const char kStep15MetalMarker[] = "STEP15-METAL";
 __attribute__((used)) static const char kStep16TfHostMarker[] = "STEP16-TFHOST";
 __attribute__((used)) static const char kStep17ImGuiMarker[] = "STEP17-IMGUI";
+__attribute__((used)) static const char kStep18ReadMarker[] = "STEP18-READPROBE";
 
 @interface Step11HudOverlay ()
 @property(nonatomic, strong) UIWindow *overlayWindow;
@@ -33,11 +34,13 @@ __attribute__((used)) static const char kStep17ImGuiMarker[] = "STEP17-IMGUI";
     volatile const char *keep15 = kStep15MetalMarker;
     volatile const char *keep16 = kStep16TfHostMarker;
     volatile const char *keep17 = kStep17ImGuiMarker;
+    volatile const char *keep18 = kStep18ReadMarker;
     (void)keep11[0];
     (void)keep14[0];
     (void)keep15[0];
     (void)keep16[0];
     (void)keep17[0];
+    (void)keep18[0];
   });
   return inst;
 }
@@ -88,7 +91,7 @@ __attribute__((used)) static const char kStep17ImGuiMarker[] = "STEP17-IMGUI";
   label.font = [UIFont monospacedSystemFontOfSize:12.0f weight:UIFontWeightSemibold];
   label.numberOfLines = 2;
   label.textAlignment = NSTextAlignmentCenter;
-  label.text = @"STEP17-IMGUI";
+  label.text = @"STEP18-READPROBE";
   self.bannerLabel = label;
 
   [banner addSubview:label];
@@ -114,9 +117,9 @@ __attribute__((used)) static const char kStep17ImGuiMarker[] = "STEP17-IMGUI";
     [self ensureWindow];
     if (detail.length > 0) {
       self.bannerLabel.text =
-          [NSString stringWithFormat:@"STEP17-IMGUI\n%@", detail];
+          [NSString stringWithFormat:@"STEP18-READPROBE\n%@", detail];
     } else {
-      self.bannerLabel.text = @"STEP17-IMGUI\n薄 BBZGUI+Metal（无 PhysX/DrawView.mm）";
+      self.bannerLabel.text = @"STEP18-READPROBE\n读取开关+进程/模块探针";
     }
     self.visible = visible;
     self.overlayWindow.hidden = !visible;
@@ -149,7 +152,7 @@ __attribute__((used)) static const char kStep17ImGuiMarker[] = "STEP17-IMGUI";
       return;
     }
     self.bannerLabel.text =
-        [NSString stringWithFormat:@"STEP17-IMGUI\n%@", detail ?: @""];
+        [NSString stringWithFormat:@"STEP18-READPROBE\n%@", detail ?: @""];
   };
   if ([NSThread isMainThread]) {
     work();
