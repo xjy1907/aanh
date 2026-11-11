@@ -15,7 +15,10 @@
 #import "BBZGui_impl_metal.h"
 #import "SDK.h"
 #import "绘制类型.h"
-#import "绘制算法.h"
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 __attribute__((used)) static const char kStep17Keep[] = "STEP17-IMGUI";
 __attribute__((used)) static const char kStep18Keep[] = "STEP18-READPROBE";
@@ -26,6 +29,95 @@ struct Step19Box {
   float dist;
   bool ai;
 };
+
+static bool ReadBytes(uint64_t addr, void *out, size_t n) {
+  return [Step18ReadProbe readGameAt:addr size:n into:out];
+}
+
+template <typename T>
+static bool ReadVal(uint64_t addr, T *out) {
+  return ReadBytes(addr, out, sizeof(T));
+}
+
+static uint64_t ReadPtr(uint64_t addr) {
+  uint64_t v = 0;
+  if (!ReadVal(addr, &v)) {
+    return 0;
+  }
+  return UNSIGN_PTR(v);
+}
+
+static float Dot3(Vector3 lhs, Vector3 rhs) {
+  return lhs.X * rhs.X + lhs.Y * rhs.Y + lhs.Z * rhs.Z;
+}
+
+static float Dist3(Vector3 a, Vector3 b) {
+  Vector3 v = a - b;
+  return sqrtf(v.X * v.X + v.Y * v.Y + v.Z * v.Z);
+}
+
+static FMatrix RotToMatrix(FRotator rotation) {
+  float radPitch = rotation.Pitch * (float)(M_PI / 180.0);
+  float radYaw = rotation.Yaw * (float)(M_PI / 180.0);
+  float radRoll = rotation.Roll * (float)(M_PI / 180.0);
+  float SP = sinf(radPitch), CP = cosf(radPitch);
+  float SY = sinf(radYaw), CY = cosf(radYaw);
+  float SR = sinf(radRoll), CR = cosf(radRoll);
+  FMatrix matrix;
+  matrix[0][0] = CP * CY;
+  matrix[0][1] = CP * SY;
+  matrix[0][2] = SP;
+  matrix[0][3] = 0;
+  matrix[1][0] = SR * SP * CY - CR * SY;
+  matrix[1][1] = SR * SP * SY + CR * CY;
+  matrix[1][2] = -SR * CP;
+  matrix[1][3] = 0;
+  matrix[2][0] = -(CR * SP * CY + SR * SY);
+  matrix[2][1] = CY * SR - CR * SP * SY;
+  matrix[2][2] = CR * CP;
+  matrix[2][3] = 0;
+  matrix[3][0] = 0;
+  matrix[3][1] = 0;
+  matrix[3][2] = 0;
+  matrix[3][3] = 1;
+  return matrix;
+}
+
+static Vector2 W2S(Vector3 worldLocation, CoViewInfo cam, int width, int height) {
+  float fovRadian = cam.FOV * (float)(M_PI / 360.0);
+  float tanFov = tanf(fovRadian);
+  if (tanFov == 0) {
+    tanFov = 0.001f;
+  }
+  float screenCenterX = width / 2.0f;
+  float screenCenterY = height / 2.0f;
+  FMatrix tempMatrix = RotToMatrix(cam.Rotation);
+  Vector3 vAxisX(tempMatrix[0][0], tempMatrix[0][1], tempMatrix[0][2]);
+  Vector3 vAxisY(tempMatrix[1][0], tempMatrix[1][1], tempMatrix[1][2]);
+  Vector3 vAxisZ(tempMatrix[2][0], tempMatrix[2][1], tempMatrix[2][2]);
+  Vector3 vDelta = worldLocation - cam.Location;
+  float transformedX = Dot3(vDelta, vAxisY);
+  float transformedY = Dot3(vDelta, vAxisZ);
+  float transformedZ = Dot3(vDelta, vAxisX);
+  if (transformedZ < 1.0f) {
+    transformedZ = 1.0f;
+  }
+  return Vector2(screenCenterX + transformedX * (screenCenterX / tanFov) / transformedZ,
+                 screenCenterY - transformedY * (screenCenterX / tanFov) / transformedZ);
+}
+
+static void BoxFromLoc(Vector3 worldLocation, VectorRect *rect, CoViewInfo cam, Vector2 canvasSize) {
+  Vector3 head = worldLocation;
+  head.Z += 85.f;
+  Vector3 foot = worldLocation;
+  foot.Z -= 85.f;
+  Vector2 h = W2S(head, cam, (int)canvasSize.X, (int)canvasSize.Y);
+  Vector2 f = W2S(foot, cam, (int)canvasSize.X, (int)canvasSize.Y);
+  rect->h = (int)(f.Y - h.Y);
+  rect->w = (int)(rect->h / 2.0f);
+  rect->x = (int)(h.X - rect->w / 2.0f);
+  rect->y = (int)h.Y;
+}
 
 @interface Step19EspHost () <MTKViewDelegate>
 @property(nonatomic, strong) id<MTLDevice> device;
@@ -131,21 +223,13 @@ struct Step19Box {
   self.link = nil;
 }
 
-static bool ReadBytes(uint64_t addr, void *out, size_t n) {
-  return [Step18ReadProbe readGameAt:addr size:n into:out];
-}
-
-template <typename T>
-static bool ReadVal(uint64_t addr, T *out) {
-  return ReadBytes(addr, out, sizeof(T));
-}
-
-static uint64_t ReadPtr(uint64_t addr) {
-  uint64_t v = 0;
-  if (!ReadVal(addr, &v)) {
-    return 0;
-  }
-  return UNSIGN_PTR(v);
+- (void)applyBoxes:(std::vector<Step19Box>)boxes status:(NSString *)status {
+  [_boxLock lock];
+  _boxes.swap(boxes);
+  self.boxCount = (NSInteger)_boxes.size();
+  [_boxLock unlock];
+  self.statusLine = status;
+  self.refreshBusy = NO;
 }
 
 - (void)refreshEspAsync {
@@ -153,11 +237,7 @@ static uint64_t ReadPtr(uint64_t addr) {
     return;
   }
   if (![Step18ReadProbe isReadingEnabled]) {
-    self.statusLine = @"reading=0";
-    [_boxLock lock];
-    _boxes.clear();
-    self.boxCount = 0;
-    [_boxLock unlock];
+    [self applyBoxes:{} status:@"reading=0"];
     return;
   }
   uint64_t base = [Step18ReadProbe moduleBase];
@@ -183,7 +263,7 @@ static uint64_t ReadPtr(uint64_t addr) {
       }
       uint64_t netDriver = ReadPtr(gWorld + SDK::NetDriver);
       if (!IsValidAddr(netDriver)) {
-        status = [NSString stringWithFormat:@"GWorld ok lobby NetDriver=0"];
+        status = @"GWorld ok lobby NetDriver=0";
         break;
       }
       uint64_t serverConn = ReadPtr(netDriver + SDK::ServerConnection);
@@ -238,11 +318,11 @@ static uint64_t ReadPtr(uint64_t addr) {
         }
 
         VectorRect rect{};
-        BoxConversion(loc, &rect, pov, Vector2((float)sw, (float)sh));
+        BoxFromLoc(loc, &rect, pov, Vector2((float)sw, (float)sh));
         if (rect.w < 2 || rect.h < 4) {
           continue;
         }
-        float dist = GetDistance(loc, pov.Location) / 100.0f;
+        float dist = Dist3(loc, pov.Location) / 100.0f;
         Step19Box b;
         b.x = (float)rect.x;
         b.y = (float)rect.y;
@@ -261,15 +341,7 @@ static uint64_t ReadPtr(uint64_t addr) {
 
     dispatch_async(dispatch_get_main_queue(), ^{
       __strong typeof(weakSelf) strongSelf = weakSelf;
-      if (!strongSelf) {
-        return;
-      }
-      [strongSelf->_boxLock lock];
-      strongSelf->_boxes.swap(local);
-      strongSelf.boxCount = (NSInteger)strongSelf->_boxes.size();
-      [strongSelf->_boxLock unlock];
-      strongSelf.statusLine = status;
-      strongSelf.refreshBusy = NO;
+      [strongSelf applyBoxes:std::move(local) status:status];
     });
   });
 }
