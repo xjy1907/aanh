@@ -18,6 +18,7 @@
 		A1STEP13D11F508F1500FD4A /* Step13DrawSurface.m in Sources */ = {isa = PBXBuildFile; fileRef = A1STEP13D12F508F1500FD4A /* Step13DrawSurface.m */; };
 		A1STEP15M11F508F1500FD4A /* Step15MetalSurface.m in Sources */ = {isa = PBXBuildFile; fileRef = A1STEP15M12F508F1500FD4A /* Step15MetalSurface.m */; };
 		A1STEP16T11F508F1500FD4A /* Step16TfMetalHost.m in Sources */ = {isa = PBXBuildFile; fileRef = A1STEP16T12F508F1500FD4A /* Step16TfMetalHost.m */; };
+		A1STEP17I11F508F1500FD4A /* Step17ImGuiHost.mm in Sources */ = {isa = PBXBuildFile; fileRef = A1STEP17I12F508F1500FD4A /* Step17ImGuiHost.mm */; };
 		A1STEP12A11F508F1500FD4A /* AimConfigViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = A1M001CFG000000000000002 /* AimConfigViewController.mm */; };
 		A1STEP12H11F508F1500FD4A /* AimHumanizeConfigViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = A1M001HUM000000000000002 /* AimHumanizeConfigViewController.mm */; };
 		A1STEP12B11F508F1500FD4A /* AimBezierConfigViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = A1M001BEZ000000000000002 /* AimBezierConfigViewController.mm */; };
@@ -306,6 +307,8 @@
 		A1STEP15M13F508F1500FD4A /* Step15MetalSurface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Step15MetalSurface.h; sourceTree = "<group>"; };
 		A1STEP16T12F508F1500FD4A /* Step16TfMetalHost.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Step16TfMetalHost.m; sourceTree = "<group>"; };
 		A1STEP16T13F508F1500FD4A /* Step16TfMetalHost.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Step16TfMetalHost.h; sourceTree = "<group>"; };
+		A1STEP17I12F508F1500FD4A /* Step17ImGuiHost.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = Step17ImGuiHost.mm; sourceTree = "<group>"; };
+		A1STEP17I13F508F1500FD4A /* Step17ImGuiHost.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Step17ImGuiHost.h; sourceTree = "<group>"; };
 		A1M001CFG000000000000001 /* AimConfigViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AimConfigViewController.h; sourceTree = "<group>"; };
 		A1M001CFG000000000000002 /* AimConfigViewController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = AimConfigViewController.mm; sourceTree = "<group>"; };
 		A1M001HUM000000000000001 /* AimHumanizeConfigViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AimHumanizeConfigViewController.h; sourceTree = "<group>"; };
@@ -1041,6 +1044,8 @@
 				A1STEP15M12F508F1500FD4A /* Step15MetalSurface.m */,
 				A1STEP16T13F508F1500FD4A /* Step16TfMetalHost.h */,
 				A1STEP16T12F508F1500FD4A /* Step16TfMetalHost.m */,
+				A1STEP17I13F508F1500FD4A /* Step17ImGuiHost.h */,
+				A1STEP17I12F508F1500FD4A /* Step17ImGuiHost.mm */,
 				CC711D492B5BF5C6007235A6 /* MainButton.h */,
 				CC711D2E2B5BF5C6007235A6 /* MainButton.mm */,
 				CC711D232B5BF5C6007235A6 /* TSEventFetcher.h */,
@@ -1701,6 +1706,12 @@
 				A1STEP13D11F508F1500FD4A /* Step13DrawSurface.m in Sources */,
 				A1STEP15M11F508F1500FD4A /* Step15MetalSurface.m in Sources */,
 				A1STEP16T11F508F1500FD4A /* Step16TfMetalHost.m in Sources */,
+				A1STEP17I11F508F1500FD4A /* Step17ImGuiHost.mm in Sources */,
+				368CEE1B2E7726E9000D0A45 /* BBZGui.cpp in Sources */,
+				368CEE172E7726E9000D0A45 /* BBZGui_draw.cpp in Sources */,
+				368CEE1C2E7726E9000D0A45 /* BBZGui_widgets.cpp in Sources */,
+				368CEE192E7726E9000D0A45 /* BBZGui_tables.cpp in Sources */,
+				368CEE1A2E7726E9000D0A45 /* BBZGui_impl_metal.mm in Sources */,
 				0F177A7F2F586AAC005AB832 /* 过直播窗口.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2457,6 +2468,7 @@
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/supports",
 					"$(PROJECT_DIR)/sources",
+					"$(PROJECT_DIR)/ImGui 1.91.5",
 					"$(PROJECT_DIR)/HID",
 					"$(PROJECT_DIR)/绘图",
 					"$(PROJECT_DIR)/绘图/游戏",
@@ -2506,7 +2518,7 @@
 					"-lz",
 					"-lcompression",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step16tf;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step17ig;
 				PRODUCT_MODULE_NAME = Books;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -2548,6 +2560,7 @@
 				HEADER_SEARCH_PATHS = (
 					"$(PROJECT_DIR)/supports",
 					"$(PROJECT_DIR)/sources",
+					"$(PROJECT_DIR)/ImGui 1.91.5",
 					"$(PROJECT_DIR)/HID",
 					"$(PROJECT_DIR)/绘图",
 					"$(PROJECT_DIR)/绘图/游戏",
@@ -2597,7 +2610,7 @@
 					"-lz",
 					"-lcompression",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step16tf;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.step17ig;
 				PRODUCT_MODULE_NAME = Books;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

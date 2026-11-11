@@ -60,12 +60,12 @@
 
 - (NSString *)hudDetailText {
   if (self.reading) {
-    return @"reading=1 · TFHOST 绘制面";
+    return @"reading=1 · BBZGUI 绘制面";
   }
   if (self.kernelReady) {
-    return @"kread OK · TFHOST 绘制面";
+    return @"kread OK · BBZGUI 绘制面";
   }
-  return @"UITextField+MTKView（无 ImGui/PhysX/DrawView.mm）";
+  return @"薄 BBZGUI+Metal（无 PhysX/DrawView.mm）";
 }
 
 - (void)viewDidLoad {
@@ -78,7 +78,7 @@
 
   UILabel *title = [[UILabel alloc] init];
   title.translatesAutoresizingMaskIntoConstraints = NO;
-  title.text = @"STEP15-Metal 面板";
+  title.text = @"STEP17-IMGUI 面板";
   title.textColor = [UIColor colorWithRed:200.0f / 255.0f
                                     green:120.0f / 255.0f
                                      blue:255.0f / 255.0f
@@ -88,7 +88,7 @@
 
   UILabel *hint = [[UILabel alloc] init];
   hint.translatesAutoresizingMaskIntoConstraints = NO;
-  hint.text = @"⑭已过：过直播安全链\n⑮：开启 HUD 应见 Metal/MTKView 面\n仍不链 DrawView.mm / PhysX / ImGui\n点「开启 HUD 叠层」= 验收⑮";
+  hint.text = @"⑯已过：UITextField+MTKView\n⑰：开启 HUD 应见 BBZGUI 准星/框\n仍不链 PhysX / DrawView.mm\n点「开启 HUD 叠层」= 验收⑰";
   hint.textColor = [UIColor colorWithWhite:0.78f alpha:1.0f];
   hint.font = [UIFont systemFontOfSize:13.0f weight:UIFontWeightMedium];
   hint.textAlignment = NSTextAlignmentCenter;
@@ -137,7 +137,7 @@
                                                       alpha:0.30f]
                                action:@selector(onOpenBBZSettings)];
 
-  UIButton *backBtn = [self makeButton:@"返回 STEP16 诊断页"
+  UIButton *backBtn = [self makeButton:@"返回 STEP17 诊断页"
                                  color:[UIColor colorWithWhite:0.25f alpha:0.9f]
                                 action:@selector(onBack)];
 
@@ -219,8 +219,8 @@
 
   [self refreshReadButtonTitle];
   [self refreshHudButtonTitle];
-  [self appendLog:@"STEP16 面板已挂载（UITextField+MTKView，未链 ImGui / PhysX / DrawView.mm）"];
-  [self appendLog:@"验收⑯：点「开启 HUD 叠层」应出现 STEP16-TFHOST + 准星/框"];
+  [self appendLog:@"STEP17 面板已挂载（薄 BBZGUI+Metal，未链 PhysX / DrawView.mm）"];
+  [self appendLog:@"验收⑰：点「开启 HUD 叠层」应出现 STEP17-IMGUI + 准星/框"];
 }
 
 - (void)onInitKernel {
@@ -292,7 +292,7 @@
       self.hudOn = YES;
       [self refreshHudButtonTitle];
       [[Step11HudOverlay shared] setVisible:YES detail:[self hudDetailText]];
-      [self appendLog:@"auto HUD 叠层=ON（验收⑯）"];
+      [self appendLog:@"auto HUD 叠层=ON（验收⑰）"];
     } else {
       [[Step11HudOverlay shared] updateDetail:[self hudDetailText]];
     }
@@ -315,8 +315,8 @@
   [self refreshHudButtonTitle];
   if (self.hudOn) {
     [[Step11HudOverlay shared] setVisible:YES detail:[self hudDetailText]];
-    [self appendLog:@"HUD 叠层开启（UITextField+MTKView，验收⑯）"];
-    self.statusLabel.text = @"TFHOST 绘制面=ON（验收⑯）";
+    [self appendLog:@"HUD 叠层开启（薄 BBZGUI+Metal，验收⑰）"];
+    self.statusLabel.text = @"BBZGUI 绘制面=ON（验收⑰）";
   } else {
     [[Step11HudOverlay shared] setVisible:NO detail:nil];
     [self appendLog:@"HUD 叠层关闭"];

@@ -1,6 +1,6 @@
 //
 //  Step10ABPanelViewController.h
-//  验收⑯：AB 三按钮 + UITextField(Metal) HUD；不链 BBZView.mm / PhysX / DrawView / ImGui
+//  验收⑰：AB 三按钮 + 薄 BBZGUI HUD；不链 PhysX / DrawView.mm
 //
 
 #import <UIKit/UIKit.h>

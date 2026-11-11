@@ -1,6 +1,6 @@
 //
 //  Step11HudOverlay.h
-//  验收⑯：进程内 HUD + 过直播 + UITextField Metal 宿主；不链 ImGui/PhysX/DrawView
+//  验收⑰：进程内 HUD + 过直播 + 薄 BBZGUI；不链 PhysX/DrawView
 //
 
 #import <Foundation/Foundation.h>

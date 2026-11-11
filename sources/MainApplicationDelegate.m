@@ -1,5 +1,5 @@
 //
-//  MainApplicationDelegate.m — 验收⑯：过直播 + UITextField Metal 宿主
+//  MainApplicationDelegate.m — 验收⑰：薄 BBZGUI + Metal
 //
 
 #import "MainApplicationDelegate.h"
@@ -10,6 +10,7 @@ __attribute__((used)) static const char kStep13Marker[] = "STEP13-DRAWSURF";
 __attribute__((used)) static const char kStep14Marker[] = "STEP14-LIVECOVER";
 __attribute__((used)) static const char kStep15Marker[] = "STEP15-METAL";
 __attribute__((used)) static const char kStep16Marker[] = "STEP16-TFHOST";
+__attribute__((used)) static const char kStep17Marker[] = "STEP17-IMGUI";
 
 @implementation MainApplicationDelegate
 
@@ -22,11 +23,13 @@ __attribute__((used)) static const char kStep16Marker[] = "STEP16-TFHOST";
   volatile const char *keepStep14 = kStep14Marker;
   volatile const char *keepStep15 = kStep15Marker;
   volatile const char *keepStep16 = kStep16Marker;
+  volatile const char *keepStep17 = kStep17Marker;
   (void)keepFps[0];
   (void)keepStep13[0];
   (void)keepStep14[0];
   (void)keepStep15[0];
   (void)keepStep16[0];
+  (void)keepStep17[0];
 
   self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
   UIViewController *boot = [[UIViewController alloc] init];
