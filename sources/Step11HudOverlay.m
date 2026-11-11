@@ -1,10 +1,10 @@
 //
 //  Step11HudOverlay.m
-//  验收⑱：叠层 + 过直播 + 薄 BBZGUI + 读取探针状态
+//  验收⑲：叠层 + 过直播 + 薄 ESP/W2S
 //
 
 #import "Step11HudOverlay.h"
-#import "Step17ImGuiHost.h"
+#import "Step19EspHost.h"
 #import "过直播窗口.h"
 
 __attribute__((used)) static const char kStep11HudMarker[] = "STEP11-HUDHOST";
@@ -13,12 +13,13 @@ __attribute__((used)) static const char kStep15MetalMarker[] = "STEP15-METAL";
 __attribute__((used)) static const char kStep16TfHostMarker[] = "STEP16-TFHOST";
 __attribute__((used)) static const char kStep17ImGuiMarker[] = "STEP17-IMGUI";
 __attribute__((used)) static const char kStep18ReadMarker[] = "STEP18-READPROBE";
+__attribute__((used)) static const char kStep19EspMarker[] = "STEP19-THINESP";
 
 @interface Step11HudOverlay ()
 @property(nonatomic, strong) UIWindow *overlayWindow;
 @property(nonatomic, strong) UILabel *bannerLabel;
 @property(nonatomic, strong) 过直播窗口 *liveCover;
-@property(nonatomic, strong) Step17ImGuiHost *drawSurface;
+@property(nonatomic, strong) Step19EspHost *drawSurface;
 @property(nonatomic, assign, readwrite, getter=isVisible) BOOL visible;
 @end
 
@@ -35,12 +36,14 @@ __attribute__((used)) static const char kStep18ReadMarker[] = "STEP18-READPROBE"
     volatile const char *keep16 = kStep16TfHostMarker;
     volatile const char *keep17 = kStep17ImGuiMarker;
     volatile const char *keep18 = kStep18ReadMarker;
+    volatile const char *keep19 = kStep19EspMarker;
     (void)keep11[0];
     (void)keep14[0];
     (void)keep15[0];
     (void)keep16[0];
     (void)keep17[0];
     (void)keep18[0];
+    (void)keep19[0];
   });
   return inst;
 }
@@ -65,7 +68,7 @@ __attribute__((used)) static const char kStep18ReadMarker[] = "STEP18-READPROBE"
   [root.view addSubview:cover];
   self.liveCover = cover;
 
-  Step17ImGuiHost *surface = [[Step17ImGuiHost alloc] initWithFrame:bounds];
+  Step19EspHost *surface = [[Step19EspHost alloc] initWithFrame:bounds];
   surface.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
   [cover attachDrawView:surface];
   [cover setLiveHidden:YES];
@@ -91,7 +94,7 @@ __attribute__((used)) static const char kStep18ReadMarker[] = "STEP18-READPROBE"
   label.font = [UIFont monospacedSystemFontOfSize:12.0f weight:UIFontWeightSemibold];
   label.numberOfLines = 2;
   label.textAlignment = NSTextAlignmentCenter;
-  label.text = @"STEP18-READPROBE";
+  label.text = @"STEP19-THINESP";
   self.bannerLabel = label;
 
   [banner addSubview:label];
@@ -117,9 +120,9 @@ __attribute__((used)) static const char kStep18ReadMarker[] = "STEP18-READPROBE"
     [self ensureWindow];
     if (detail.length > 0) {
       self.bannerLabel.text =
-          [NSString stringWithFormat:@"STEP18-READPROBE\n%@", detail];
+          [NSString stringWithFormat:@"STEP19-THINESP\n%@", detail];
     } else {
-      self.bannerLabel.text = @"STEP18-READPROBE\n读取开关+进程/模块探针";
+      self.bannerLabel.text = @"STEP19-THINESP\n薄 ESP/W2S（无 PhysX/DrawView.mm）";
     }
     self.visible = visible;
     self.overlayWindow.hidden = !visible;
@@ -152,7 +155,7 @@ __attribute__((used)) static const char kStep18ReadMarker[] = "STEP18-READPROBE"
       return;
     }
     self.bannerLabel.text =
-        [NSString stringWithFormat:@"STEP18-READPROBE\n%@", detail ?: @""];
+        [NSString stringWithFormat:@"STEP19-THINESP\n%@", detail ?: @""];
   };
   if ([NSThread isMainThread]) {
     work();

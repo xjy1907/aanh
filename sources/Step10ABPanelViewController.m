@@ -1,6 +1,6 @@
 //
 //  Step10ABPanelViewController.m
-//  验收⑱：读取开关 + 进程/模块探针；仍不链 PhysX / DrawView.mm
+//  验收⑲：薄 ESP/W2S；仍不链 PhysX / DrawView.mm
 //
 
 #import "Step10ABPanelViewController.h"
@@ -67,7 +67,7 @@
   if (self.kernelReady) {
     return @"kread OK · 等待开始读取";
   }
-  return @"薄读取探针（无 PhysX/DrawView.mm）";
+  return @"薄 ESP/W2S（无 PhysX/DrawView.mm）";
 }
 
 - (void)viewDidLoad {
@@ -80,7 +80,7 @@
 
   UILabel *title = [[UILabel alloc] init];
   title.translatesAutoresizingMaskIntoConstraints = NO;
-  title.text = @"STEP18-READPROBE 面板";
+  title.text = @"STEP19-THINESP 面板";
   title.textColor = [UIColor colorWithRed:200.0f / 255.0f
                                     green:120.0f / 255.0f
                                      blue:255.0f / 255.0f
@@ -90,7 +90,7 @@
 
   UILabel *hint = [[UILabel alloc] init];
   hint.translatesAutoresizingMaskIntoConstraints = NO;
-  hint.text = @"⑰已过：薄 BBZGUI 准星/框\n⑱：初始化内核 → 开始读取\n应扫到游戏 pid + 模块基址\n仍不链 PhysX / DrawView.mm";
+  hint.text = @"⑱已修：vm_map 走表取模块基址\n⑲：开始读取后 HUD 画 W2S 框\n进对局应见表敌方框+距离\n仍不链 PhysX / DrawView.mm";
   hint.textColor = [UIColor colorWithWhite:0.78f alpha:1.0f];
   hint.font = [UIFont systemFontOfSize:13.0f weight:UIFontWeightMedium];
   hint.textAlignment = NSTextAlignmentCenter;
@@ -139,7 +139,7 @@
                                                       alpha:0.30f]
                                action:@selector(onOpenBBZSettings)];
 
-  UIButton *backBtn = [self makeButton:@"返回 STEP18 诊断页"
+  UIButton *backBtn = [self makeButton:@"返回 STEP19 诊断页"
                                  color:[UIColor colorWithWhite:0.25f alpha:0.9f]
                                 action:@selector(onBack)];
 
@@ -221,8 +221,8 @@
 
   [self refreshReadButtonTitle];
   [self refreshHudButtonTitle];
-  [self appendLog:@"STEP18 面板已挂载（读取开关+进程/模块探针，未链 PhysX / DrawView.mm）"];
-  [self appendLog:@"验收⑱：先初始化内核，再点「开始读取」看 pid/base"];
+  [self appendLog:@"STEP19 面板已挂载（薄 ESP/W2S，未链 PhysX / DrawView.mm）"];
+  [self appendLog:@"验收⑲：初始化内核 → 开始读取 → 进对局看敌人方框"];
 }
 
 - (void)onInitKernel {
@@ -335,7 +335,7 @@
       self.hudOn = YES;
       [self refreshHudButtonTitle];
       [[Step11HudOverlay shared] setVisible:YES detail:[self hudDetailText]];
-      [self appendLog:@"auto HUD 叠层=ON（验收⑱）"];
+      [self appendLog:@"auto HUD 叠层=ON（验收⑲ 薄 ESP）"];
     } else {
       [[Step11HudOverlay shared] updateDetail:[self hudDetailText]];
     }
@@ -360,8 +360,8 @@
   [self refreshHudButtonTitle];
   if (self.hudOn) {
     [[Step11HudOverlay shared] setVisible:YES detail:[self hudDetailText]];
-    [self appendLog:@"HUD 叠层开启（验收⑱ 状态条）"];
-    self.statusLabel.text = @"HUD=ON（验收⑱）";
+    [self appendLog:@"HUD 叠层开启（验收⑲ 薄 ESP）"];
+    self.statusLabel.text = @"HUD=ON（验收⑲）";
   } else {
     [[Step11HudOverlay shared] setVisible:NO detail:nil];
     [self appendLog:@"HUD 叠层关闭"];
