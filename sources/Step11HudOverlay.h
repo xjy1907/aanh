@@ -1,6 +1,6 @@
 //
 //  Step11HudOverlay.h
-//  验收⑮：进程内 HUD + 过直播 + Metal 面；不 spawn 子进程、不链 DrawView/PhysX/ImGui
+//  验收⑯：进程内 HUD + 过直播 + UITextField Metal 宿主；不链 ImGui/PhysX/DrawView
 //
 
 #import <Foundation/Foundation.h>

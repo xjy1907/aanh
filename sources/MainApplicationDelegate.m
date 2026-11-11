@@ -1,5 +1,5 @@
 //
-//  MainApplicationDelegate.m — 验收⑮：过直播 + 薄 Metal/MTKView
+//  MainApplicationDelegate.m — 验收⑯：过直播 + UITextField Metal 宿主
 //
 
 #import "MainApplicationDelegate.h"
@@ -9,6 +9,7 @@ __attribute__((used)) static const char kDrawFpsSegMarker[] = "DRAWFPS_SEG_V1";
 __attribute__((used)) static const char kStep13Marker[] = "STEP13-DRAWSURF";
 __attribute__((used)) static const char kStep14Marker[] = "STEP14-LIVECOVER";
 __attribute__((used)) static const char kStep15Marker[] = "STEP15-METAL";
+__attribute__((used)) static const char kStep16Marker[] = "STEP16-TFHOST";
 
 @implementation MainApplicationDelegate
 
@@ -20,10 +21,12 @@ __attribute__((used)) static const char kStep15Marker[] = "STEP15-METAL";
   volatile const char *keepStep13 = kStep13Marker;
   volatile const char *keepStep14 = kStep14Marker;
   volatile const char *keepStep15 = kStep15Marker;
+  volatile const char *keepStep16 = kStep16Marker;
   (void)keepFps[0];
   (void)keepStep13[0];
   (void)keepStep14[0];
   (void)keepStep15[0];
+  (void)keepStep16[0];
 
   self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
   UIViewController *boot = [[UIViewController alloc] init];

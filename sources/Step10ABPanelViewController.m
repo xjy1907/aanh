@@ -60,12 +60,12 @@
 
 - (NSString *)hudDetailText {
   if (self.reading) {
-    return @"reading=1 · Metal 绘制面";
+    return @"reading=1 · TFHOST 绘制面";
   }
   if (self.kernelReady) {
-    return @"kread OK · Metal 绘制面";
+    return @"kread OK · TFHOST 绘制面";
   }
-  return @"过直播 + Metal/MTKView（无 DrawView.mm/PhysX/ImGui）";
+  return @"UITextField+MTKView（无 ImGui/PhysX/DrawView.mm）";
 }
 
 - (void)viewDidLoad {
@@ -137,7 +137,7 @@
                                                       alpha:0.30f]
                                action:@selector(onOpenBBZSettings)];
 
-  UIButton *backBtn = [self makeButton:@"返回 STEP15 诊断页"
+  UIButton *backBtn = [self makeButton:@"返回 STEP16 诊断页"
                                  color:[UIColor colorWithWhite:0.25f alpha:0.9f]
                                 action:@selector(onBack)];
 
@@ -219,8 +219,8 @@
 
   [self refreshReadButtonTitle];
   [self refreshHudButtonTitle];
-  [self appendLog:@"STEP15 面板已挂载（过直播+Metal，未链 DrawView.mm / PhysX / ImGui）"];
-  [self appendLog:@"验收⑮：点「开启 HUD 叠层」应出现 STEP15-METAL + 准星/框"];
+  [self appendLog:@"STEP16 面板已挂载（UITextField+MTKView，未链 ImGui / PhysX / DrawView.mm）"];
+  [self appendLog:@"验收⑯：点「开启 HUD 叠层」应出现 STEP16-TFHOST + 准星/框"];
 }
 
 - (void)onInitKernel {
@@ -292,7 +292,7 @@
       self.hudOn = YES;
       [self refreshHudButtonTitle];
       [[Step11HudOverlay shared] setVisible:YES detail:[self hudDetailText]];
-      [self appendLog:@"auto HUD 叠层=ON（验收⑮）"];
+      [self appendLog:@"auto HUD 叠层=ON（验收⑯）"];
     } else {
       [[Step11HudOverlay shared] updateDetail:[self hudDetailText]];
     }
@@ -315,8 +315,8 @@
   [self refreshHudButtonTitle];
   if (self.hudOn) {
     [[Step11HudOverlay shared] setVisible:YES detail:[self hudDetailText]];
-    [self appendLog:@"HUD 叠层开启（过直播+Metal，验收⑮）"];
-    self.statusLabel.text = @"Metal 绘制面=ON（验收⑮）";
+    [self appendLog:@"HUD 叠层开启（UITextField+MTKView，验收⑯）"];
+    self.statusLabel.text = @"TFHOST 绘制面=ON（验收⑯）";
   } else {
     [[Step11HudOverlay shared] setVisible:NO detail:nil];
     [self appendLog:@"HUD 叠层关闭"];

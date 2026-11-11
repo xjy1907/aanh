@@ -1,21 +1,22 @@
 //
 //  Step11HudOverlay.m
-//  验收⑮：叠层宿主 + 过直播安全链 + 薄 Metal/MTKView 面
+//  验收⑯：叠层 + 过直播 + UITextField(Metal) 宿主（对标 ImGuiDraw 外形）
 //
 
 #import "Step11HudOverlay.h"
-#import "Step15MetalSurface.h"
+#import "Step16TfMetalHost.h"
 #import "过直播窗口.h"
 
 __attribute__((used)) static const char kStep11HudMarker[] = "STEP11-HUDHOST";
 __attribute__((used)) static const char kStep14LiveCoverMarker[] = "STEP14-LIVECOVER";
 __attribute__((used)) static const char kStep15MetalMarker[] = "STEP15-METAL";
+__attribute__((used)) static const char kStep16TfHostMarker[] = "STEP16-TFHOST";
 
 @interface Step11HudOverlay ()
 @property(nonatomic, strong) UIWindow *overlayWindow;
 @property(nonatomic, strong) UILabel *bannerLabel;
 @property(nonatomic, strong) 过直播窗口 *liveCover;
-@property(nonatomic, strong) Step15MetalSurface *drawSurface;
+@property(nonatomic, strong) Step16TfMetalHost *drawSurface;
 @property(nonatomic, assign, readwrite, getter=isVisible) BOOL visible;
 @end
 
@@ -29,9 +30,11 @@ __attribute__((used)) static const char kStep15MetalMarker[] = "STEP15-METAL";
     volatile const char *keep11 = kStep11HudMarker;
     volatile const char *keep14 = kStep14LiveCoverMarker;
     volatile const char *keep15 = kStep15MetalMarker;
+    volatile const char *keep16 = kStep16TfHostMarker;
     (void)keep11[0];
     (void)keep14[0];
     (void)keep15[0];
+    (void)keep16[0];
   });
   return inst;
 }
@@ -56,7 +59,7 @@ __attribute__((used)) static const char kStep15MetalMarker[] = "STEP15-METAL";
   [root.view addSubview:cover];
   self.liveCover = cover;
 
-  Step15MetalSurface *surface = [[Step15MetalSurface alloc] initWithFrame:bounds];
+  Step16TfMetalHost *surface = [[Step16TfMetalHost alloc] initWithFrame:bounds];
   surface.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
   [cover attachDrawView:surface];
   [cover setLiveHidden:YES];
@@ -82,7 +85,7 @@ __attribute__((used)) static const char kStep15MetalMarker[] = "STEP15-METAL";
   label.font = [UIFont monospacedSystemFontOfSize:12.0f weight:UIFontWeightSemibold];
   label.numberOfLines = 2;
   label.textAlignment = NSTextAlignmentCenter;
-  label.text = @"STEP15-METAL";
+  label.text = @"STEP16-TFHOST";
   self.bannerLabel = label;
 
   [banner addSubview:label];
@@ -108,9 +111,9 @@ __attribute__((used)) static const char kStep15MetalMarker[] = "STEP15-METAL";
     [self ensureWindow];
     if (detail.length > 0) {
       self.bannerLabel.text =
-          [NSString stringWithFormat:@"STEP15-METAL\n%@", detail];
+          [NSString stringWithFormat:@"STEP16-TFHOST\n%@", detail];
     } else {
-      self.bannerLabel.text = @"STEP15-METAL\n过直播 + Metal/MTKView（无 DrawView.mm/PhysX/ImGui）";
+      self.bannerLabel.text = @"STEP16-TFHOST\nUITextField+MTKView（无 ImGui/PhysX/DrawView.mm）";
     }
     self.visible = visible;
     self.overlayWindow.hidden = !visible;
@@ -143,7 +146,7 @@ __attribute__((used)) static const char kStep15MetalMarker[] = "STEP15-METAL";
       return;
     }
     self.bannerLabel.text =
-        [NSString stringWithFormat:@"STEP15-METAL\n%@", detail ?: @""];
+        [NSString stringWithFormat:@"STEP16-TFHOST\n%@", detail ?: @""];
   };
   if ([NSThread isMainThread]) {
     work();
