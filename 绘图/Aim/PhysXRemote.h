@@ -8,7 +8,7 @@
 #include <cstdint>
 #include <cstring>
 
-// 全局 PhysX 指针（默认对齐 qwer MainApplicationDelegate: 0x110ADBA0）
+// 全局 PhysX 指针（1.39 冰雪阿勒泰默认: 0x1190A3A0）
 extern volatile uint64_t kPhysXPtr;
 
 #ifdef __OBJC__

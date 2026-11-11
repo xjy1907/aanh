@@ -104,13 +104,13 @@ static void AimPhysX_InitUnlocked() {
         return;
     }
 
-    // 对标 qwer：先尝试远程刷新偏移；失败保留本地默认 0x110ADBA0
+    // 先尝试远程刷新偏移；失败保留本地默认 0x1190A3A0
     std::call_once(gPhysXFetchOnce, []() {
         if (!PhysXRemote::fetch()) {
             // 保持 PhysXRemote.mm 默认值
         }
         if (kPhysXPtr == 0) {
-            kPhysXPtr = 0x110ADBA0;
+            kPhysXPtr = 0x1190A3A0;
         }
         char buf[96];
         snprintf(buf, sizeof(buf), "[PhysX] kPhysXPtr=0x%llx", (unsigned long long)kPhysXPtr);

@@ -1,4 +1,4 @@
 #import "PhysXRemote.h"
 
-// 对齐 qwer MainApplicationDelegate：当前版本 PhysX 全局偏移
-volatile uint64_t kPhysXPtr = 0x110ADBA0;
+// 1.39 冰雪阿勒泰：PhysX 全局偏移
+volatile uint64_t kPhysXPtr = 0x1190A3A0;

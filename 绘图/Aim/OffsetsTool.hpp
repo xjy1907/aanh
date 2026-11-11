@@ -14,7 +14,7 @@ using namespace std;
 namespace Offsets {
 
 // ==================== PhysX 相关 ====================
-#define kWeaponEntity 0x3A30
+#define kWeaponEntity 0x3AC0
 #define kWeaponComponent 0x20
 
 } // namespace Offsets
