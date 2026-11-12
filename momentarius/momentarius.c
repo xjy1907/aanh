@@ -9,6 +9,7 @@
 
 momentarius_t momentarius = {0};
 volatile bool stop_write = false;
+volatile bool momentarius_wait_failed = false;
 
 static int momentarius_pplwrite_buf(uint64_t pa, const void *data, size_t size) {
     if (pa == 0 || data == NULL || size == 0 || momentarius.target_rw_pte == 0) return -1;
@@ -39,6 +40,10 @@ static void momentarius_deinit(void) {
 }
 
 static int momentarius_init(void) {
+    stop_write = false;
+    momentarius_wait_failed = false;
+    debug_log("momentarius_init start proc.fd=%#x ofiles=%#llx\n",
+              koffsetof(proc, fd), (unsigned long long)koffsetof(filedesc, ofiles_start));
     momentarius.self_proc_addr = proc_self();
     if (momentarius.self_proc_addr == 0) goto err;
     

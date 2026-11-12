@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <stdarg.h>
 #include <pthread.h>
 #include <sys/sysctl.h>
 #include <IOKit/IOKitLib.h>
@@ -13,11 +14,31 @@
 int momentarius_init_A12(void);
 int momentarius_init_A13(void);
 
+// 直接追加到与主 App 相同的 kfd_debug.log，避免 NHPpl 依赖 NHKit 符号
+static inline void momentarius_debug_logf(const char *fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    FILE *f = fopen("/var/mobile/Documents/kfd_debug.log", "a");
+    if (f) {
+        fputs("[momentarius] ", f);
+        vfprintf(f, fmt, ap);
+        fflush(f);
+        fclose(f);
+    }
+    va_end(ap);
+    va_start(ap, fmt);
+    fprintf(stderr, "[momentarius] ");
+    vfprintf(stderr, fmt, ap);
+    va_end(ap);
+    usleep(1000);
+}
 #if 1
-#define debug_log(...) {fprintf(stderr, "[momentarius] " __VA_ARGS__);usleep(1000);}
+#define debug_log(...) momentarius_debug_logf(__VA_ARGS__)
 #else
 #define debug_log(...)
 #endif
+
+extern volatile bool momentarius_wait_failed;
 
 #define TTE_PA_MASK             0x0000ffffffffc000ull
 #define TT_L2_SIZE              0x0000000002000000ull

