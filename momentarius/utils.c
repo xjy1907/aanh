@@ -76,17 +76,8 @@ uint64_t kalloc_page(void) {
     uint64_t offset = koffsetof(proc, fd) + koffsetof(filedesc, ofiles_start);
     uint64_t fd_ofiles = kread_ptr(momentarius.self_proc_addr + offset);
     uint64_t fproc = kread_ptr(fd_ofiles + fds[0] * 0x8);
-    uint64_t f_fglob = 0;
-    
-    if (gPrimitives.krwMinSafeReadSize > 0x8) {
-        uint32_t zoneSize = 0x20;
-        uint64_t readOffset = zoneSize - gPrimitives.krwMinSafeReadSize;
-        uint8_t buf[gPrimitives.krwMinSafeReadSize];
-        kreadbuf(fproc + readOffset, &buf[0], gPrimitives.krwMinSafeReadSize);
-        f_fglob = UNSIGN_PTR(*(uint64_t *)(&buf[0x10 - readOffset]));
-    } else {
-        f_fglob = kread_ptr(fproc + 0x10);
-    }
+    // aanh 预编译 libjailbreak 无 krwMinSafeReadSize，走常规 8 字节读
+    uint64_t f_fglob = kread_ptr(fproc + 0x10);
     
     uint64_t fg_data = kread_ptr(f_fglob + 0x38);
     uint64_t pipe_buf = kread_ptr(fg_data + 0x10);
