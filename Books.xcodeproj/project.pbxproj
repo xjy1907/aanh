@@ -38,6 +38,17 @@
 		06D4D98A2E19087A008B33B6 /* libjailbreak.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8962E18DD9A008B33B6 /* libjailbreak.dylib */; platformFilter = ios; };
 		06D4DA932E190918008B33B6 /* NHDraw.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4DA8D2E190918008B33B6 /* NHDraw.framework */; };
 		06D4DA942E190918008B33B6 /* NHDraw.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4DA8D2E190918008B33B6 /* NHDraw.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		A1000004E190918008B3304 /* NHPpl.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A1000001E190918008B3301 /* NHPpl.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		A1000005E190918008B3305 /* NHPpl.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A1000001E190918008B3301 /* NHPpl.framework */; };
+		A1000006E190918008B3306 /* libjailbreak.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8962E18DD9A008B33B6 /* libjailbreak.dylib */; platformFilter = ios; };
+		A1000007E190918008B3307 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8862E18D774008B33B6 /* IOKit.framework */; };
+		A1000008E190918008B3308 /* IOSurface.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D67DB22E0CD63D002E20EF /* IOSurface.framework */; };
+		A1000009E190918008B3309 /* momentarius_public.h in Headers */ = {isa = PBXBuildFile; fileRef = A1000010E190918008B3310 /* momentarius_public.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		A100000AE190918008B330A /* momentarius.c in Sources */ = {isa = PBXBuildFile; fileRef = A1000011E190918008B3311 /* momentarius.c */; };
+		A100000BE190918008B330B /* momentarius_a12.c in Sources */ = {isa = PBXBuildFile; fileRef = A1000012E190918008B3312 /* momentarius_a12.c */; };
+		A100000CE190918008B330C /* momentarius_a13.c in Sources */ = {isa = PBXBuildFile; fileRef = A1000013E190918008B3313 /* momentarius_a13.c */; };
+		A100000DE190918008B330D /* utils.c in Sources */ = {isa = PBXBuildFile; fileRef = A1000014E190918008B3314 /* utils.c */; };
+		A100000EE190918008B330E /* iosurface_map.m in Sources */ = {isa = PBXBuildFile; fileRef = A1000015E190918008B3315 /* iosurface_map.m */; };
 		06D4DA992E190976008B33B6 /* libjailbreak.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8962E18DD9A008B33B6 /* libjailbreak.dylib */; platformFilter = ios; };
 		06D4DBF02E190B9B008B33B6 /* NHStream.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4DBEA2E190B9B008B33B6 /* NHStream.framework */; };
 		06D4DBF12E190B9B008B33B6 /* NHStream.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4DBEA2E190B9B008B33B6 /* NHStream.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -226,6 +237,13 @@
 			remoteGlobalIDString = 06D4DBE92E190B9B008B33B6;
 			remoteInfo = multicast_bytecopy;
 		};
+		A1000002E190918008B3302 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CC711CF92B5BF550007235A6 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A1000018E190918008B3318;
+			remoteInfo = momentarius;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -240,6 +258,7 @@
 				06D4D9282E19068A008B33B6 /* NHBase.framework in Embed Frameworks */,
 				06D4DBF12E190B9B008B33B6 /* NHStream.framework in Embed Frameworks */,
 				06D4DA942E190918008B33B6 /* NHDraw.framework in Embed Frameworks */,
+				A1000004E190918008B3304 /* NHPpl.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -522,6 +541,15 @@
 		D7B8E466CE37C7E916D8058A /* exploit/kernel_base.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = exploit/kernel_base.c; sourceTree = "<group>"; };
 		DBBDAA0841DC9E78FD4704A6 /* exploit/kernel_rw.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = exploit/kernel_rw.c; sourceTree = "<group>"; };
 		FF82BEC347A40E3DA9D3001A /* kfd.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = kfd.m; sourceTree = "<group>"; };
+		A1000001E190918008B3301 /* NHPpl.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NHPpl.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A100000FE190918008B330F /* momentarius.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = momentarius.h; sourceTree = "<group>"; };
+		A1000010E190918008B3310 /* momentarius_public.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = momentarius_public.h; sourceTree = "<group>"; };
+		A1000011E190918008B3311 /* momentarius.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = momentarius.c; sourceTree = "<group>"; };
+		A1000012E190918008B3312 /* momentarius_a12.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = momentarius_a12.c; sourceTree = "<group>"; };
+		A1000013E190918008B3313 /* momentarius_a13.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = momentarius_a13.c; sourceTree = "<group>"; };
+		A1000014E190918008B3314 /* utils.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = utils.c; sourceTree = "<group>"; };
+		A1000015E190918008B3315 /* iosurface_map.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = iosurface_map.m; sourceTree = "<group>"; };
+		A1000016E190918008B3316 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -610,6 +638,7 @@
 				1F190ADE504FF1E5B8E82B49 /* libzstd.a in Frameworks */,
 				06D4D8B02E18DE11008B33B6 /* NHKit.framework in Frameworks */,
 				06D4DA932E190918008B33B6 /* NHDraw.framework in Frameworks */,
+				A1000005E190918008B3305 /* NHPpl.framework in Frameworks */,
 				06D4DBF02E190B9B008B33B6 /* NHStream.framework in Frameworks */,
 				361131B62E49340A00E2AA06 /* AdSupport.framework in Frameworks */,
 				CC711D9C2B5C0032007235A6 /* IOKit.tbd in Frameworks */,
@@ -618,6 +647,16 @@
 				CC711D9E2B5C0081007235A6 /* AssertionServices.tbd in Frameworks */,
 				CC711D9A2B5BFF2F007235A6 /* BackBoardServices.tbd in Frameworks */,
 				CC711D992B5BFF2F007235A6 /* SpringBoardServices.tbd in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A100001BE190918008B331B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1000006E190918008B3306 /* libjailbreak.dylib in Frameworks */,
+				A1000007E190918008B3307 /* IOKit.framework in Frameworks */,
+				A1000008E190918008B3308 /* IOSurface.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -658,6 +697,21 @@
 				8FC7F48713EC7F97F002AA84 /* exploit/utils.c */,
 			);
 			path = weightBufs;
+			sourceTree = "<group>";
+		};
+		A1000017E190918008B3317 /* momentarius */ = {
+			isa = PBXGroup;
+			children = (
+				A100000FE190918008B330F /* momentarius.h */,
+				A1000010E190918008B3310 /* momentarius_public.h */,
+				A1000011E190918008B3311 /* momentarius.c */,
+				A1000012E190918008B3312 /* momentarius_a12.c */,
+				A1000013E190918008B3313 /* momentarius_a13.c */,
+				A1000014E190918008B3314 /* utils.c */,
+				A1000015E190918008B3315 /* iosurface_map.m */,
+				A1000016E190918008B3316 /* Info.plist */,
+			);
+			path = momentarius;
 			sourceTree = "<group>";
 		};
 		06D4DA8E2E190918008B33B6 /* dmaFail */ = {
@@ -899,6 +953,7 @@
 				1F0BD8B72D6DACDC008151DA /* 绘图 */,
 				06D4DBEB2E190B9B008B33B6 /* multicast_bytecopy */,
 				06D4DA8E2E190918008B33B6 /* dmaFail */,
+				A1000017E190918008B3317 /* momentarius */,
 				06D4D97D2E190828008B33B6 /* weightBufs */,
 				06D4D9222E19068A008B33B6 /* badRecovery */,
 				06D4D8AB2E18DE11008B33B6 /* kfd */,
@@ -920,6 +975,7 @@
 				06D4D9212E19068A008B33B6 /* NHBase.framework */,
 				06D4D97C2E190828008B33B6 /* NHEngine.framework */,
 				06D4DA8D2E190918008B33B6 /* NHDraw.framework */,
+				A1000001E190918008B3301 /* NHPpl.framework */,
 				06D4DBEA2E190B9B008B33B6 /* NHStream.framework */,
 			);
 			name = Products;
@@ -1139,6 +1195,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A1000019E190918008B3319 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1000009E190918008B3309 /* momentarius_public.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
@@ -1282,12 +1346,34 @@
 				06D4D9262E19068A008B33B6 /* PBXTargetDependency */,
 				06D4D9812E190828008B33B6 /* PBXTargetDependency */,
 				06D4DA922E190918008B33B6 /* PBXTargetDependency */,
+				A1000003E190918008B3303 /* PBXTargetDependency */,
 				06D4DBEF2E190B9B008B33B6 /* PBXTargetDependency */,
 			);
 			name = Books;
 			productName = Books;
 			productReference = CC711D012B5BF550007235A6 /* Books.app */;
 			productType = "com.apple.product-type.application";
+		};
+		A1000018E190918008B3318 /* momentarius */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A1000020E190918008B3320 /* Build configuration list for PBXNativeTarget "momentarius" */;
+			buildPhases = (
+				A1000019E190918008B3319 /* Headers */,
+				A100001AE190918008B331A /* Sources */,
+				A100001BE190918008B331B /* Frameworks */,
+				A100001CE190918008B331C /* Resources */,
+				A100001DE190918008B331D /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = momentarius;
+			packageProductDependencies = (
+			);
+			productName = NHPpl;
+			productReference = A1000001E190918008B3301 /* NHPpl.framework */;
+			productType = "com.apple.product-type.framework";
 		};
 /* End PBXNativeTarget section */
 
@@ -1308,6 +1394,9 @@
 						CreatedOnToolsVersion = 14.2;
 					};
 					06D4DA8C2E190918008B33B6 = {
+						CreatedOnToolsVersion = 14.2;
+					};
+					A1000018E190918008B3318 = {
 						CreatedOnToolsVersion = 14.2;
 					};
 					06D4DBE92E190B9B008B33B6 = {
@@ -1339,6 +1428,7 @@
 				06D4D9202E19068A008B33B6 /* badRecovery */,
 				06D4D97B2E190828008B33B6 /* weightBufs */,
 				06D4DA8C2E190918008B33B6 /* dmaFail */,
+				A1000018E190918008B3318 /* momentarius */,
 				06D4DBE92E190B9B008B33B6 /* multicast_bytecopy */,
 			);
 		};
@@ -1400,6 +1490,13 @@
 				CC2A77302B6AADB400796650 /* Settings.bundle in Resources */,
 				CC711D852B5BFCC4007235A6 /* Localizable.strings in Resources */,
 				CC711D112B5BF551007235A6 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A100001CE190918008B331C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1502,6 +1599,24 @@
 			shellScript = "install_name_tool -change \"@loader_path/libjailbreak.dylib\" \"@executable_path/libjailbreak.dylib\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_PATH\"\n";
 		};
 		06D4DC252E190C47008B33B6 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "install_name_tool -change \"@loader_path/libjailbreak.dylib\" \"@executable_path/libjailbreak.dylib\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_PATH\"\n";
+		};
+		A100001DE190918008B331D /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -1683,6 +1798,18 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A100001AE190918008B331A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A100000AE190918008B330A /* momentarius.c in Sources */,
+				A100000BE190918008B330B /* momentarius_a12.c in Sources */,
+				A100000CE190918008B330C /* momentarius_a13.c in Sources */,
+				A100000DE190918008B330D /* utils.c in Sources */,
+				A100000EE190918008B330E /* iosurface_map.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -1710,6 +1837,11 @@
 			isa = PBXTargetDependency;
 			target = 06D4DBE92E190B9B008B33B6 /* multicast_bytecopy */;
 			targetProxy = 06D4DBEE2E190B9B008B33B6 /* PBXContainerItemProxy */;
+		};
+		A1000003E190918008B3303 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A1000018E190918008B3318 /* momentarius */;
+			targetProxy = A1000002E190918008B3302 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -2546,6 +2678,104 @@
 			};
 			name = Release;
 		};
+		A100001EE190918008B331E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMPILER_INDEX_STORE_ENABLE = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = "";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/dependencies/include",
+					"$(PROJECT_DIR)/zstd/lib",
+					"$(PROJECT_DIR)/_external/include",
+					"$(PROJECT_DIR)/momentarius",
+				);
+				INFOPLIST_FILE = momentarius/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = momentarius;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/dependencies/build";
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				OTHER_LDFLAGS = (
+					"-ObjC",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.nhppl;
+				PRODUCT_NAME = NHPpl;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSION_INFO_PREFIX = "";
+
+			};
+			name = Debug;
+		};
+		A100001FE190918008B331F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMPILER_INDEX_STORE_ENABLE = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = "";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/dependencies/include",
+					"$(PROJECT_DIR)/zstd/lib",
+					"$(PROJECT_DIR)/_external/include",
+					"$(PROJECT_DIR)/momentarius",
+				);
+				INFOPLIST_FILE = momentarius/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = momentarius;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/dependencies/build";
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				OTHER_LDFLAGS = (
+					"-ObjC",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.nhppl;
+				PRODUCT_NAME = NHPpl;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSION_INFO_PREFIX = "";
+
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -2617,6 +2847,15 @@
 			buildConfigurations = (
 				CC711D1B2B5BF551007235A6 /* Debug */,
 				CC711D1C2B5BF551007235A6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A1000020E190918008B3320 /* Build configuration list for PBXNativeTarget "momentarius" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A100001EE190918008B331E /* Debug */,
+				A100001FE190918008B331F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
