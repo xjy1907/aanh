@@ -192,20 +192,23 @@ void jbinfo_initialize_hardcoded_offsets(void)
 				if (strcmp(xnuVersion, "22.0.0") >= 0) { // iOS 16+
 					gSystemInfo.kernelConstant.smrBase = 3;
 
-					// proc
+					// proc（对齐 Dopamine-5b1d2c：iOS16+ 为 0xD0，不是 15.2 的 0xD8）
 					gSystemInfo.kernelStruct.proc.task    =   0x0; // Removed, task is now at (proc + sizeof(proc))
 					gSystemInfo.kernelStruct.proc.pptr    =  0x10;
 					gSystemInfo.kernelStruct.proc.proc_ro =  0x18;
 					gSystemInfo.kernelStruct.proc.svuid   =  0x3C;
 					gSystemInfo.kernelStruct.proc.svgid   =  0x40;
 					gSystemInfo.kernelStruct.proc.pid     =  0x60;
-					gSystemInfo.kernelStruct.proc.fd      =  0xD8;
+					gSystemInfo.kernelStruct.proc.fd      =  0xD0;
 					gSystemInfo.kernelStruct.proc.flag    = 0x25C;
 					gSystemInfo.kernelStruct.proc.textvp  = 0x350;
 
 					gSystemInfo.kernelStruct.proc_ro.syscall_filter_mask = 0x28;
 					gSystemInfo.kernelStruct.proc_ro.mach_trap_filter_mask = 0x68;
 					gSystemInfo.kernelStruct.proc_ro.mach_kobj_filter_mask = 0x70;
+
+					// filedesc（对齐 Dopamine：iOS16+ ofiles_start=0x28）
+					gSystemInfo.kernelStruct.filedesc.ofiles_start = 0x28;
 
 					// task
 #ifdef __arm64e__
