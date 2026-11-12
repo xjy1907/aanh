@@ -292,21 +292,24 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
 
 // ========================================
 // 内核选择选项卡（样式对标「绘制帧率」）
-// landa / smith / physpuppet，默认 physpuppet
+// landa / smith / physpuppet / clearsword，默认 physpuppet
 // ========================================
 static NSString * const kJVRKernelExploitLanda = @"com.nh.nhkit.landa";
 static NSString * const kJVRKernelExploitSmith = @"com.nh.nhkit.smith";
 static NSString * const kJVRKernelExploitPhyspuppet = @"com.nh.nhkit.physpuppet";
+static NSString * const kJVRKernelExploitClearSword = @"com.nh.nhsword";
 
 static NSInteger JVR_KernelExploitToSegmentIndex(NSString *ident) {
     if ([ident isEqualToString:kJVRKernelExploitLanda]) return 0;
     if ([ident isEqualToString:kJVRKernelExploitSmith]) return 1;
+    if ([ident isEqualToString:kJVRKernelExploitClearSword]) return 3;
     return 2; // physpuppet 默认
 }
 
 static NSString *JVR_SegmentIndexToKernelExploit(NSInteger idx) {
     if (idx == 0) return kJVRKernelExploitLanda;
     if (idx == 1) return kJVRKernelExploitSmith;
+    if (idx == 3) return kJVRKernelExploitClearSword;
     return kJVRKernelExploitPhyspuppet;
 }
 
@@ -316,7 +319,8 @@ static NSString *JVR_读取KernelExploit(void) {
         NSString *s = (NSString *)v;
         if ([s isEqualToString:kJVRKernelExploitLanda] ||
             [s isEqualToString:kJVRKernelExploitSmith] ||
-            [s isEqualToString:kJVRKernelExploitPhyspuppet]) {
+            [s isEqualToString:kJVRKernelExploitPhyspuppet] ||
+            [s isEqualToString:kJVRKernelExploitClearSword]) {
             return s;
         }
     }
@@ -326,10 +330,54 @@ static NSString *JVR_读取KernelExploit(void) {
 static void JVR_保存KernelExploit(NSString *ident) {
     if (![ident isEqualToString:kJVRKernelExploitLanda] &&
         ![ident isEqualToString:kJVRKernelExploitSmith] &&
-        ![ident isEqualToString:kJVRKernelExploitPhyspuppet]) {
+        ![ident isEqualToString:kJVRKernelExploitPhyspuppet] &&
+        ![ident isEqualToString:kJVRKernelExploitClearSword]) {
         ident = kJVRKernelExploitPhyspuppet;
     }
     [[DOPreferenceManager sharedManager] setPreferenceValue:ident forKey:@"selectedKernelExploit"];
+}
+
+// ========================================
+// PPL 选择（自动 / dmaFail / momentarius / Titan）
+// ========================================
+static NSString * const kJVRPPLDmaFail = @"com.nh.nhdraw";
+static NSString * const kJVRPPLMomentarius = @"com.nh.nhppl";
+static NSString * const kJVRPPLTitan = @"com.nh.nhtitan";
+
+static NSInteger JVR_PPLToSegmentIndex(NSString *identOrNil) {
+    if (![identOrNil isKindOfClass:[NSString class]] || identOrNil.length == 0) return 0; // 自动
+    if ([identOrNil isEqualToString:kJVRPPLDmaFail]) return 1;
+    if ([identOrNil isEqualToString:kJVRPPLMomentarius]) return 2;
+    if ([identOrNil isEqualToString:kJVRPPLTitan]) return 3;
+    return 0;
+}
+
+static NSString *JVR_SegmentIndexToPPL(NSInteger idx) {
+    if (idx == 1) return kJVRPPLDmaFail;
+    if (idx == 2) return kJVRPPLMomentarius;
+    if (idx == 3) return kJVRPPLTitan;
+    return nil; // 自动
+}
+
+static NSString *JVR_读取PPL(void) {
+    id v = [[DOPreferenceManager sharedManager] preferenceValueForKey:@"selectedPPLBypass"];
+    if ([v isKindOfClass:[NSString class]]) {
+        NSString *s = (NSString *)v;
+        if ([s isEqualToString:kJVRPPLDmaFail] ||
+            [s isEqualToString:kJVRPPLMomentarius] ||
+            [s isEqualToString:kJVRPPLTitan]) {
+            return s;
+        }
+    }
+    return nil; // 自动
+}
+
+static void JVR_保存PPL(NSString *identOrNil) {
+    if (identOrNil.length == 0) {
+        [[DOPreferenceManager sharedManager] removePreferenceValueForKey:@"selectedPPLBypass"];
+        return;
+    }
+    [[DOPreferenceManager sharedManager] setPreferenceValue:identOrNil forKey:@"selectedPPLBypass"];
 }
 
 @interface JVRKernelExploitSegmentRow : UIView
@@ -363,7 +411,7 @@ static void JVR_保存KernelExploit(NSString *ident) {
         self.titleLabel.textColor = JVR_文字色;
         [self addSubview:self.titleLabel];
 
-        self.segment = [[UISegmentedControl alloc] initWithItems:@[ @"landa", @"smith", @"physpuppet" ]];
+        self.segment = [[UISegmentedControl alloc] initWithItems:@[ @"landa", @"smith", @"physpuppet", @"clearsword" ]];
         self.segment.translatesAutoresizingMaskIntoConstraints = NO;
         self.segment.selectedSegmentIndex = JVR_KernelExploitToSegmentIndex(JVR_读取KernelExploit());
         if (@available(iOS 13.0, *)) {
@@ -393,6 +441,71 @@ static void JVR_保存KernelExploit(NSString *ident) {
 
 - (void)onSegment:(UISegmentedControl *)sender {
     NSString *ident = JVR_SegmentIndexToKernelExploit(sender.selectedSegmentIndex);
+    if (self.onChange) self.onChange(ident);
+}
+
+@end
+
+@interface JVRPPLBypassSegmentRow : UIView
+@property (nonatomic, strong) UILabel *titleLabel;
+@property (nonatomic, strong) UISegmentedControl *segment;
+@property (nonatomic, copy) void (^onChange)(NSString *exploitId);
+@end
+
+@implementation JVRPPLBypassSegmentRow
+
+- (instancetype)init {
+    self = [super initWithFrame:CGRectZero];
+    if (self) {
+        self.backgroundColor = [JVR_卡片色 colorWithAlphaComponent:0.6f];
+        self.layer.cornerRadius = 8.0f;
+        self.layer.borderWidth = 1.0f;
+        self.layer.borderColor = JVR_边框色.CGColor;
+        self.accessibilityIdentifier = @"PPL_BYPASS_SEG_V1";
+
+        UIView *accent = [[UIView alloc] init];
+        accent.translatesAutoresizingMaskIntoConstraints = NO;
+        accent.backgroundColor = JVR_副色;
+        accent.layer.cornerRadius = 1.5f;
+        [self addSubview:accent];
+
+        self.titleLabel = [[UILabel alloc] init];
+        self.titleLabel.translatesAutoresizingMaskIntoConstraints = NO;
+        self.titleLabel.text = @"PPL 选择";
+        self.titleLabel.font = [UIFont systemFontOfSize:14.0f weight:UIFontWeightMedium];
+        self.titleLabel.textColor = JVR_文字色;
+        [self addSubview:self.titleLabel];
+
+        self.segment = [[UISegmentedControl alloc] initWithItems:@[ @"自动", @"dmaFail", @"momentarius", @"Titan" ]];
+        self.segment.translatesAutoresizingMaskIntoConstraints = NO;
+        self.segment.selectedSegmentIndex = JVR_PPLToSegmentIndex(JVR_读取PPL());
+        if (@available(iOS 13.0, *)) {
+            self.segment.selectedSegmentTintColor = [JVR_副色 colorWithAlphaComponent:0.55f];
+            [self.segment setTitleTextAttributes:@{ NSForegroundColorAttributeName: JVR_文字色 } forState:UIControlStateNormal];
+            [self.segment setTitleTextAttributes:@{ NSForegroundColorAttributeName: [UIColor whiteColor] } forState:UIControlStateSelected];
+        }
+        [self.segment addTarget:self action:@selector(onSegment:) forControlEvents:UIControlEventValueChanged];
+        [self addSubview:self.segment];
+
+        [NSLayoutConstraint activateConstraints:@[
+            [accent.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:10],
+            [accent.topAnchor constraintEqualToAnchor:self.topAnchor constant:12],
+            [accent.widthAnchor constraintEqualToConstant:3],
+            [accent.heightAnchor constraintEqualToConstant:18],
+            [self.titleLabel.leadingAnchor constraintEqualToAnchor:accent.trailingAnchor constant:10],
+            [self.titleLabel.centerYAnchor constraintEqualToAnchor:accent.centerYAnchor],
+            [self.segment.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:12],
+            [self.segment.trailingAnchor constraintEqualToAnchor:self.trailingAnchor constant:-12],
+            [self.segment.topAnchor constraintEqualToAnchor:self.titleLabel.bottomAnchor constant:10],
+            [self.segment.heightAnchor constraintEqualToConstant:30],
+            [self.heightAnchor constraintEqualToConstant:72],
+        ]];
+    }
+    return self;
+}
+
+- (void)onSegment:(UISegmentedControl *)sender {
+    NSString *ident = JVR_SegmentIndexToPPL(sender.selectedSegmentIndex);
     if (self.onChange) self.onChange(ident);
 }
 
@@ -1278,6 +1391,17 @@ static void JVR_保存KernelExploit(NSString *ident) {
     };
     [content addSubview:kernelExpRow];
 
+    // ---- PPL 选择（内核选择下方）----
+    JVRPPLBypassSegmentRow *pplRow = [[JVRPPLBypassSegmentRow alloc] init];
+    pplRow.translatesAutoresizingMaskIntoConstraints = NO;
+    pplRow.onChange = ^(NSString *exploitId) {
+        JVR_保存PPL(exploitId);
+        NSString *label = exploitId.length ? ([[exploitId componentsSeparatedByString:@"."] lastObject] ?: exploitId) : @"自动";
+        KernelLogLine([[NSString stringWithFormat:@"PPL 选择 = %@", label] UTF8String]);
+        kfd_log("[UI] selectedPPLBypass=%s PPL_BYPASS_SEG_V1\n", exploitId.length ? exploitId.UTF8String : "auto");
+    };
+    [content addSubview:pplRow];
+
     // ---- 内核按钮 ----
     JVRKernelButton *kernelBtn = [[JVRKernelButton alloc] init];
     kernelBtn.translatesAutoresizingMaskIntoConstraints = NO;
@@ -1361,8 +1485,12 @@ static void JVR_保存KernelExploit(NSString *ident) {
         [kernelExpRow.topAnchor constraintEqualToAnchor:mainCard.bottomAnchor constant:12],
         [kernelExpRow.leadingAnchor constraintEqualToAnchor:content.leadingAnchor constant:16],
         [kernelExpRow.trailingAnchor constraintEqualToAnchor:content.trailingAnchor constant:-16],
+
+        [pplRow.topAnchor constraintEqualToAnchor:kernelExpRow.bottomAnchor constant:8],
+        [pplRow.leadingAnchor constraintEqualToAnchor:content.leadingAnchor constant:16],
+        [pplRow.trailingAnchor constraintEqualToAnchor:content.trailingAnchor constant:-16],
         
-        [kernelBtn.topAnchor constraintEqualToAnchor:kernelExpRow.bottomAnchor constant:8],
+        [kernelBtn.topAnchor constraintEqualToAnchor:pplRow.bottomAnchor constant:8],
         [kernelBtn.leadingAnchor constraintEqualToAnchor:content.leadingAnchor constant:16],
         [kernelBtn.trailingAnchor constraintEqualToAnchor:content.trailingAnchor constant:-16],
         

@@ -7,6 +7,36 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+
+		/* PHASE2_TITAN_CLEARSWORD_INJECTED */
+		B2000004E190918008B2004 /* NHTitan.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B2000001E190918008B2001 /* NHTitan.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		B2000005E190918008B2005 /* NHTitan.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B2000001E190918008B2001 /* NHTitan.framework */; };
+		B2000006E190918008B2006 /* libjailbreak.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8962E18DD9A008B33B6 /* libjailbreak.dylib */; platformFilter = ios; };
+		B2000007E190918008B2007 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8862E18D774008B33B6 /* IOKit.framework */; };
+		B2000008E190918008B2008 /* IOSurface.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D67DB22E0CD63D002E20EF /* IOSurface.framework */; };
+		B200000AE190918008B200A /* Titan.h in Headers */ = {isa = PBXBuildFile; fileRef = B2000020E190918008B2020 /* Titan.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		B2000010E190918008B2010 /* Titan.m in Sources */ = {isa = PBXBuildFile; fileRef = B2000021E190918008B2021 /* Titan.m */; };
+		B2000011E190918008B2011 /* titan.m in Sources */ = {isa = PBXBuildFile; fileRef = B2000022E190918008B2022 /* titan.m */; };
+		B2000012E190918008B2012 /* gfx.m in Sources */ = {isa = PBXBuildFile; fileRef = B2000023E190918008B2023 /* gfx.m */; };
+		B2000013E190918008B2013 /* gfx_patchfinder.c in Sources */ = {isa = PBXBuildFile; fileRef = B2000024E190918008B2024 /* gfx_patchfinder.c */; };
+		B2000014E190918008B2014 /* info.c in Sources */ = {isa = PBXBuildFile; fileRef = B2000025E190918008B2025 /* info.c */; };
+		B2000015E190918008B2015 /* IOGPUDevice.c in Sources */ = {isa = PBXBuildFile; fileRef = B2000026E190918008B2026 /* IOGPUDevice.c */; };
+		B2000016E190918008B2016 /* ipc_port.c in Sources */ = {isa = PBXBuildFile; fileRef = B2000027E190918008B2027 /* ipc_port.c */; };
+		B2000017E190918008B2017 /* kernel_patchfinder.c in Sources */ = {isa = PBXBuildFile; fileRef = B2000028E190918008B2028 /* kernel_patchfinder.c */; };
+		C3000004E190918008C3004 /* NHSword.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = C3000001E190918008C3001 /* NHSword.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		C3000005E190918008C3005 /* NHSword.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C3000001E190918008C3001 /* NHSword.framework */; };
+		C3000006E190918008C3006 /* libjailbreak.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8962E18DD9A008B33B6 /* libjailbreak.dylib */; platformFilter = ios; };
+		C3000007E190918008C3007 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8862E18D774008B33B6 /* IOKit.framework */; };
+		C3000008E190918008C3008 /* IOSurface.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D67DB22E0CD63D002E20EF /* IOSurface.framework */; };
+		C300000AE190918008C300A /* ClearSword.h in Headers */ = {isa = PBXBuildFile; fileRef = C3000020E190918008C3020 /* ClearSword.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		C3000010E190918008C3010 /* ClearSword.m in Sources */ = {isa = PBXBuildFile; fileRef = C3000021E190918008C3021 /* ClearSword.m */; };
+		C3000011E190918008C3011 /* free_thread.c in Sources */ = {isa = PBXBuildFile; fileRef = C3000022E190918008C3022 /* free_thread.c */; };
+		C3000012E190918008C3012 /* krw.c in Sources */ = {isa = PBXBuildFile; fileRef = C3000023E190918008C3023 /* krw.c */; };
+		C3000013E190918008C3013 /* phys_oob.c in Sources */ = {isa = PBXBuildFile; fileRef = C3000024E190918008C3024 /* phys_oob.c */; };
+		C3000014E190918008C3014 /* poc.c in Sources */ = {isa = PBXBuildFile; fileRef = C3000025E190918008C3025 /* poc.c */; };
+		C3000015E190918008C3015 /* socket.c in Sources */ = {isa = PBXBuildFile; fileRef = C3000026E190918008C3026 /* socket.c */; };
+		C3000016E190918008C3016 /* surface.c in Sources */ = {isa = PBXBuildFile; fileRef = C3000027E190918008C3027 /* surface.c */; };
+		C3000017E190918008C3017 /* utils.c in Sources */ = {isa = PBXBuildFile; fileRef = C3000028E190918008C3028 /* utils.c */; };
 		2F50CA52FF96439999D47905 /* stb_image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7E9ECD8FB8C641AFAC9327E1 /* stb_image.cpp */; };
 		48FAF1654B4F4B44B1423CC9 /* DrawSettingsViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = EB75F96552FF49C5B5543956 /* DrawSettingsViewController.mm */; };
 		3BC5ADD429D34DD689FC0109 /* WeaponTextures.mm in Sources */ = {isa = PBXBuildFile; fileRef = 54D381EE9E2145908F6B1B4E /* WeaponTextures.mm */; };
@@ -202,6 +232,21 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+
+		B2000033E190918008B2033 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CC711CF92B5BF550007235A6 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B2000032E190918008B2032;
+			remoteInfo = Titan;
+		};
+		C3000033E190918008C3033 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CC711CF92B5BF550007235A6 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C3000032E190918008C3032;
+			remoteInfo = ClearSword;
+		};
 		06D4D8AE2E18DE11008B33B6 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = CC711CF92B5BF550007235A6 /* Project object */;
@@ -259,6 +304,8 @@
 				06D4DBF12E190B9B008B33B6 /* NHStream.framework in Embed Frameworks */,
 				06D4DA942E190918008B33B6 /* NHDraw.framework in Embed Frameworks */,
 				A1000004E190918008B3304 /* NHPpl.framework in Embed Frameworks */,
+				B2000004E190918008B2004 /* NHTitan.framework in Embed Frameworks */,
+				C3000004E190918008C3004 /* NHSword.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -279,6 +326,27 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+
+		B2000001E190918008B2001 /* NHTitan.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NHTitan.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		B2000020E190918008B2020 /* Titan.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Titan.h; sourceTree = "<group>"; };
+		B2000021E190918008B2021 /* Titan.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Titan.m; sourceTree = "<group>"; };
+		B2000022E190918008B2022 /* titan.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = titan.m; sourceTree = "<group>"; };
+		B2000023E190918008B2023 /* gfx.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = gfx.m; sourceTree = "<group>"; };
+		B2000024E190918008B2024 /* gfx_patchfinder.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = gfx_patchfinder.c; sourceTree = "<group>"; };
+		B2000025E190918008B2025 /* info.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = info.c; sourceTree = "<group>"; };
+		B2000026E190918008B2026 /* IOGPUDevice.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = IOGPUDevice.c; sourceTree = "<group>"; };
+		B2000027E190918008B2027 /* ipc_port.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = ipc_port.c; sourceTree = "<group>"; };
+		B2000028E190918008B2028 /* kernel_patchfinder.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = kernel_patchfinder.c; sourceTree = "<group>"; };
+		C3000001E190918008C3001 /* NHSword.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NHSword.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		C3000020E190918008C3020 /* ClearSword.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ClearSword.h; sourceTree = "<group>"; };
+		C3000021E190918008C3021 /* ClearSword.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ClearSword.m; sourceTree = "<group>"; };
+		C3000022E190918008C3022 /* free_thread.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = free_thread.c; sourceTree = "<group>"; };
+		C3000023E190918008C3023 /* krw.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = krw.c; sourceTree = "<group>"; };
+		C3000024E190918008C3024 /* phys_oob.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = phys_oob.c; sourceTree = "<group>"; };
+		C3000025E190918008C3025 /* poc.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = poc.c; sourceTree = "<group>"; };
+		C3000026E190918008C3026 /* socket.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = socket.c; sourceTree = "<group>"; };
+		C3000027E190918008C3027 /* surface.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = surface.c; sourceTree = "<group>"; };
+		C3000028E190918008C3028 /* utils.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = utils.c; sourceTree = "<group>"; };
 		45098A121F4F429DA0D24586 /* stb_image.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "stb/stb_image.h"; sourceTree = "<group>"; };
 		7E9ECD8FB8C641AFAC9327E1 /* stb_image.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = "stb/stb_image.cpp"; sourceTree = "<group>"; };
 		EB75F96552FF49C5B5543956 /* DrawSettingsViewController.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = "DrawSettingsViewController.mm"; sourceTree = "<group>"; };
@@ -639,6 +707,8 @@
 				06D4D8B02E18DE11008B33B6 /* NHKit.framework in Frameworks */,
 				06D4DA932E190918008B33B6 /* NHDraw.framework in Frameworks */,
 				A1000005E190918008B3305 /* NHPpl.framework in Frameworks */,
+				B2000005E190918008B2005 /* NHTitan.framework in Frameworks */,
+				C3000005E190918008C3005 /* NHSword.framework in Frameworks */,
 				06D4DBF02E190B9B008B33B6 /* NHStream.framework in Frameworks */,
 				361131B62E49340A00E2AA06 /* AdSupport.framework in Frameworks */,
 				CC711D9C2B5C0032007235A6 /* IOKit.tbd in Frameworks */,
@@ -660,9 +730,79 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+
+		B2000037E190918008B2037 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+								B2000006E190918008B2006 /* libjailbreak.dylib in Frameworks */,
+				B2000007E190918008B2007 /* IOKit.framework in Frameworks */,
+				B2000008E190918008B2008 /* IOSurface.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C3000037E190918008C3037 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C3000006E190918008C3006 /* libjailbreak.dylib in Frameworks */,
+				C3000007E190918008C3007 /* IOKit.framework in Frameworks */,
+				C3000008E190918008C3008 /* IOSurface.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+
+		B2000030E190918008B2030 /* Titan */ = {
+			isa = PBXGroup;
+			children = (
+				B2000020E190918008B2020 /* Titan.h */,
+				B2000021E190918008B2021 /* Titan.m */,
+				B2000031E190918008B2031 /* exploit */,
+			);
+			path = Titan;
+			sourceTree = "<group>";
+		};
+		B2000031E190918008B2031 /* exploit */ = {
+			isa = PBXGroup;
+			children = (
+				B2000022E190918008B2022 /* titan.m */,
+				B2000023E190918008B2023 /* gfx.m */,
+				B2000024E190918008B2024 /* gfx_patchfinder.c */,
+				B2000025E190918008B2025 /* info.c */,
+				B2000026E190918008B2026 /* IOGPUDevice.c */,
+				B2000027E190918008B2027 /* ipc_port.c */,
+				B2000028E190918008B2028 /* kernel_patchfinder.c */,
+			);
+			path = exploit;
+			sourceTree = "<group>";
+		};
+		C3000030E190918008C3030 /* ClearSword */ = {
+			isa = PBXGroup;
+			children = (
+				C3000020E190918008C3020 /* ClearSword.h */,
+				C3000021E190918008C3021 /* ClearSword.m */,
+				C3000031E190918008C3031 /* exploit */,
+			);
+			path = ClearSword;
+			sourceTree = "<group>";
+		};
+		C3000031E190918008C3031 /* exploit */ = {
+			isa = PBXGroup;
+			children = (
+				C3000022E190918008C3022 /* free_thread.c */,
+				C3000023E190918008C3023 /* krw.c */,
+				C3000024E190918008C3024 /* phys_oob.c */,
+				C3000025E190918008C3025 /* poc.c */,
+				C3000026E190918008C3026 /* socket.c */,
+				C3000027E190918008C3027 /* surface.c */,
+				C3000028E190918008C3028 /* utils.c */,
+			);
+			path = exploit;
+			sourceTree = "<group>";
+		};
 		06D4D8AB2E18DE11008B33B6 /* kfd */ = {
 			isa = PBXGroup;
 			children = (
@@ -954,6 +1094,8 @@
 				06D4DBEB2E190B9B008B33B6 /* multicast_bytecopy */,
 				06D4DA8E2E190918008B33B6 /* dmaFail */,
 				A1000017E190918008B3317 /* momentarius */,
+				B2000030E190918008B2030 /* Titan */,
+				C3000030E190918008C3030 /* ClearSword */,
 				06D4D97D2E190828008B33B6 /* weightBufs */,
 				06D4D9222E19068A008B33B6 /* badRecovery */,
 				06D4D8AB2E18DE11008B33B6 /* kfd */,
@@ -976,6 +1118,8 @@
 				06D4D97C2E190828008B33B6 /* NHEngine.framework */,
 				06D4DA8D2E190918008B33B6 /* NHDraw.framework */,
 				A1000001E190918008B3301 /* NHPpl.framework */,
+				B2000001E190918008B2001 /* NHTitan.framework */,
+				C3000001E190918008C3001 /* NHSword.framework */,
 				06D4DBEA2E190B9B008B33B6 /* NHStream.framework */,
 			);
 			name = Products;
@@ -1203,6 +1347,23 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+
+		B2000035E190918008B2035 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B200000AE190918008B200A /* Titan.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C3000035E190918008C3035 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C300000AE190918008C300A /* ClearSword.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
@@ -1347,6 +1508,8 @@
 				06D4D9812E190828008B33B6 /* PBXTargetDependency */,
 				06D4DA922E190918008B33B6 /* PBXTargetDependency */,
 				A1000003E190918008B3303 /* PBXTargetDependency */,
+				B2000034E190918008B2034 /* PBXTargetDependency */,
+				C3000034E190918008C3034 /* PBXTargetDependency */,
 				06D4DBEF2E190B9B008B33B6 /* PBXTargetDependency */,
 			);
 			name = Books;
@@ -1375,6 +1538,49 @@
 			productReference = A1000001E190918008B3301 /* NHPpl.framework */;
 			productType = "com.apple.product-type.framework";
 		};
+
+		B2000032E190918008B2032 /* Titan */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B200003CE190918008B203C /* Build configuration list for PBXNativeTarget "Titan" */;
+			buildPhases = (
+				B2000035E190918008B2035 /* Headers */,
+				B2000036E190918008B2036 /* Sources */,
+				B2000037E190918008B2037 /* Frameworks */,
+				B2000038E190918008B2038 /* Resources */,
+				B2000039E190918008B2039 /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Titan;
+			packageProductDependencies = (
+			);
+			productName = NHTitan;
+			productReference = B2000001E190918008B2001 /* NHTitan.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		C3000032E190918008C3032 /* ClearSword */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C300003CE190918008C303C /* Build configuration list for PBXNativeTarget "ClearSword" */;
+			buildPhases = (
+				C3000035E190918008C3035 /* Headers */,
+				C3000036E190918008C3036 /* Sources */,
+				C3000037E190918008C3037 /* Frameworks */,
+				C3000038E190918008C3038 /* Resources */,
+				C3000039E190918008C3039 /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ClearSword;
+			packageProductDependencies = (
+			);
+			productName = NHSword;
+			productReference = C3000001E190918008C3001 /* NHSword.framework */;
+			productType = "com.apple.product-type.framework";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -1397,6 +1603,12 @@
 						CreatedOnToolsVersion = 14.2;
 					};
 					A1000018E190918008B3318 = {
+						CreatedOnToolsVersion = 14.2;
+					};
+					B2000032E190918008B2032 = {
+						CreatedOnToolsVersion = 14.2;
+					};
+					C3000032E190918008C3032 = {
 						CreatedOnToolsVersion = 14.2;
 					};
 					06D4DBE92E190B9B008B33B6 = {
@@ -1429,6 +1641,8 @@
 				06D4D97B2E190828008B33B6 /* weightBufs */,
 				06D4DA8C2E190918008B33B6 /* dmaFail */,
 				A1000018E190918008B3318 /* momentarius */,
+				B2000032E190918008B2032 /* Titan */,
+				C3000032E190918008C3032 /* ClearSword */,
 				06D4DBE92E190B9B008B33B6 /* multicast_bytecopy */,
 			);
 		};
@@ -1494,6 +1708,21 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		A100001CE190918008B331C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+
+		B2000038E190918008B2038 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C3000038E190918008C3038 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -1619,6 +1848,41 @@
 		A100001DE190918008B331D /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "install_name_tool -change \"@loader_path/libjailbreak.dylib\" \"@executable_path/libjailbreak.dylib\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_PATH\"\n";
+		};
+
+		B2000039E190918008B2039 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "install_name_tool -change \"@loader_path/libjailbreak.dylib\" \"@executable_path/libjailbreak.dylib\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_PATH\"\n";
+		};
+		C3000039E190918008C3039 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -1810,6 +2074,37 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+
+		B2000036E190918008B2036 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B2000010E190918008B2010 /* Titan.m in Sources */,
+				B2000011E190918008B2011 /* titan.m in Sources */,
+				B2000012E190918008B2012 /* gfx.m in Sources */,
+				B2000013E190918008B2013 /* gfx_patchfinder.c in Sources */,
+				B2000014E190918008B2014 /* info.c in Sources */,
+				B2000015E190918008B2015 /* IOGPUDevice.c in Sources */,
+				B2000016E190918008B2016 /* ipc_port.c in Sources */,
+				B2000017E190918008B2017 /* kernel_patchfinder.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C3000036E190918008C3036 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C3000010E190918008C3010 /* ClearSword.m in Sources */,
+				C3000011E190918008C3011 /* free_thread.c in Sources */,
+				C3000012E190918008C3012 /* krw.c in Sources */,
+				C3000013E190918008C3013 /* phys_oob.c in Sources */,
+				C3000014E190918008C3014 /* poc.c in Sources */,
+				C3000015E190918008C3015 /* socket.c in Sources */,
+				C3000016E190918008C3016 /* surface.c in Sources */,
+				C3000017E190918008C3017 /* utils.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -1842,6 +2137,17 @@
 			isa = PBXTargetDependency;
 			target = A1000018E190918008B3318 /* momentarius */;
 			targetProxy = A1000002E190918008B3302 /* PBXContainerItemProxy */;
+		};
+
+		B2000034E190918008B2034 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B2000032E190918008B2032 /* Titan */;
+			targetProxy = B2000033E190918008B2033 /* PBXContainerItemProxy */;
+		};
+		C3000034E190918008C3034 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C3000032E190918008C3032 /* ClearSword */;
+			targetProxy = C3000033E190918008C3033 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -2776,6 +3082,210 @@
 			};
 			name = Release;
 		};
+
+		B200003AE190918008B203A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMPILER_INDEX_STORE_ENABLE = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = NO;
+				DEVELOPMENT_TEAM = "";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/dependencies/include",
+					"$(PROJECT_DIR)/zstd/lib",
+					"$(PROJECT_DIR)/_external/include",
+					"$(PROJECT_DIR)/Titan",
+					"$(PROJECT_DIR)/Titan/exploit",
+				);
+				INFOPLIST_FILE = Titan/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Titan;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/dependencies/build";
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				OTHER_LDFLAGS = (
+					"-ObjC",
+					"-framework",
+					UIKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.nhtitan;
+				PRODUCT_NAME = NHTitan;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+
+		B200003BE190918008B203B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMPILER_INDEX_STORE_ENABLE = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = NO;
+				DEVELOPMENT_TEAM = "";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/dependencies/include",
+					"$(PROJECT_DIR)/zstd/lib",
+					"$(PROJECT_DIR)/_external/include",
+					"$(PROJECT_DIR)/Titan",
+					"$(PROJECT_DIR)/Titan/exploit",
+				);
+				INFOPLIST_FILE = Titan/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Titan;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/dependencies/build";
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				OTHER_LDFLAGS = (
+					"-ObjC",
+					"-framework",
+					UIKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.nhtitan;
+				PRODUCT_NAME = NHTitan;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
+
+		C300003AE190918008C303A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMPILER_INDEX_STORE_ENABLE = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = NO;
+				DEVELOPMENT_TEAM = "";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/dependencies/include",
+					"$(PROJECT_DIR)/zstd/lib",
+					"$(PROJECT_DIR)/_external/include",
+					"$(PROJECT_DIR)/ClearSword",
+					"$(PROJECT_DIR)/ClearSword/exploit",
+				);
+				INFOPLIST_FILE = ClearSword/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = ClearSword;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/dependencies/build";
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				OTHER_LDFLAGS = (
+					"-ObjC",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.nhsword;
+				PRODUCT_NAME = NHSword;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+
+		C300003BE190918008C303B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMPILER_INDEX_STORE_ENABLE = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = NO;
+				DEVELOPMENT_TEAM = "";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/dependencies/include",
+					"$(PROJECT_DIR)/zstd/lib",
+					"$(PROJECT_DIR)/_external/include",
+					"$(PROJECT_DIR)/ClearSword",
+					"$(PROJECT_DIR)/ClearSword/exploit",
+				);
+				INFOPLIST_FILE = ClearSword/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = ClearSword;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/dependencies/build";
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				OTHER_LDFLAGS = (
+					"-ObjC",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.nhsword;
+				PRODUCT_NAME = NHSword;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -2856,6 +3366,25 @@
 			buildConfigurations = (
 				A100001EE190918008B331E /* Debug */,
 				A100001FE190918008B331F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+
+		B200003CE190918008B203C /* Build configuration list for PBXNativeTarget "Titan" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B200003AE190918008B203A /* Debug */,
+				B200003BE190918008B203B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C300003CE190918008C303C /* Build configuration list for PBXNativeTarget "ClearSword" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C300003AE190918008C303A /* Debug */,
+				C300003BE190918008C303B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
