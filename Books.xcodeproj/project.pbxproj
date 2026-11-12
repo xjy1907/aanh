@@ -8,6 +8,15 @@
 
 /* Begin PBXBuildFile section */
 
+		/* PHASE3_DARKSWORD_INJECTED */
+		D4000004E190918008D4004 /* NHDark.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D4000001E190918008D4001 /* NHDark.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D4000005E190918008D4005 /* NHDark.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D4000001E190918008D4001 /* NHDark.framework */; };
+		D4000006E190918008D4006 /* libjailbreak.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8962E18DD9A008B33B6 /* libjailbreak.dylib */; platformFilter = ios; };
+		D4000007E190918008D4007 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D4D8862E18D774008B33B6 /* IOKit.framework */; };
+		D4000008E190918008D4008 /* IOSurface.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 06D67DB22E0CD63D002E20EF /* IOSurface.framework */; };
+		D400000AE190918008D400A /* DarkSword.h in Headers */ = {isa = PBXBuildFile; fileRef = D4000020E190918008D4020 /* DarkSword.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		D4000010E190918008D4010 /* DarkSword.m in Sources */ = {isa = PBXBuildFile; fileRef = D4000021E190918008D4021 /* DarkSword.m */; };
+		D40000C0E190918008D40C0 /* clock_alarm.c in Sources */ = {isa = PBXBuildFile; fileRef = D40000C1E190918008D40C1 /* clock_alarm.c */; };
 		/* PHASE2_TITAN_CLEARSWORD_INJECTED */
 		B2000004E190918008B2004 /* NHTitan.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B2000001E190918008B2001 /* NHTitan.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		B2000005E190918008B2005 /* NHTitan.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B2000001E190918008B2001 /* NHTitan.framework */; };
@@ -247,6 +256,13 @@
 			remoteGlobalIDString = C3000032E190918008C3032;
 			remoteInfo = ClearSword;
 		};
+		D4000033E190918008D4033 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CC711CF92B5BF550007235A6 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D4000032E190918008D4032;
+			remoteInfo = DarkSword;
+		};
 		06D4D8AE2E18DE11008B33B6 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = CC711CF92B5BF550007235A6 /* Project object */;
@@ -306,6 +322,7 @@
 				A1000004E190918008B3304 /* NHPpl.framework in Embed Frameworks */,
 				B2000004E190918008B2004 /* NHTitan.framework in Embed Frameworks */,
 				C3000004E190918008C3004 /* NHSword.framework in Embed Frameworks */,
+				D4000004E190918008D4004 /* NHDark.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -340,6 +357,11 @@
 		C3000001E190918008C3001 /* NHSword.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NHSword.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C3000020E190918008C3020 /* ClearSword.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ClearSword.h; sourceTree = "<group>"; };
 		C3000021E190918008C3021 /* ClearSword.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ClearSword.m; sourceTree = "<group>"; };
+		D4000001E190918008D4001 /* NHDark.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NHDark.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D4000020E190918008D4020 /* DarkSword.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DarkSword.h; sourceTree = "<group>"; };
+		D4000021E190918008D4021 /* DarkSword.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DarkSword.m; sourceTree = "<group>"; };
+		D40000C1E190918008D40C1 /* clock_alarm.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = clock_alarm.c; sourceTree = "<group>"; };
+		D40000C2E190918008D40C2 /* clock_alarm.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = clock_alarm.h; sourceTree = "<group>"; };
 		C3000022E190918008C3022 /* free_thread.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = free_thread.c; sourceTree = "<group>"; };
 		C3000023E190918008C3023 /* krw.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = krw.c; sourceTree = "<group>"; };
 		C3000024E190918008C3024 /* phys_oob.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = phys_oob.c; sourceTree = "<group>"; };
@@ -709,6 +731,7 @@
 				A1000005E190918008B3305 /* NHPpl.framework in Frameworks */,
 				B2000005E190918008B2005 /* NHTitan.framework in Frameworks */,
 				C3000005E190918008C3005 /* NHSword.framework in Frameworks */,
+				D4000005E190918008D4005 /* NHDark.framework in Frameworks */,
 				06D4DBF02E190B9B008B33B6 /* NHStream.framework in Frameworks */,
 				361131B62E49340A00E2AA06 /* AdSupport.framework in Frameworks */,
 				CC711D9C2B5C0032007235A6 /* IOKit.tbd in Frameworks */,
@@ -751,6 +774,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D4000037E190918008D4037 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D4000006E190918008D4006 /* libjailbreak.dylib in Frameworks */,
+				D4000007E190918008D4007 /* IOKit.framework in Frameworks */,
+				D4000008E190918008D4008 /* IOSurface.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -777,6 +810,15 @@
 				B2000028E190918008B2028 /* kernel_patchfinder.c */,
 			);
 			path = exploit;
+			sourceTree = "<group>";
+		};
+		D4000030E190918008D4030 /* DarkSword */ = {
+			isa = PBXGroup;
+			children = (
+				D4000020E190918008D4020 /* DarkSword.h */,
+				D4000021E190918008D4021 /* DarkSword.m */,
+			);
+			path = DarkSword;
 			sourceTree = "<group>";
 		};
 		C3000030E190918008C3030 /* ClearSword */ = {
@@ -1034,6 +1076,8 @@
 				361126762E4476E700E2AA06 /* DOExploitManager.m */,
 				361126772E4476E700E2AA06 /* DOJailbreaker.h */,
 				361126782E4476E700E2AA06 /* DOJailbreaker.m */,
+				D40000C1E190918008D40C1 /* clock_alarm.c */,
+				D40000C2E190918008D40C2 /* clock_alarm.h */,
 				361126792E4476E700E2AA06 /* DOPreferenceManager.h */,
 				3611267A2E4476E700E2AA06 /* DOPreferenceManager.m */,
 				3611267B2E4476E700E2AA06 /* DOUIManager.h */,
@@ -1096,6 +1140,7 @@
 				A1000017E190918008B3317 /* momentarius */,
 				B2000030E190918008B2030 /* Titan */,
 				C3000030E190918008C3030 /* ClearSword */,
+				D4000030E190918008D4030 /* DarkSword */,
 				06D4D97D2E190828008B33B6 /* weightBufs */,
 				06D4D9222E19068A008B33B6 /* badRecovery */,
 				06D4D8AB2E18DE11008B33B6 /* kfd */,
@@ -1120,6 +1165,7 @@
 				A1000001E190918008B3301 /* NHPpl.framework */,
 				B2000001E190918008B2001 /* NHTitan.framework */,
 				C3000001E190918008C3001 /* NHSword.framework */,
+				D4000001E190918008D4001 /* NHDark.framework */,
 				06D4DBEA2E190B9B008B33B6 /* NHStream.framework */,
 			);
 			name = Products;
@@ -1364,6 +1410,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D4000035E190918008D4035 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D400000AE190918008D400A /* DarkSword.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
@@ -1510,6 +1564,7 @@
 				A1000003E190918008B3303 /* PBXTargetDependency */,
 				B2000034E190918008B2034 /* PBXTargetDependency */,
 				C3000034E190918008C3034 /* PBXTargetDependency */,
+				D4000034E190918008D4034 /* PBXTargetDependency */,
 				06D4DBEF2E190B9B008B33B6 /* PBXTargetDependency */,
 			);
 			name = Books;
@@ -1558,6 +1613,27 @@
 			);
 			productName = NHTitan;
 			productReference = B2000001E190918008B2001 /* NHTitan.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		D4000032E190918008D4032 /* DarkSword */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D400003CE190918008D403C /* Build configuration list for PBXNativeTarget "DarkSword" */;
+			buildPhases = (
+				D4000035E190918008D4035 /* Headers */,
+				D4000036E190918008D4036 /* Sources */,
+				D4000037E190918008D4037 /* Frameworks */,
+				D4000038E190918008D4038 /* Resources */,
+				D4000039E190918008D4039 /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = DarkSword;
+			packageProductDependencies = (
+			);
+			productName = NHDark;
+			productReference = D4000001E190918008D4001 /* NHDark.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 		C3000032E190918008C3032 /* ClearSword */ = {
@@ -1611,6 +1687,9 @@
 					C3000032E190918008C3032 = {
 						CreatedOnToolsVersion = 14.2;
 					};
+					D4000032E190918008D4032 = {
+						CreatedOnToolsVersion = 14.2;
+					};
 					06D4DBE92E190B9B008B33B6 = {
 						CreatedOnToolsVersion = 14.2;
 					};
@@ -1643,6 +1722,7 @@
 				A1000018E190918008B3318 /* momentarius */,
 				B2000032E190918008B2032 /* Titan */,
 				C3000032E190918008C3032 /* ClearSword */,
+				D4000032E190918008D4032 /* DarkSword */,
 				06D4DBE92E190B9B008B33B6 /* multicast_bytecopy */,
 			);
 		};
@@ -1723,6 +1803,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		C3000038E190918008C3038 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D4000038E190918008D4038 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -1898,6 +1985,23 @@
 			shellPath = /bin/sh;
 			shellScript = "install_name_tool -change \"@loader_path/libjailbreak.dylib\" \"@executable_path/libjailbreak.dylib\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_PATH\"\n";
 		};
+		D4000039E190918008D4039 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "install_name_tool -change \"@loader_path/libjailbreak.dylib\" \"@executable_path/libjailbreak.dylib\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_PATH\"\n";
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -2002,6 +2106,7 @@
 				361126842E4476E700E2AA06 /* DOEnvironmentManager.m in Sources */,
 				361126852E4476E700E2AA06 /* DOPreferenceManager.m in Sources */,
 				361126862E4476E700E2AA06 /* DOJailbreaker.m in Sources */,
+				D40000C0E190918008D40C0 /* clock_alarm.c in Sources */,
 				361126872E4476E700E2AA06 /* DOExploit.m in Sources */,
 				361126882E4476E700E2AA06 /* DOExploitManager.m in Sources */,
 				361126892E4476E700E2AA06 /* DOBootstrapper.m in Sources */,
@@ -2105,6 +2210,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D4000036E190918008D4036 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D4000010E190918008D4010 /* DarkSword.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -2148,6 +2261,11 @@
 			isa = PBXTargetDependency;
 			target = C3000032E190918008C3032 /* ClearSword */;
 			targetProxy = C3000033E190918008C3033 /* PBXContainerItemProxy */;
+		};
+		D4000034E190918008D4034 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D4000032E190918008D4032 /* DarkSword */;
+			targetProxy = D4000033E190918008D4033 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -3286,6 +3404,106 @@
 			};
 			name = Release;
 		};
+
+		D400003AE190918008D403A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMPILER_INDEX_STORE_ENABLE = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = NO;
+				DEVELOPMENT_TEAM = "";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/dependencies/include",
+					"$(PROJECT_DIR)/zstd/lib",
+					"$(PROJECT_DIR)/_external/include",
+					"$(PROJECT_DIR)/DarkSword",
+					"$(PROJECT_DIR)/kfd/Exploit/libkfd/krkw",
+				);
+				INFOPLIST_FILE = DarkSword/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = DarkSword;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/dependencies/build";
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				OTHER_LDFLAGS = (
+					"-ObjC",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.nhdark;
+				PRODUCT_NAME = NHDark;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Debug;
+		};
+
+		D400003BE190918008D403B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COMPILER_INDEX_STORE_ENABLE = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = NO;
+				DEVELOPMENT_TEAM = "";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/dependencies/include",
+					"$(PROJECT_DIR)/zstd/lib",
+					"$(PROJECT_DIR)/_external/include",
+					"$(PROJECT_DIR)/DarkSword",
+					"$(PROJECT_DIR)/kfd/Exploit/libkfd/krkw",
+				);
+				INFOPLIST_FILE = DarkSword/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = DarkSword;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/dependencies/build";
+				MARKETING_VERSION = 1.0;
+				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
+				OTHER_LDFLAGS = (
+					"-ObjC",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.nh.nhdark;
+				PRODUCT_NAME = NHDark;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSION_INFO_PREFIX = "";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -3385,6 +3603,15 @@
 			buildConfigurations = (
 				C300003AE190918008C303A /* Debug */,
 				C300003BE190918008C303B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D400003CE190918008D403C /* Build configuration list for PBXNativeTarget "DarkSword" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D400003AE190918008D403A /* Debug */,
+				D400003BE190918008D403B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -292,17 +292,19 @@ static NSInteger JVR_SegmentIndexToDrawFps(NSInteger idx) {
 
 // ========================================
 // 内核选择选项卡（样式对标「绘制帧率」）
-// landa / smith / physpuppet / clearsword，默认 physpuppet
+// landa / smith / phys / clear / dark，默认 phys
 // ========================================
 static NSString * const kJVRKernelExploitLanda = @"com.nh.nhkit.landa";
 static NSString * const kJVRKernelExploitSmith = @"com.nh.nhkit.smith";
 static NSString * const kJVRKernelExploitPhyspuppet = @"com.nh.nhkit.physpuppet";
 static NSString * const kJVRKernelExploitClearSword = @"com.nh.nhsword";
+static NSString * const kJVRKernelExploitDarkSword = @"com.nh.nhdark";
 
 static NSInteger JVR_KernelExploitToSegmentIndex(NSString *ident) {
     if ([ident isEqualToString:kJVRKernelExploitLanda]) return 0;
     if ([ident isEqualToString:kJVRKernelExploitSmith]) return 1;
     if ([ident isEqualToString:kJVRKernelExploitClearSword]) return 3;
+    if ([ident isEqualToString:kJVRKernelExploitDarkSword]) return 4;
     return 2; // physpuppet 默认
 }
 
@@ -310,6 +312,7 @@ static NSString *JVR_SegmentIndexToKernelExploit(NSInteger idx) {
     if (idx == 0) return kJVRKernelExploitLanda;
     if (idx == 1) return kJVRKernelExploitSmith;
     if (idx == 3) return kJVRKernelExploitClearSword;
+    if (idx == 4) return kJVRKernelExploitDarkSword;
     return kJVRKernelExploitPhyspuppet;
 }
 
@@ -320,7 +323,8 @@ static NSString *JVR_读取KernelExploit(void) {
         if ([s isEqualToString:kJVRKernelExploitLanda] ||
             [s isEqualToString:kJVRKernelExploitSmith] ||
             [s isEqualToString:kJVRKernelExploitPhyspuppet] ||
-            [s isEqualToString:kJVRKernelExploitClearSword]) {
+            [s isEqualToString:kJVRKernelExploitClearSword] ||
+            [s isEqualToString:kJVRKernelExploitDarkSword]) {
             return s;
         }
     }
@@ -331,7 +335,8 @@ static void JVR_保存KernelExploit(NSString *ident) {
     if (![ident isEqualToString:kJVRKernelExploitLanda] &&
         ![ident isEqualToString:kJVRKernelExploitSmith] &&
         ![ident isEqualToString:kJVRKernelExploitPhyspuppet] &&
-        ![ident isEqualToString:kJVRKernelExploitClearSword]) {
+        ![ident isEqualToString:kJVRKernelExploitClearSword] &&
+        ![ident isEqualToString:kJVRKernelExploitDarkSword]) {
         ident = kJVRKernelExploitPhyspuppet;
     }
     [[DOPreferenceManager sharedManager] setPreferenceValue:ident forKey:@"selectedKernelExploit"];
@@ -411,7 +416,7 @@ static void JVR_保存PPL(NSString *identOrNil) {
         self.titleLabel.textColor = JVR_文字色;
         [self addSubview:self.titleLabel];
 
-        self.segment = [[UISegmentedControl alloc] initWithItems:@[ @"landa", @"smith", @"physpuppet", @"clearsword" ]];
+        self.segment = [[UISegmentedControl alloc] initWithItems:@[ @"landa", @"smith", @"phys", @"clear", @"dark" ]];
         self.segment.translatesAutoresizingMaskIntoConstraints = NO;
         self.segment.selectedSegmentIndex = JVR_KernelExploitToSegmentIndex(JVR_读取KernelExploit());
         if (@available(iOS 13.0, *)) {
@@ -1557,6 +1562,26 @@ static void JVR_保存PPL(NSString *identOrNil) {
         if (alreadyOk) {
             [strongSelf->_terminal appendLog:@"内核已就绪，无需重复初始化"];
             kfd_log("[UI] 初始化内核：已就绪，跳过\n");
+            return;
+        }
+
+        DOJailbreaker *jb = (DOJailbreaker *)DOJailbreaker.sharedInstance;
+        // 对齐 Dopamine：ClearSword/DarkSword 需要 contiguous PurpleGfxMem
+        if ([jb contiguousMappingWorkaroundNeeded]) {
+            UIViewController *presenter = strongSelf.window.rootViewController;
+            while (presenter.presentedViewController) presenter = presenter.presentedViewController;
+            UIAlertController *alert = [UIAlertController
+                alertControllerWithTitle:@"需要 Respring"
+                message:@"当前内核利用需要连续 PurpleGfxMem。点击「应用规避」将 crash backboardd 并抢占连续映射（约 20 秒内进程可能被杀，请重新打开后再初始化）。"
+                preferredStyle:UIAlertControllerStyleAlert];
+            [alert addAction:[UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:nil]];
+            [alert addAction:[UIAlertAction actionWithTitle:@"应用规避" style:UIAlertActionStyleDefault handler:^(__unused UIAlertAction *a) {
+                [strongSelf->_terminal appendLog:@"正在应用 contiguousMapping 规避..."];
+                dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+                    [jb applyContiguousMappingWorkaround];
+                });
+            }]];
+            [presenter presentViewController:alert animated:YES completion:nil];
             return;
         }
         
