@@ -1568,7 +1568,7 @@ static void JVR_保存PPL(NSString *identOrNil) {
         DOJailbreaker *jb = (DOJailbreaker *)DOJailbreaker.sharedInstance;
         // 对齐 Dopamine：ClearSword/DarkSword 需要 contiguous PurpleGfxMem
         if ([jb contiguousMappingWorkaroundNeeded]) {
-            UIViewController *presenter = strongSelf.window.rootViewController;
+            UIViewController *presenter = strongSelf;
             while (presenter.presentedViewController) presenter = presenter.presentedViewController;
             UIAlertController *alert = [UIAlertController
                 alertControllerWithTitle:@"需要 Respring"
