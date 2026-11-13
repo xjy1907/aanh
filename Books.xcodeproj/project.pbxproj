@@ -188,6 +188,7 @@
 		CC8DDA992B66318E001C7C9E /* AppIntents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CC8DDA982B66318E001C7C9E /* AppIntents.framework */; settings = {ATTRIBUTES = (Required, ); }; };
 		CC8DDA9A2B6631DC001C7C9E /* AppIntents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CC8DDA982B66318E001C7C9E /* AppIntents.framework */; };
 		A11111110000000000000002 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A11111110000000000000001 /* UIKit.framework */; };
+		A1111111000000000000000E /* CoreImage.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A1111111000000000000000D /* CoreImage.framework */; };
 		A11111110000000000000004 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A11111110000000000000003 /* QuartzCore.framework */; };
 		A11111110000000000000006 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A11111110000000000000005 /* CoreGraphics.framework */; };
 		A11111110000000000000008 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A11111110000000000000007 /* Security.framework */; };
@@ -541,6 +542,7 @@
 		CC8DDA942B655183001C7C9E /* ToggleHUDIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToggleHUDIntent.swift; sourceTree = "<group>"; };
 		CC8DDA982B66318E001C7C9E /* AppIntents.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppIntents.framework; path = System/Library/Frameworks/AppIntents.framework; sourceTree = SDKROOT; };
 		A11111110000000000000001 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		A1111111000000000000000D /* CoreImage.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreImage.framework; path = System/Library/Frameworks/CoreImage.framework; sourceTree = SDKROOT; };
 		A11111110000000000000003 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		A11111110000000000000005 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		A11111110000000000000007 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
@@ -643,6 +645,7 @@
 				06D4D8952E18D83A008B33B6 /* Preferences.framework in Frameworks */,
 				36DE04712E83D1C000453C35 /* Foundation.framework in Frameworks */,
 				A11111110000000000000002 /* UIKit.framework in Frameworks */,
+				A1111111000000000000000E /* CoreImage.framework in Frameworks */,
 				A11111110000000000000004 /* QuartzCore.framework in Frameworks */,
 				A11111110000000000000006 /* CoreGraphics.framework in Frameworks */,
 				A11111110000000000000008 /* Security.framework in Frameworks */,
@@ -2521,6 +2524,8 @@
 					"ImageIO",
 					"-framework",
 					"CFNetwork",
+					"-framework",
+					"CoreImage",
 					"-Wl,-U,___swift_FORCE_LOAD_$_swiftCompatibility51",
 					"-Wl,-U,___swift_FORCE_LOAD_$_swiftCompatibility56",
 					"-Wl,-U,___swift_FORCE_LOAD_$_swiftCompatibilityConcurrency",
@@ -2615,6 +2620,8 @@
 					"ImageIO",
 					"-framework",
 					"CFNetwork",
+					"-framework",
+					"CoreImage",
 					"-Wl,-U,___swift_FORCE_LOAD_$_swiftCompatibility51",
 					"-Wl,-U,___swift_FORCE_LOAD_$_swiftCompatibility56",
 					"-Wl,-U,___swift_FORCE_LOAD_$_swiftCompatibilityConcurrency",
