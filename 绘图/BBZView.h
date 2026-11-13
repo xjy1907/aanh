@@ -3,11 +3,10 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "Books-Swift.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface BBZView : UIViewController <TSSettingsControllerDelegate>
+@interface BBZView : UIViewController
 @property (nonatomic, strong) UIView *backgroundView;
 + (void)setShouldToggleHUDAfterLaunch:(BOOL)flag;
 - (void)reloadMainButtonState;
