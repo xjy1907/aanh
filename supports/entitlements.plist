@@ -6,8 +6,6 @@
 	<true/>
 	<key>get-task-allow</key>
 	<true/>
-	<key>run-unsigned-code</key>
-	<true/>
 	<key>file-read-data</key>
 	<true/>
 	<key>user-preference-read</key>
@@ -42,13 +40,7 @@
 	<true/>
 	<key>com.apple.private.security.no-sandbox</key>
 	<true/>
-	<key>com.apple.private.skip-library-validation</key>
-	<true/>
 	<key>com.apple.private.persona-mgmt</key>
-	<true/>
-	<key>com.apple.private.kernel.jetsam</key>
-	<true/>
-	<key>com.apple.private.memorystatus</key>
 	<true/>
 	<key>com.apple.springboard-ui.client</key>
 	<true/>
