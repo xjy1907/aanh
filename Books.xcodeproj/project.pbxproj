@@ -187,12 +187,12 @@
 		CC8DDA952B6551C7001C7C9E /* ToggleHUDIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC8DDA942B655183001C7C9E /* ToggleHUDIntent.swift */; };
 		CC8DDA992B66318E001C7C9E /* AppIntents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CC8DDA982B66318E001C7C9E /* AppIntents.framework */; settings = {ATTRIBUTES = (Required, ); }; };
 		CC8DDA9A2B6631DC001C7C9E /* AppIntents.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CC8DDA982B66318E001C7C9E /* AppIntents.framework */; };
-		A1UIKITBLD0000000000001 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A1UIKITREF0000000000001 /* UIKit.framework */; };
-		A1QUARTZBLD000000000001 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A1QUARTZREF000000000001 /* QuartzCore.framework */; };
-		A1CGBLD0000000000000001 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A1CGREF0000000000000001 /* CoreGraphics.framework */; };
-		A1SECBLD000000000000001 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A1SECREF000000000000001 /* Security.framework */; };
-		A1IMGBLD000000000000001 /* ImageIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A1IMGREF000000000000001 /* ImageIO.framework */; };
-		A1CFNBLD000000000000001 /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A1CFNREF000000000000001 /* CFNetwork.framework */; };
+		A11111110000000000000002 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A11111110000000000000001 /* UIKit.framework */; };
+		A11111110000000000000004 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A11111110000000000000003 /* QuartzCore.framework */; };
+		A11111110000000000000006 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A11111110000000000000005 /* CoreGraphics.framework */; };
+		A11111110000000000000008 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A11111110000000000000007 /* Security.framework */; };
+		A1111111000000000000000A /* ImageIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A11111110000000000000009 /* ImageIO.framework */; };
+		A1111111000000000000000C /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A1111111000000000000000B /* CFNetwork.framework */; };
 		CC91309E2B616541006E3280 /* HUDBackdropLabel.mm in Sources */ = {isa = PBXBuildFile; fileRef = CC91309D2B616541006E3280 /* HUDBackdropLabel.mm */; };
 		CC91309F2B616541006E3280 /* HUDBackdropLabel.mm in Sources */ = {isa = PBXBuildFile; fileRef = CC91309D2B616541006E3280 /* HUDBackdropLabel.mm */; };
 		CC9130A32B616C18006E3280 /* HUDBackdropView.mm in Sources */ = {isa = PBXBuildFile; fileRef = CC9130A22B616C18006E3280 /* HUDBackdropView.mm */; };
@@ -540,12 +540,12 @@
 		CC8DDA912B655156001C7C9E /* DeactivateHUDIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeactivateHUDIntent.swift; sourceTree = "<group>"; };
 		CC8DDA942B655183001C7C9E /* ToggleHUDIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToggleHUDIntent.swift; sourceTree = "<group>"; };
 		CC8DDA982B66318E001C7C9E /* AppIntents.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppIntents.framework; path = System/Library/Frameworks/AppIntents.framework; sourceTree = SDKROOT; };
-		A1UIKITREF0000000000001 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
-		A1QUARTZREF000000000001 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
-		A1CGREF0000000000000001 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
-		A1SECREF000000000000001 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
-		A1IMGREF000000000000001 /* ImageIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ImageIO.framework; path = System/Library/Frameworks/ImageIO.framework; sourceTree = SDKROOT; };
-		A1CFNREF000000000000001 /* CFNetwork.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CFNetwork.framework; path = System/Library/Frameworks/CFNetwork.framework; sourceTree = SDKROOT; };
+		A11111110000000000000001 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		A11111110000000000000003 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		A11111110000000000000005 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		A11111110000000000000007 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		A11111110000000000000009 /* ImageIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ImageIO.framework; path = System/Library/Frameworks/ImageIO.framework; sourceTree = SDKROOT; };
+		A1111111000000000000000B /* CFNetwork.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CFNetwork.framework; path = System/Library/Frameworks/CFNetwork.framework; sourceTree = SDKROOT; };
 		CC91309C2B616541006E3280 /* HUDBackdropLabel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = HUDBackdropLabel.h; sourceTree = "<group>"; };
 		CC91309D2B616541006E3280 /* HUDBackdropLabel.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = HUDBackdropLabel.mm; sourceTree = "<group>"; };
 		CC9130A02B616BBF006E3280 /* CAFilter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CAFilter.h; sourceTree = "<group>"; };
@@ -642,12 +642,12 @@
 				06D4D8942E18D83A008B33B6 /* libgrabkernel2.a in Frameworks */,
 				06D4D8952E18D83A008B33B6 /* Preferences.framework in Frameworks */,
 				36DE04712E83D1C000453C35 /* Foundation.framework in Frameworks */,
-				A1UIKITBLD0000000000001 /* UIKit.framework in Frameworks */,
-				A1QUARTZBLD000000000001 /* QuartzCore.framework in Frameworks */,
-				A1CGBLD0000000000000001 /* CoreGraphics.framework in Frameworks */,
-				A1SECBLD000000000000001 /* Security.framework in Frameworks */,
-				A1IMGBLD000000000000001 /* ImageIO.framework in Frameworks */,
-				A1CFNBLD000000000000001 /* CFNetwork.framework in Frameworks */,
+				A11111110000000000000002 /* UIKit.framework in Frameworks */,
+				A11111110000000000000004 /* QuartzCore.framework in Frameworks */,
+				A11111110000000000000006 /* CoreGraphics.framework in Frameworks */,
+				A11111110000000000000008 /* Security.framework in Frameworks */,
+				A1111111000000000000000A /* ImageIO.framework in Frameworks */,
+				A1111111000000000000000C /* CFNetwork.framework in Frameworks */,
 				06D4D8872E18D774008B33B6 /* IOKit.framework in Frameworks */,
 				06D67DB32E0CD63D002E20EF /* IOSurface.framework in Frameworks */,
 				1F0BD9182D6DB7AA008151DA /* Metal.framework in Frameworks */,
@@ -1135,12 +1135,12 @@
 		CC8DDA972B66318E001C7C9E /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				A1UIKITREF0000000000001 /* UIKit.framework */,
-				A1QUARTZREF000000000001 /* QuartzCore.framework */,
-				A1CGREF0000000000000001 /* CoreGraphics.framework */,
-				A1SECREF000000000000001 /* Security.framework */,
-				A1IMGREF000000000000001 /* ImageIO.framework */,
-				A1CFNREF000000000000001 /* CFNetwork.framework */,
+				A11111110000000000000001 /* UIKit.framework */,
+				A11111110000000000000003 /* QuartzCore.framework */,
+				A11111110000000000000005 /* CoreGraphics.framework */,
+				A11111110000000000000007 /* Security.framework */,
+				A11111110000000000000009 /* ImageIO.framework */,
+				A1111111000000000000000B /* CFNetwork.framework */,
 
 				0FE5D6AB2F508F1500FD4AFC /* CoreHaptics.framework */,
 				0FE5D6A42F50892300FD4AFC /* Foundation.framework */,
@@ -2509,6 +2509,18 @@
 				MARKETING_VERSION = 1.12.1;
 				OTHER_CFLAGS = "-fno-modules";
 				OTHER_LDFLAGS = (
+					"-framework",
+					"UIKit",
+					"-framework",
+					"QuartzCore",
+					"-framework",
+					"CoreGraphics",
+					"-framework",
+					"Security",
+					"-framework",
+					"ImageIO",
+					"-framework",
+					"CFNetwork",
 					"-Wl,-U,___swift_FORCE_LOAD_$_swiftCompatibility51",
 					"-Wl,-U,___swift_FORCE_LOAD_$_swiftCompatibility56",
 					"-Wl,-U,___swift_FORCE_LOAD_$_swiftCompatibilityConcurrency",
@@ -2591,6 +2603,18 @@
 				MARKETING_VERSION = 1.12.1;
 				OTHER_CFLAGS = "-fno-modules";
 				OTHER_LDFLAGS = (
+					"-framework",
+					"UIKit",
+					"-framework",
+					"QuartzCore",
+					"-framework",
+					"CoreGraphics",
+					"-framework",
+					"Security",
+					"-framework",
+					"ImageIO",
+					"-framework",
+					"CFNetwork",
 					"-Wl,-U,___swift_FORCE_LOAD_$_swiftCompatibility51",
 					"-Wl,-U,___swift_FORCE_LOAD_$_swiftCompatibility56",
 					"-Wl,-U,___swift_FORCE_LOAD_$_swiftCompatibilityConcurrency",
